@@ -48,14 +48,6 @@ for (const name of previous.scripts) if (!(name in scripts)) delete pkg.scripts[
 Object.assign(pkg.scripts, scripts);
 writeJson("package.json", pkg);
 
-// npm packages: install only what the project does not have yet.
-const have = { ...pkg.dependencies, ...pkg.devDependencies };
-const stackDeps = modules.flatMap(([, m]) => m.stackDevDependencies?.[stackId] ?? []);
-const missing = [...new Set([...collect("devDependencies"), ...stackDeps])].filter((p) => !(p in have));
-if (missing.length && !process.env.HARNESS_NO_INSTALL) {
-  execSync(`npm install --save-dev ${missing.join(" ")}`, { stdio: "inherit" });
-}
-
 // .claude/settings.json: the harness owns `hooks` and its plugins; every other key stays.
 const settings = readJson(".claude/settings.json", {});
 const hook = (script, extra = {}) => ({
@@ -195,3 +187,16 @@ try {
 }
 
 console.log(`harness: ${modules.map(([id]) => id).join(", ")} on ${stackId}`);
+
+// npm packages last, so every file above is written even when the install fails.
+// Install only what the project does not have yet.
+const have = { ...pkg.dependencies, ...pkg.devDependencies };
+const stackDeps = modules.flatMap(([, m]) => m.stackDevDependencies?.[stackId] ?? []);
+const missing = [...new Set([...collect("devDependencies"), ...stackDeps])].filter((p) => !(p in have));
+if (missing.length && !process.env.HARNESS_NO_INSTALL) {
+  try {
+    execSync(`npm install --save-dev ${missing.join(" ")}`, { stdio: "inherit" });
+  } catch {
+    fail(`npm install failed; install these by hand: ${missing.join(" ")}`);
+  }
+}
