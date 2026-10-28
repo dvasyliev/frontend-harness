@@ -47,7 +47,7 @@ Update (same `-d` answers; Copier keeps any you leave out):
 uvx copier update --trust --defaults -d 'modules=[...]' -d 'skip_checks=[...]'
 ```
 
-`--trust` lets the template's task (`tasks/apply.mjs`) run: it copies the modules' skills from `library/skills/`, writes `.claude/settings.json` hooks and plugins, `.mcp.json`, `.claude/harness.json`, `.claude/harness.md`, the npm scripts, and installs missing packages. `docs_language` is the language of specs and plans; ask if the project's docs do not show it.
+`--trust` lets the template's task (`tasks/apply.mjs`) run: it copies the modules' files, rules and skills from `library/`, writes `.claude/settings.json` hooks and plugins, `.mcp.json`, `.claude/harness.json`, `.claude/harness.md`, the npm scripts, and installs missing packages. `docs_language` is the language of specs and plans; ask if the project's docs do not show it.
 
 Then read `git status` and `git diff`:
 
@@ -73,7 +73,13 @@ Copier writes `CLAUDE.md` only when there is none. If the project already had on
 
 A fix to a harness-owned file (anything the template writes, or the hooks, rules and skills it installs) goes into the template, not only into the project, or the next update overwrites it.
 
-1. Make the change in `<template>`: a skill in `library/skills/<name>/` (edit it, or replace it with a newer copy), an MCP server in `library/mcp.json`, another file under `template/`, `modules.json` for which module brings which skill, server, check, script, package or plugin, or `tasks/apply.mjs` for what is generated from them.
+1. Make the change in `<template>`:
+   - `library/` is laid out like a project, and its files are copied to the same paths: hooks in `library/.claude/hooks/`, rules in `library/.claude/rules/`, git hooks in `library/.githooks/`, configs at its root.
+   - Skills: in `library/`, run `npx skills add <owner/repo> --skill <name> -a claude-code` to add one, `npx skills update` to update them (it reads `library/skills-lock.json`), or edit `library/.claude/skills/<name>/` by hand.
+   - MCP servers: in `library/`, run `claude mcp add --scope project <name> ...`, or edit `library/.mcp.json`.
+   - `modules.json`: which module brings which file, rule, skill, server, check, script, package or plugin. A new file in `library/` reaches no project until a module lists it.
+   - `template/`: only `CLAUDE.md` and the `structure.md` and `feature-workflow.md` rules, which Copier renders per stack and modules and merges with the project's edits.
+   - `tasks/apply.mjs`: what is generated from `modules.json`.
 2. Try it on a scratch project: `uvx copier copy --trust --defaults -d stack=<stack> -d 'modules=[...]' <template> <scratch>` (with `HARNESS_NO_INSTALL=1` to skip npm installs).
 3. Commit in `<template>` and tag the next version (`git tag vX.Y.Z`; a new module or answer is a minor version, a fix a patch).
 4. Update the project with step 3's update command.

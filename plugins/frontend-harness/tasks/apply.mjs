@@ -10,7 +10,8 @@ const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
 const stack = catalog.stacks[stackId];
 if (!stack) fail(`unknown stack "${stackId}"`);
 const skip = new Set(JSON.parse(skipArg || "[]"));
-// Skills and MCP servers are kept as plain files next to modules.json, so they can be edited and updated there.
+// Skills and MCP servers live in library/, laid out like a project (.claude/skills, skills-lock.json, .mcp.json)
+// so `npx skills add|update -a claude-code` and `claude mcp add --scope project` work there.
 const library = join(dirname(catalogPath), "library");
 
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
@@ -34,8 +35,8 @@ const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id))
 const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
 const merge = (key) => Object.assign({}, ...modules.map(([, m]) => m[key] ?? {}));
 
-// What the previous run wrote, so a removed module's scripts, skills, plugins and servers go too.
-const previous = { scripts: [], skills: [], plugins: [], mcp: [], ...readJson(".claude/harness.json", {}) };
+// What the previous run wrote, so a removed module's scripts, files, skills, plugins and servers go too.
+const previous = { scripts: [], files: [], skills: [], plugins: [], mcp: [], ...readJson(".claude/harness.json", {}) };
 
 // package.json: harness scripts are set, the project's own are kept.
 const pkg = readJson("package.json");
@@ -77,22 +78,40 @@ settings.permissions ??= {};
 settings.permissions.deny = [...new Set([...(settings.permissions.deny ?? []), "Read(./.env)", "Read(./.env.*)"])];
 writeJson(".claude/settings.json", settings);
 
-// .claude/skills: each module's skills are copied whole from library/skills, replacing the old copy.
+// .claude/skills: each module's skills are copied whole from library/.claude/skills, replacing the old copy.
 const skills = Object.keys(merge("skills"));
 for (const name of previous.skills) if (!skills.includes(name)) rmSync(`.claude/skills/${name}`, { recursive: true, force: true });
 mkdirSync(".claude/skills", { recursive: true });
 for (const name of skills) {
-  const from = join(library, "skills", name);
-  if (!existsSync(from)) fail(`skill "${name}" is missing from library/skills`);
+  const from = join(library, ".claude", "skills", name);
+  if (!existsSync(from)) fail(`skill "${name}" is missing from library/.claude/skills`);
   rmSync(`.claude/skills/${name}`, { recursive: true, force: true });
   cpSync(from, `.claude/skills/${name}`, { recursive: true });
 }
 
-// .mcp.json: the harness servers are set from library/mcp.json, the project's own are kept.
-const serverDefs = readJson(join(library, "mcp.json"), {});
+// Files and rules: copied from library/ to the same path. A rule missing there comes from template/.
+const values = { port: String(stack.port), css: stack.css, srcDirs: stack.srcDirs.join(" ") };
+const files = [
+  ...new Set([
+    ...collect("files"),
+    ...Object.keys(merge("rules"))
+      .map((name) => `.claude/rules/${name}`)
+      .filter((path) => existsSync(join(library, path))),
+  ]),
+];
+for (const path of previous.files ?? []) if (!files.includes(path)) rmSync(path, { force: true });
+for (const path of files) {
+  const from = join(library, path);
+  if (!existsSync(from)) fail(`file "${path}" is missing from library/`);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, readFileSync(from, "utf8").replace(/\{(port|css|srcDirs)\}/g, (_, key) => values[key]));
+}
+
+// .mcp.json: the harness servers are set from library/.mcp.json, the project's own are kept.
+const serverDefs = readJson(join(library, ".mcp.json"), { mcpServers: {} }).mcpServers;
 const servers = Object.fromEntries(
   [...new Set(collect("mcp"))].map((name) => {
-    if (!serverDefs[name]) fail(`MCP server "${name}" is missing from library/mcp.json`);
+    if (!serverDefs[name]) fail(`MCP server "${name}" is missing from library/.mcp.json`);
     return [name, serverDefs[name]];
   }),
 );
@@ -114,6 +133,7 @@ writeJson(".claude/harness.json", {
   fileChecks,
   scripts: Object.keys(scripts),
   skills,
+  files,
   plugins,
   mcp: Object.keys(servers),
 });

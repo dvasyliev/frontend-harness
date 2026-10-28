@@ -2,6 +2,8 @@
 # run by hand: uvx copier copy --trust -d stack=next -d 'modules=["core"]' <this repo> .
 _subdirectory: template
 _answers_file: .copier-answers.yml
+# Every file in template/ is rendered, so none needs a .jinja suffix.
+_templates_suffix: ""
 _tasks:
   # On install: writes the JSON-driven files (settings.json, .mcp.json, .claude/harness.json,
   # .claude/harness.md, .claude/skills) and adds npm scripts and packages.
@@ -29,11 +31,6 @@ skip_checks:
   help: Checks to turn off in this project (names from modules.json)
   default: []
 
-tailwind_css:
-  type: str
-  help: Tailwind stylesheet
-  default: "{% if stack == 'next' %}./app/globals.css{% else %}./src/index.css{% endif %}"
-  when: "{{ 'tailwind' in modules }}"
 
 docs_language:
   type: str
