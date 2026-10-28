@@ -37,6 +37,14 @@ docs_language:
   help: Language of specs and plans
   default: English
 
+# Configs that only some modules use; modules.json lists the same files under each module's `templates`.
+_exclude:
+  - "{% if 'unit' not in modules %}vitest.config.mts{% endif %}"
+  - "{% if 'e2e' not in modules %}playwright.config.ts{% endif %}"
+  - "{% if 'e2e' not in modules %}tests{% endif %}"
+  - "{% if 'quality' not in modules %}knip.json{% endif %}"
+  - "{% if 'commitlint' not in modules %}commitlint.config.mjs{% endif %}"
+
 # CLAUDE.md belongs to the project once written; the skill adds the imports to an existing one.
 _skip_if_exists:
   - CLAUDE.md

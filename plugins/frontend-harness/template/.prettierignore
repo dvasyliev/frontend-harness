@@ -1,0 +1,14 @@
+# Only the project's own code is formatted and checked: {{ 'app, lib' if stack == 'next' else 'src' }},
+# tests and the code files at the root. Docs, public assets,
+# notes such as CLAUDE.md and Claude Code's own files stay as written.
+/*
+{%- if stack == 'next' %}
+!/app/
+!/lib/
+{%- else %}
+!/src/
+{%- endif %}
+!/tests/
+!/*.ts
+!/*.mts
+!/*.mjs

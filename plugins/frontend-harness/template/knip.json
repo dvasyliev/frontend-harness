@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreDependencies": [
+    {%- set deps = [] -%}
+    {%- if 'e2e' in modules %}{% set _ = deps.append('@playwright/cli') %}{% endif -%}
+    {%- if 'commitlint' in modules %}{% set _ = deps.append('@commitlint/cli') %}{% endif -%}
+    {%- if 'unit' in modules %}{% set _ = deps.extend(['@testing-library/react', '@testing-library/dom']) %}{% endif -%}
+    {%- if 'tailwind' in modules %}{% set _ = deps.append('prettier-plugin-tailwindcss') %}{% endif %}
+    {%- for d in deps %}
+    "{{ d }}"{{ "," if not loop.last }}
+    {%- endfor %}
+  ]
+}

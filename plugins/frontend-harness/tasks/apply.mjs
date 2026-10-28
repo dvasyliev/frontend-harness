@@ -50,7 +50,8 @@ writeJson("package.json", pkg);
 
 // npm packages: install only what the project does not have yet.
 const have = { ...pkg.dependencies, ...pkg.devDependencies };
-const missing = [...new Set(collect("devDependencies"))].filter((p) => !(p in have));
+const stackDeps = modules.flatMap(([, m]) => m.stackDevDependencies?.[stackId] ?? []);
+const missing = [...new Set([...collect("devDependencies"), ...stackDeps])].filter((p) => !(p in have));
 if (missing.length && !process.env.HARNESS_NO_INSTALL) {
   execSync(`npm install --save-dev ${missing.join(" ")}`, { stdio: "inherit" });
 }
@@ -88,6 +89,9 @@ for (const name of skills) {
   rmSync(`.claude/skills/${name}`, { recursive: true, force: true });
   cpSync(from, `.claude/skills/${name}`, { recursive: true });
 }
+
+// Templates: Copier renders them; one missing here means copier.yml `_exclude` and modules.json disagree.
+for (const path of collect("templates")) if (!existsSync(path)) fail(`template "${path}" was not rendered; check _exclude in copier.yml`);
 
 // Files and rules: copied from library/ to the same path. A rule missing there comes from template/.
 const values = { port: String(stack.port), css: stack.css, srcDirs: stack.srcDirs.join(" ") };

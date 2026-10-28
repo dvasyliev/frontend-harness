@@ -1,5 +1,5 @@
 {
-  "$comment": "The harness catalog. The harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `files`, `rules` and `skills` are copied from library/ (laid out like a project) to the same path in the project; `{port}`, `{css}` and `{srcDirs}` in `files` take the stack's values. template/ holds only the files Copier renders and merges: CLAUDE.md and the structure and feature-workflow rules.",
+  "$comment": "The harness catalog. The harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `files`, `rules` and `skills` are copied whole from library/ (laid out like a project) to the same path in the project; `{port}`, `{css}` and `{srcDirs}` in `files` take the stack's values. Its `templates` are configs in template/ that Copier renders per stack and merges with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. `stackDevDependencies` adds packages for one stack only.",
   "stacks": {
     "next": {
       "describe": "Next.js App Router",
@@ -25,7 +25,22 @@
       "describe": "Claude Code hooks, structure and feature-workflow rules, improve-harness skill, typecheck, ESLint and Prettier on every edit and turn.",
       "required": true,
       "plugins": ["superpowers@claude-plugins-official"],
-      "devDependencies": ["typescript", "eslint", "prettier"],
+      "devDependencies": [
+        "typescript",
+        "eslint",
+        "prettier",
+        "eslint-config-prettier",
+        "typescript-eslint"
+      ],
+      "stackDevDependencies": {
+        "next": ["eslint-config-next", "eslint-plugin-boundaries"],
+        "vite": [
+          "@eslint/js",
+          "globals",
+          "eslint-plugin-react-hooks",
+          "eslint-plugin-react-refresh"
+        ]
+      },
       "scripts": {
         "typecheck": {
           "run": "tsc -b",
@@ -88,6 +103,7 @@
           "block": true
         }
       ],
+      "templates": ["eslint.config.mjs", ".prettierrc.json", ".prettierignore"],
       "files": [
         ".claude/hooks/session-start.sh",
         ".claude/hooks/guard-commands.sh",
@@ -123,7 +139,13 @@
       "detect": {
         "devDependencies": ["vitest"]
       },
-      "devDependencies": ["vitest"],
+      "devDependencies": [
+        "vitest",
+        "jsdom",
+        "@vitejs/plugin-react",
+        "@testing-library/react",
+        "@testing-library/dom"
+      ],
       "scripts": {
         "test": {
           "run": "vitest run --passWithNoTests",
@@ -136,6 +158,7 @@
           "script": "test"
         }
       ],
+      "templates": ["vitest.config.mts"],
       "rules": {
         "tests-unit.md": "unit test conventions (loads when working on test files)."
       }
@@ -153,6 +176,7 @@
           "describe": "all end-to-end tests; `npx playwright test <file>` for one"
         }
       },
+      "templates": ["playwright.config.ts", "tests/seed.spec.ts"],
       "files": [".githooks/pre-push"],
       "rules": {
         "tests-e2e.md": "end-to-end test conventions (loads when working in `tests/`)."
@@ -168,7 +192,8 @@
       "describe": "Conventional Commits checked by commitlint in a commit-msg hook, plus the skill that writes valid messages.",
       "recommended": true,
       "devDependencies": ["@commitlint/cli", "@commitlint/config-conventional"],
-      "files": [".githooks/commit-msg", "commitlint.config.mjs"],
+      "templates": ["commitlint.config.mjs"],
+      "files": [".githooks/commit-msg"],
       "skills": {
         "committing-with-commitlint": "use before every commit."
       },
@@ -202,7 +227,8 @@
           "name": "dupes",
           "script": "dupes"
         }
-      ]
+      ],
+      "templates": ["knip.json"]
     },
     "react-skills": {
       "describe": "Vercel's React and Next.js performance rules, composition patterns and the Web Interface Guidelines review.",
@@ -234,8 +260,7 @@
         "dependencies": ["tailwindcss"],
         "devDependencies": ["tailwindcss"]
       },
-      "devDependencies": ["prettier-plugin-tailwindcss"],
-      "files": [".prettierrc.json"]
+      "devDependencies": ["prettier-plugin-tailwindcss"]
     }
   }
 }
