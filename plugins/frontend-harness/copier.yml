@@ -3,10 +3,15 @@
 _subdirectory: template
 _answers_file: .copier-answers.yml
 _tasks:
-  # Writes the JSON-driven files (settings.json, .mcp.json, .claude/harness.json,
-  # .claude/harness.md) and adds npm scripts and packages. Skipped in Copier's
-  # temporary copies, which have no package.json.
-  - "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/modules.json' '{{ stack }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}'"
+  # On install: writes the JSON-driven files (settings.json, .mcp.json, .claude/harness.json,
+  # .claude/harness.md, .claude/skills) and adds npm scripts and packages.
+  - command: &apply "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/modules.json' '{{ stack }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}'"
+    when: "{{ _copier_operation == 'copy' }}"
+_migrations:
+  # On update: the same, but after Copier has merged the project's own changes back in,
+  # so a removed module's skills and scripts stay removed.
+  - command: *apply
+    when: "{{ _stage == 'after' }}"
 
 stack:
   type: str
