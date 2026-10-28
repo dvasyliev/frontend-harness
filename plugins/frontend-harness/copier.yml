@@ -1,0 +1,40 @@
+# Harness template. The `harness` skill fills these answers from modules.json;
+# run by hand: uvx copier copy --trust -d stack=next -d 'modules=["core"]' <this repo> .
+_subdirectory: template
+_answers_file: .copier-answers.yml
+_tasks:
+  # Writes the JSON-driven files (settings.json, .mcp.json, .claude/harness.json,
+  # .claude/harness.md) and adds npm scripts and packages. Skipped in Copier's
+  # temporary copies, which have no package.json.
+  - "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/modules.json' '{{ stack }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}'"
+
+stack:
+  type: str
+  help: Project stack
+  choices: [next, vite]
+
+modules:
+  type: json
+  help: Harness modules to install (ids from modules.json)
+  default: ["core"]
+  validator: "{% if 'core' not in modules %}core is required{% endif %}"
+
+skip_checks:
+  type: json
+  help: Checks to turn off in this project (names from modules.json)
+  default: []
+
+tailwind_css:
+  type: str
+  help: Tailwind stylesheet
+  default: "{% if stack == 'next' %}./app/globals.css{% else %}./src/index.css{% endif %}"
+  when: "{{ 'tailwind' in modules }}"
+
+docs_language:
+  type: str
+  help: Language of specs and plans
+  default: English
+
+# CLAUDE.md belongs to the project once written; the skill adds the imports to an existing one.
+_skip_if_exists:
+  - CLAUDE.md

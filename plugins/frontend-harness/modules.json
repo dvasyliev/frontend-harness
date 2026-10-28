@@ -1,0 +1,142 @@
+{
+  "$comment": "The harness catalog. The harness skill reads it to suggest modules; tasks/apply.mjs reads it to write settings, checks, npm scripts and packages. A module's files live in template/ under names guarded by `{% if '<id>' in modules %}`.",
+  "stacks": {
+    "next": {
+      "describe": "Next.js App Router",
+      "port": 3000,
+      "srcDirs": ["app", "lib"],
+      "detect": { "dependencies": ["next"] }
+    },
+    "vite": {
+      "describe": "React + Vite",
+      "port": 5173,
+      "srcDirs": ["src"],
+      "detect": { "devDependencies": ["vite"] }
+    }
+  },
+  "modules": {
+    "core": {
+      "describe": "Claude Code hooks, structure and feature-workflow rules, improve-harness skill, typecheck, ESLint and Prettier on every edit and turn.",
+      "required": true,
+      "plugins": ["superpowers@claude-plugins-official"],
+      "devDependencies": ["typescript", "eslint", "prettier"],
+      "scripts": {
+        "typecheck": { "run": "tsc -b", "describe": "TypeScript; never `tsc --noEmit`" },
+        "lint": { "run": "eslint --max-warnings 0", "describe": "ESLint, no warnings allowed" },
+        "lint:file": { "run": "eslint --max-warnings 0", "describe": "ESLint on one file (used by the edit hook)" },
+        "format": { "run": "prettier --write .", "describe": "Prettier, whole repo" },
+        "format:check": { "run": "prettier --check .", "describe": "Prettier check only" },
+        "format:file": { "run": "prettier --write", "describe": "Prettier on one file (used by the edit hook)" },
+        "check": { "run": ".claude/hooks/check-all.sh --force", "describe": "all checks at once, as the Stop hook runs them" },
+        "prepare": { "run": "git config core.hooksPath .githooks", "describe": "turns on the git hooks in .githooks/ (npm runs it on install)" }
+      },
+      "checks": [
+        { "name": "types", "script": "typecheck" },
+        { "name": "lint", "script": "lint" },
+        { "name": "format", "script": "format:check" }
+      ],
+      "fileChecks": [
+        {
+          "name": "format",
+          "script": "format:file",
+          "ext": ["ts", "tsx", "mts", "js", "jsx", "mjs", "css", "json", "md"],
+          "block": false
+        },
+        {
+          "name": "lint",
+          "script": "lint:file",
+          "ext": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
+          "block": true
+        }
+      ],
+      "rules": {
+        "structure.md": "where new and moved files go.",
+        "feature-workflow.md": "the steps for building a user-facing feature."
+      },
+      "skills": {
+        "improve-harness": "end of a feature, or when a hook, rule or skill misbehaved: find harness problems and fix the approved ones."
+      },
+      "sections": {
+        "Several agents at once": "- Several agents may work in this repo at the same time, all on `main`. Changes you did not make are another agent's work in progress, not a mess to clean up.\n- Touch only your own changes. Never revert, reformat, stash or commit another agent's files.\n- Before editing a file, check `git status`. If it has changes you did not make, tell the user which file and wait instead of editing it.\n- If the end-of-turn checks fail, first make sure none of the failures come from your own changes. If they all sit in another agent's files, finish with one short line saying so; do not analyse, list or fix them.\n- Commit only your own files (`git add <paths>`, never `git add -A`)."
+      }
+    },
+    "next-rules": {
+      "describe": "Next.js page performance rule (streaming, lists in batches, caching, media) and the note to read the bundled Next.js docs.",
+      "stacks": ["next"],
+      "recommended": true,
+      "detect": { "dependencies": ["next"] },
+      "rules": {
+        "performance.md": "how pages load fast and how to measure it (loads when working in `app/` or `lib/`)."
+      }
+    },
+    "unit": {
+      "describe": "Vitest unit tests, run at the end of every turn.",
+      "recommended": true,
+      "detect": { "devDependencies": ["vitest"] },
+      "devDependencies": ["vitest"],
+      "scripts": {
+        "test": { "run": "vitest run --passWithNoTests", "describe": "all unit tests (Vitest); `npx vitest run <file>` for one" }
+      },
+      "checks": [{ "name": "test", "script": "test" }],
+      "rules": { "tests.md": "unit and end-to-end test conventions (loads when working on test files)." }
+    },
+    "e2e": {
+      "describe": "Playwright end-to-end tests, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
+      "recommended": true,
+      "detect": { "devDependencies": ["@playwright/test"] },
+      "devDependencies": ["@playwright/test", "@playwright/cli"],
+      "scripts": {
+        "verify": { "run": "playwright test", "describe": "all end-to-end tests; `npx playwright test <file>` for one" }
+      },
+      "githooks": { "pre-push": "runs `npm run verify`; the push is cancelled if it fails." },
+      "rules": { "tests.md": "unit and end-to-end test conventions (loads when working on test files)." },
+      "skills": { "playwright-cli": "drive the browser, check a feature, write end-to-end tests." }
+    },
+    "commitlint": {
+      "describe": "Conventional Commits checked by commitlint in a commit-msg hook, plus the skill that writes valid messages.",
+      "recommended": true,
+      "devDependencies": ["@commitlint/cli", "@commitlint/config-conventional"],
+      "githooks": { "commit-msg": "checks the commit message with commitlint." },
+      "skills": { "committing-with-commitlint": "use before every commit." },
+      "sections": { "Commits": "Before every commit, use the `committing-with-commitlint` skill." }
+    },
+    "quality": {
+      "describe": "knip (unused files, exports, dependencies) and jscpd (duplicated code), run at the end of every turn.",
+      "recommended": true,
+      "devDependencies": ["knip", "jscpd"],
+      "scripts": {
+        "knip": { "run": "knip --no-progress --reporter compact", "describe": "unused files, exports and dependencies" },
+        "dupes": { "run": "jscpd {srcDirs} --threshold 0 --reporters console", "describe": "duplicated code (jscpd)" }
+      },
+      "checks": [
+        { "name": "knip", "script": "knip" },
+        { "name": "dupes", "script": "dupes" }
+      ]
+    },
+    "react-skills": {
+      "describe": "Vercel's React and Next.js performance rules, composition patterns and the Web Interface Guidelines review.",
+      "recommended": true,
+      "detect": { "dependencies": ["react"] },
+      "skills": {
+        "vercel-react-best-practices": "React and Next.js performance rules.",
+        "vercel-composition-patterns": "component patterns that scale.",
+        "web-design-guidelines": "review UI against the Web Interface Guidelines."
+      }
+    },
+    "context7": {
+      "describe": "Context7 MCP server, rule and skill for current library docs.",
+      "recommended": true,
+      "mcp": {
+        "context7": { "type": "http", "url": "https://mcp.context7.com/mcp/oauth" }
+      },
+      "rules": { "context7.md": "fetch current library docs through Context7 before answering library questions." },
+      "skills": { "context7-mcp": "library docs and code examples through Context7." }
+    },
+    "tailwind": {
+      "describe": "Prettier plugin that sorts Tailwind classes.",
+      "recommended": true,
+      "detect": { "dependencies": ["tailwindcss"], "devDependencies": ["tailwindcss"] },
+      "devDependencies": ["prettier-plugin-tailwindcss"]
+    }
+  }
+}
