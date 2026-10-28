@@ -32,6 +32,13 @@ for (const id of wanted) {
   for (const dep of m.requires ?? []) wanted.add(dep);
 }
 const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id));
+// Each group (the linter) takes exactly `pick` of its modules. Copier renders a module's
+// templates from the answers, so a missing one is an error here, not a silent default.
+for (const [group, g] of Object.entries(catalog.groups ?? {})) {
+  const members = Object.entries(catalog.modules).filter(([, m]) => m.group === group).map(([id]) => id);
+  const chosen = members.filter((id) => wanted.has(id));
+  if (chosen.length !== g.pick) fail(`choose ${g.pick} ${group} of ${members.join(", ")} (default for ${stackId}: ${g.default?.[stackId]})`);
+}
 const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
 const merge = (key) => Object.assign({}, ...modules.map(([, m]) => m[key] ?? {}));
 
@@ -85,16 +92,9 @@ for (const name of skills) {
 // Templates: Copier renders them; one missing here means copier.yml `_exclude` and modules.json disagree.
 for (const path of collect("templates")) if (!existsSync(path)) fail(`template "${path}" was not rendered; check _exclude in copier.yml`);
 
-// Files and rules: copied from library/ to the same path. A rule missing there comes from template/.
+// Files: copied whole from library/ to the same path.
 const values = { port: String(stack.port), css: stack.css, srcDirs: stack.srcDirs.join(" ") };
-const files = [
-  ...new Set([
-    ...collect("files"),
-    ...Object.keys(merge("rules"))
-      .map((name) => `.claude/rules/${name}`)
-      .filter((path) => existsSync(join(library, path))),
-  ]),
-];
+const files = [...new Set(collect("files"))];
 for (const path of previous.files ?? []) if (!files.includes(path)) rmSync(path, { force: true });
 for (const path of files) {
   const from = join(library, path);

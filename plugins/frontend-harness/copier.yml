@@ -44,6 +44,12 @@ _exclude:
   - "{% if 'e2e' not in modules %}tests{% endif %}"
   - "{% if 'quality' not in modules %}knip.json{% endif %}"
   - "{% if 'commitlint' not in modules %}commitlint.config.mjs{% endif %}"
+  - "{% if 'eslint' not in modules %}eslint.config.mjs{% endif %}"
+  - "{% if 'oxlint' not in modules %}.oxlintrc.json{% endif %}"
+  - "{% if 'next-rules' not in modules %}.claude/rules/performance.md{% endif %}"
+  - "{% if 'context7' not in modules %}.claude/rules/context7.md{% endif %}"
+  - "{% if 'unit' not in modules %}.claude/rules/tests-unit.md{% endif %}"
+  - "{% if 'e2e' not in modules %}.claude/rules/tests-e2e.md{% endif %}"
 
 # CLAUDE.md belongs to the project once written; the skill adds the imports to an existing one.
 _skip_if_exists:

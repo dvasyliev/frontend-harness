@@ -1,5 +1,5 @@
 {
-  "$comment": "The harness catalog. The harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `files`, `rules` and `skills` are copied whole from library/ (laid out like a project) to the same path in the project; `{port}`, `{css}` and `{srcDirs}` in `files` take the stack's values. Its `templates` are configs in template/ that Copier renders per stack and merges with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. `stackDevDependencies` adds packages for one stack only.",
+  "$comment": "The harness catalog. The harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `templates` (configs and .claude/rules) live in template/: Copier renders them per stack and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. Its `files` and `skills` live in library/ (laid out like a project) and are copied whole to the same path, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per stack when the project shows none.",
   "stacks": {
     "next": {
       "describe": "Next.js App Router",
@@ -20,39 +20,26 @@
       "css": "./src/index.css"
     }
   },
+  "groups": {
+    "linter": {
+      "describe": "The linter the hooks and checks run.",
+      "pick": 1,
+      "default": {
+        "next": "eslint",
+        "vite": "oxlint"
+      }
+    }
+  },
   "modules": {
     "core": {
-      "describe": "Claude Code hooks, structure and feature-workflow rules, improve-harness skill, typecheck, ESLint and Prettier on every edit and turn.",
+      "describe": "Claude Code hooks, structure and feature-workflow rules, improve-harness skill, typecheck and Prettier on every edit and turn.",
       "required": true,
       "plugins": ["superpowers@claude-plugins-official"],
-      "devDependencies": [
-        "typescript",
-        "eslint",
-        "prettier",
-        "eslint-config-prettier",
-        "typescript-eslint"
-      ],
-      "stackDevDependencies": {
-        "next": ["eslint-config-next", "eslint-plugin-boundaries"],
-        "vite": [
-          "@eslint/js",
-          "globals",
-          "eslint-plugin-react-hooks",
-          "eslint-plugin-react-refresh"
-        ]
-      },
+      "devDependencies": ["typescript", "prettier"],
       "scripts": {
         "typecheck": {
           "run": "tsc -b",
           "describe": "TypeScript; never `tsc --noEmit`"
-        },
-        "lint": {
-          "run": "eslint --max-warnings 0",
-          "describe": "ESLint, no warnings allowed"
-        },
-        "lint:file": {
-          "run": "eslint --max-warnings 0",
-          "describe": "ESLint on one file (used by the edit hook)"
         },
         "format": {
           "run": "prettier --write .",
@@ -81,10 +68,6 @@
           "script": "typecheck"
         },
         {
-          "name": "lint",
-          "script": "lint"
-        },
-        {
           "name": "format",
           "script": "format:check"
         }
@@ -95,15 +78,14 @@
           "script": "format:file",
           "ext": ["ts", "tsx", "mts", "js", "jsx", "mjs", "css", "json", "md"],
           "block": false
-        },
-        {
-          "name": "lint",
-          "script": "lint:file",
-          "ext": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
-          "block": true
         }
       ],
-      "templates": ["eslint.config.mjs", ".prettierrc.json", ".prettierignore"],
+      "templates": [
+        ".prettierrc.json",
+        ".prettierignore",
+        ".claude/rules/structure.md",
+        ".claude/rules/feature-workflow.md"
+      ],
       "files": [
         ".claude/hooks/session-start.sh",
         ".claude/hooks/guard-commands.sh",
@@ -121,6 +103,85 @@
         "Several agents at once": "- Several agents may work in this repo at the same time, all on `main`. Changes you did not make are another agent's work in progress, not a mess to clean up.\n- Touch only your own changes. Never revert, reformat, stash or commit another agent's files.\n- Before editing a file, check `git status`. If it has changes you did not make, tell the user which file and wait instead of editing it.\n- If the end-of-turn checks fail, first make sure none of the failures come from your own changes. If they all sit in another agent's files, finish with one short line saying so; do not analyse, list or fix them.\n- Commit only your own files (`git add <paths>`, never `git add -A`)."
       }
     },
+    "eslint": {
+      "describe": "ESLint with type-aware typescript-eslint rules, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
+      "group": "linter",
+      "detect": {
+        "devDependencies": ["eslint"]
+      },
+      "devDependencies": [
+        "eslint",
+        "eslint-config-prettier",
+        "typescript-eslint"
+      ],
+      "stackDevDependencies": {
+        "next": ["eslint-config-next", "eslint-plugin-boundaries"],
+        "vite": [
+          "@eslint/js",
+          "globals",
+          "eslint-plugin-react-hooks",
+          "eslint-plugin-react-refresh"
+        ]
+      },
+      "scripts": {
+        "lint": {
+          "run": "eslint --max-warnings 0",
+          "describe": "ESLint, no warnings allowed"
+        },
+        "lint:file": {
+          "run": "eslint --max-warnings 0",
+          "describe": "ESLint on one file (used by the edit hook)"
+        }
+      },
+      "checks": [
+        {
+          "name": "lint",
+          "script": "lint"
+        }
+      ],
+      "fileChecks": [
+        {
+          "name": "lint",
+          "script": "lint:file",
+          "ext": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
+          "block": true
+        }
+      ],
+      "templates": ["eslint.config.mjs"]
+    },
+    "oxlint": {
+      "describe": "oxlint (what create-vite sets up; works with TypeScript 7) with a 400-line file limit.",
+      "group": "linter",
+      "detect": {
+        "devDependencies": ["oxlint"]
+      },
+      "devDependencies": ["oxlint"],
+      "scripts": {
+        "lint": {
+          "run": "oxlint --deny-warnings",
+          "describe": "oxlint, no warnings allowed"
+        },
+        "lint:file": {
+          "run": "oxlint --deny-warnings",
+          "describe": "oxlint on one file (used by the edit hook)"
+        }
+      },
+      "checks": [
+        {
+          "name": "lint",
+          "script": "lint"
+        }
+      ],
+      "fileChecks": [
+        {
+          "name": "lint",
+          "script": "lint:file",
+          "ext": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
+          "block": true
+        }
+      ],
+      "templates": [".oxlintrc.json"]
+    },
     "next-rules": {
       "describe": "Next.js page performance rule (streaming, lists in batches, caching, media) and the note to read the bundled Next.js docs.",
       "stacks": ["next"],
@@ -128,6 +189,7 @@
       "detect": {
         "dependencies": ["next"]
       },
+      "templates": [".claude/rules/performance.md"],
       "files": ["AGENTS.md"],
       "rules": {
         "performance.md": "how pages load fast and how to measure it (loads when working in `app/` or `lib/`)."
@@ -158,7 +220,7 @@
           "script": "test"
         }
       ],
-      "templates": ["vitest.config.mts"],
+      "templates": ["vitest.config.mts", ".claude/rules/tests-unit.md"],
       "rules": {
         "tests-unit.md": "unit test conventions (loads when working on test files)."
       }
@@ -176,7 +238,11 @@
           "describe": "all end-to-end tests; `npx playwright test <file>` for one"
         }
       },
-      "templates": ["playwright.config.ts", "tests/seed.spec.ts"],
+      "templates": [
+        "playwright.config.ts",
+        "tests/seed.spec.ts",
+        ".claude/rules/tests-e2e.md"
+      ],
       "files": [".githooks/pre-push"],
       "rules": {
         "tests-e2e.md": "end-to-end test conventions (loads when working in `tests/`)."
@@ -246,6 +312,7 @@
       "describe": "Context7 MCP server, rule and skill for current library docs.",
       "recommended": true,
       "mcp": ["context7"],
+      "templates": [".claude/rules/context7.md"],
       "rules": {
         "context7.md": "fetch current library docs through Context7 before answering library questions."
       },
