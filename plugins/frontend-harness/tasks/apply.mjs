@@ -110,7 +110,7 @@ const md = [
   "## Commands",
   "",
   "```bash",
-  `npm run dev               # http://localhost:${stack.port}`,
+  "npm run dev".padEnd(24) + `# http://localhost:${stack.port}`,
   ...scriptDocs,
   "```",
   "",
