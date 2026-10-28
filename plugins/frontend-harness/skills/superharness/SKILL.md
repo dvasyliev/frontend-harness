@@ -1,5 +1,5 @@
 ---
-name: harness
+name: superharness
 description: Use when the user wants to install, update, add or remove parts of their Claude Code harness (hooks, rules, skills, checks, commitlint, Playwright, Context7) in a Next.js or Vite project, or move a harness fix into the shared template.
 ---
 

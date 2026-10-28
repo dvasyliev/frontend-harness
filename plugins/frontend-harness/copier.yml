@@ -1,4 +1,4 @@
-# Harness template. The `harness` skill fills these answers from modules.json;
+# Harness template. The `superharness` skill fills these answers from modules.json;
 # run by hand: uvx copier copy --trust -d stack=next -d 'modules=["core"]' <this repo> .
 _subdirectory: template
 _answers_file: .copier-answers.yml
