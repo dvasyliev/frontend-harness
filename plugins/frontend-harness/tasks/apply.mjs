@@ -2,13 +2,16 @@
 // Copier task: writes everything modules.json drives into the project in the current folder.
 // Usage: node apply.mjs <modules.json> <stack> '<modules JSON>' '<skip_checks JSON>'
 import { execSync } from "node:child_process";
-import { chmodSync, existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 const [catalogPath, stackId, modulesArg, skipArg] = process.argv.slice(2);
 const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
 const stack = catalog.stacks[stackId];
 if (!stack) fail(`unknown stack "${stackId}"`);
 const skip = new Set(JSON.parse(skipArg || "[]"));
+// Skills and MCP servers are kept as plain files next to modules.json, so they can be edited and updated there.
+const library = join(dirname(catalogPath), "library");
 
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
 const writeJson = (path, data) => writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
@@ -31,8 +34,8 @@ const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id))
 const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
 const merge = (key) => Object.assign({}, ...modules.map(([, m]) => m[key] ?? {}));
 
-// What the previous run wrote, so a removed module's scripts, plugins and servers go too.
-const previous = readJson(".claude/harness.json", { scripts: [], plugins: [], mcp: [] });
+// What the previous run wrote, so a removed module's scripts, skills, plugins and servers go too.
+const previous = { scripts: [], skills: [], plugins: [], mcp: [], ...readJson(".claude/harness.json", {}) };
 
 // package.json: harness scripts are set, the project's own are kept.
 const pkg = readJson("package.json");
@@ -74,8 +77,25 @@ settings.permissions ??= {};
 settings.permissions.deny = [...new Set([...(settings.permissions.deny ?? []), "Read(./.env)", "Read(./.env.*)"])];
 writeJson(".claude/settings.json", settings);
 
-// .mcp.json: the harness servers are set, the project's own are kept.
-const servers = merge("mcp");
+// .claude/skills: each module's skills are copied whole from library/skills, replacing the old copy.
+const skills = Object.keys(merge("skills"));
+for (const name of previous.skills) if (!skills.includes(name)) rmSync(`.claude/skills/${name}`, { recursive: true, force: true });
+mkdirSync(".claude/skills", { recursive: true });
+for (const name of skills) {
+  const from = join(library, "skills", name);
+  if (!existsSync(from)) fail(`skill "${name}" is missing from library/skills`);
+  rmSync(`.claude/skills/${name}`, { recursive: true, force: true });
+  cpSync(from, `.claude/skills/${name}`, { recursive: true });
+}
+
+// .mcp.json: the harness servers are set from library/mcp.json, the project's own are kept.
+const serverDefs = readJson(join(library, "mcp.json"), {});
+const servers = Object.fromEntries(
+  [...new Set(collect("mcp"))].map((name) => {
+    if (!serverDefs[name]) fail(`MCP server "${name}" is missing from library/mcp.json`);
+    return [name, serverDefs[name]];
+  }),
+);
 const mcp = readJson(".mcp.json", { mcpServers: {} });
 for (const name of previous.mcp) if (!(name in servers)) delete mcp.mcpServers[name];
 Object.assign(mcp.mcpServers, servers);
@@ -93,6 +113,7 @@ writeJson(".claude/harness.json", {
   checks,
   fileChecks,
   scripts: Object.keys(scripts),
+  skills,
   plugins,
   mcp: Object.keys(servers),
 });

@@ -1,5 +1,5 @@
 {
-  "$comment": "The harness catalog. The harness skill reads it to suggest modules; tasks/apply.mjs reads it to write settings, checks, npm scripts and packages. A module's files live in template/ under names guarded by `{% if '<id>' in modules %}`.",
+  "$comment": "The harness catalog. The harness skill reads it to suggest modules; tasks/apply.mjs reads it to write settings, checks, npm scripts and packages. A module's skills come from library/skills/<name> and its MCP servers from library/mcp.json; its other files live in template/ under names guarded by `{% if '<id>' in modules %}`.",
   "stacks": {
     "next": {
       "describe": "Next.js App Router",
@@ -126,9 +126,7 @@
     "context7": {
       "describe": "Context7 MCP server, rule and skill for current library docs.",
       "recommended": true,
-      "mcp": {
-        "context7": { "type": "http", "url": "https://mcp.context7.com/mcp/oauth" }
-      },
+      "mcp": ["context7"],
       "rules": { "context7.md": "fetch current library docs through Context7 before answering library questions." },
       "skills": { "context7-mcp": "library docs and code examples through Context7." }
     },
