@@ -162,9 +162,10 @@ for (const x of inputs) {
 // .claude/settings.json: the harness owns `hooks` and its plugins; every other key stays.
 const settings = readJson(".claude/settings.json", {});
 settings.hooks = {};
-for (const [, { output, settings: { event, matcher, timeout, statusMessage } }] of chosen.hooks) {
-  const command = { type: "command", command: `bash "$CLAUDE_PROJECT_DIR/${output}"`, timeout, statusMessage };
-  (settings.hooks[event] ??= []).push({ ...(matcher && { matcher }), hooks: [command] });
+for (const [name, { output, config }] of chosen.hooks) {
+  const { event, matcher, hook } = config;
+  if (hook.type === "command" && !hook.command.includes(output)) fail(`hook "${name}": its command does not run its output ${output}`);
+  (settings.hooks[event] ??= []).push({ ...(matcher && { matcher }), hooks: [hook] });
 }
 const plugins = chosen.plugins.map(([name]) => name);
 settings.enabledPlugins ??= {};

@@ -1,44 +1,60 @@
 {
-  "$comment": "The Claude Code hooks modules can bring; each goes to .claude/hooks/<name>. Each entry says where it comes from and where it goes: `install` (a command) or `input` (a file or folder in library/), and `output` (the path, or paths, it writes in the project). An install runs when one of its outputs is missing. An input file has its Jinja filled in first (`framework`, `modules`, `docs_language`); a folder is copied as it is. `mode` says how an input reaches its output when the project already has it: `override` (the default) writes the harness version; `merge` merges the project's edits with the harness changes since the last install (git merge-file against the copy kept in .claude/harness-base/), and leaves a file the project had before the harness untouched for the skill to merge. Outputs go when no module needs the entry any more (a merged file only when the project did not edit it). An entry with no source is written by another entry's `install` (its output is in that entry's `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out. `settings` is what apply.mjs writes into .claude/settings.json for the hook: its `event`, `matcher`, `timeout` and `statusMessage` and `description` into .claude/harness.md ({checks} and {fileChecks} become the project's checks).",
+  "$comment": "The Claude Code hooks modules can bring; each goes to .claude/hooks/<name>. Each entry says where it comes from and where it goes: `install` (a command) or `input` (a file or folder in library/), and `output` (the path, or paths, it writes in the project). An install runs when one of its outputs is missing. An input file has its Jinja filled in first (`framework`, `modules`, `docs_language`); a folder is copied as it is. `mode` says how an input reaches its output when the project already has it: `override` (the default) writes the harness version; `merge` merges the project's edits with the harness changes since the last install (git merge-file against the copy kept in .claude/harness-base/), and leaves a file the project had before the harness untouched for the skill to merge. Outputs go when no module needs the entry any more (a merged file only when the project did not edit it). An entry with no source is written by another entry's `install` (its output is in that entry's `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out. `config` is the hook's place in .claude/settings.json: apply.mjs adds `hook` as it is (every field Claude Code supports: `type`, `command`, `timeout`, `statusMessage`, ...) under `hooks.<event>`, with `matcher` when given; a command hook's `command` must run its `output` and `description` into .claude/harness.md ({checks} and {fileChecks} become the project's checks).",
   "hooks": {
     "session-start": {
       "description": "(session start, resume or clear): reports whether dependencies are installed, whether a dev server already runs, and how many files are uncommitted.",
       "input": "hooks/session-start.sh",
       "output": ".claude/hooks/session-start.sh",
-      "settings": {
+      "config": {
         "event": "SessionStart",
-        "matcher": "startup|resume|clear"
+        "matcher": "startup|resume|clear",
+        "hook": {
+          "type": "command",
+          "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\""
+        }
       }
     },
     "guard-commands": {
       "description": "(before every Bash command): blocks force push and skipping git hooks (`--no-verify`, `SKIP_VERIFY`).",
       "input": "hooks/guard-commands.sh",
       "output": ".claude/hooks/guard-commands.sh",
-      "settings": {
+      "config": {
         "event": "PreToolUse",
         "matcher": "Bash",
-        "statusMessage": "Checking command"
+        "hook": {
+          "type": "command",
+          "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-commands.sh\"",
+          "statusMessage": "Checking command"
+        }
       }
     },
     "format-lint-file": {
       "description": "(after every edit): {fileChecks} on the edited file.",
       "input": "hooks/format-lint-file.sh",
       "output": ".claude/hooks/format-lint-file.sh",
-      "settings": {
+      "config": {
         "event": "PostToolUse",
         "matcher": "Edit|Write",
-        "timeout": 60,
-        "statusMessage": "Formatting and linting"
+        "hook": {
+          "type": "command",
+          "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-lint-file.sh\"",
+          "timeout": 60,
+          "statusMessage": "Formatting and linting"
+        }
       }
     },
     "check-all": {
       "description": "(end of every turn): {checks}; skipped when only `.md` files changed or the same code already passed.",
       "input": "hooks/check-all.sh",
       "output": ".claude/hooks/check-all.sh",
-      "settings": {
+      "config": {
         "event": "Stop",
-        "timeout": 600,
-        "statusMessage": "Running checks"
+        "hook": {
+          "type": "command",
+          "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-all.sh\"",
+          "timeout": 600,
+          "statusMessage": "Running checks"
+        }
       }
     }
   }
