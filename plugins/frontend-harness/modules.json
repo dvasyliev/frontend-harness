@@ -1,5 +1,5 @@
 {
-  "$comment": "Every framework and module the harness can install. A module's files are in modules/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` and `frameworkScripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module is. The frontend-harness skill suggests modules by `detect` and `recommended`, and asks about them by `category`.",
+  "$comment": "Every framework and module the harness can install. A module's files are in modules/<category>/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` and `frameworkScripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module is. The frontend-harness skill suggests modules by `detect` and `recommended`, and asks about them by `category` (also the folder its files are in).",
   "frameworks": {
     "nextjs": {
       "description": "Next.js App Router",
@@ -23,6 +23,7 @@
   "modules": {
     "core": {
       "description": "Claude Code hooks, the structure and hooks rules, typecheck and Prettier on every edit and turn.",
+      "category": "core",
       "required": true,
       "scripts": {
         "typecheck": {
@@ -140,7 +141,7 @@
     },
     "feature-workflow": {
       "description": "The feature-workflow skill (spec, plan, tests first, browser check, end-to-end tests, improve the harness), the rule for how agents work here (on main, several at once), the superpowers plugin and the improve-harness skill.",
-      "category": "Workflow",
+      "category": "workflow",
       "recommended": true,
       "settings": {
         "enabledPlugins": {
@@ -155,7 +156,7 @@
     },
     "eslint": {
       "description": "ESLint with type-aware typescript-eslint rules, no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
-      "category": "Code quality",
+      "category": "code-quality",
       "detect": {
         "devDependencies": ["eslint"]
       },
@@ -202,7 +203,7 @@
     },
     "oxlint": {
       "description": "oxlint (what create-vite sets up; works with TypeScript 7) with accessibility rules, no import cycles and a 400-line file limit.",
-      "category": "Code quality",
+      "category": "code-quality",
       "detect": {
         "devDependencies": ["oxlint"]
       },
@@ -235,7 +236,7 @@
     },
     "quality": {
       "description": "knip (unused files, exports, dependencies) and jscpd (duplicated code), run at the end of every turn.",
-      "category": "Code quality",
+      "category": "code-quality",
       "recommended": true,
       "scripts": {
         "knip": {
@@ -261,7 +262,7 @@
     },
     "tailwind": {
       "description": "Prettier plugin that sorts Tailwind classes, with its .prettierrc.json.",
-      "category": "Code quality",
+      "category": "code-quality",
       "auto": true,
       "detect": {
         "dependencies": ["tailwindcss"],
@@ -271,7 +272,7 @@
     },
     "unit": {
       "description": "Vitest unit tests, run at the end of every turn.",
-      "category": "Testing",
+      "category": "testing",
       "recommended": true,
       "detect": {
         "devDependencies": ["vitest"]
@@ -298,7 +299,7 @@
     },
     "e2e": {
       "description": "Playwright end-to-end tests with axe accessibility checks, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
-      "category": "Testing",
+      "category": "testing",
       "recommended": true,
       "detect": {
         "devDependencies": ["@playwright/test"]
@@ -327,7 +328,7 @@
     },
     "commitlint": {
       "description": "Conventional Commits checked by commitlint in a commit-msg hook, plus the skill that writes valid messages.",
-      "category": "Git",
+      "category": "git",
       "recommended": true,
       "scripts": {
         "prepare": {
@@ -345,7 +346,7 @@
     },
     "pre-commit": {
       "description": "A pre-commit git hook that looks for secrets in the staged files (secretlint) and formats and lints the staged code (lint-staged), for commits made without Claude.",
-      "category": "Git",
+      "category": "git",
       "recommended": true,
       "scripts": {
         "prepare": {
@@ -361,7 +362,7 @@
     },
     "sync-deps": {
       "description": "post-merge and post-checkout git hooks that run npm install when package-lock.json changed.",
-      "category": "Git",
+      "category": "git",
       "scripts": {
         "prepare": {
           "command": "git config core.hooksPath .githooks",
@@ -371,7 +372,7 @@
     },
     "best-practices": {
       "description": "Vercel's skills: React and Next.js performance rules, composition patterns, and the Web Interface Guidelines review.",
-      "category": "Best practices",
+      "category": "best-practices",
       "recommended": true,
       "install": [
         {
@@ -390,7 +391,7 @@
     },
     "context7": {
       "description": "Context7 MCP server, rule and skill for current library docs.",
-      "category": "Best practices",
+      "category": "best-practices",
       "recommended": true,
       "mcp": ["context7"],
       "install": [
@@ -405,7 +406,7 @@
     },
     "next-docs": {
       "description": "AGENTS.md, which tells Claude to read the Next.js docs bundled in node_modules, and the Next.js DevTools MCP server (Next.js versions that ship them).",
-      "category": "Best practices",
+      "category": "best-practices",
       "auto": true,
       "detect": {
         "files": ["node_modules/next/dist/docs"]
@@ -419,7 +420,7 @@
     },
     "performance": {
       "description": "Rules for fast pages and lists, how to measure them with the Chrome DevTools MCP server, and (on React) a bundle size check.",
-      "category": "Performance",
+      "category": "performance",
       "recommended": true,
       "frameworkScripts": {
         "react": {

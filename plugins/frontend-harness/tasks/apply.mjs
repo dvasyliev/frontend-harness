@@ -71,11 +71,11 @@ function unmerge(target, added) {
   }
 }
 
-// Files: modules/<module>/all/ and modules/<module>/<framework>/, each written at the same path in the project.
+// Files: modules/<category>/<module>/all/ and .../<framework>/, each written at the same path in the project.
 const files = {};
-for (const [id] of modules) {
+for (const [id, m] of modules) {
   for (const dir of ["all", frameworkId]) {
-    const base = join(root, "modules", id, dir);
+    const base = join(root, "modules", m.category, id, dir);
     if (!existsSync(base)) continue;
     for (const d of readdirSync(base, { recursive: true, withFileTypes: true })) {
       if (d.isFile() && d.name !== ".DS_Store") files[relative(base, join(d.parentPath, d.name))] = join(d.parentPath, d.name);

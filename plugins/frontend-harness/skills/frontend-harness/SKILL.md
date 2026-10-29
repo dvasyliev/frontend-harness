@@ -9,7 +9,7 @@ This skill picks the modules that fit the project, runs `tasks/apply.mjs` to wri
 
 **Template:** `$HARNESS_TEMPLATE` if set (a local checkout of this plugin, to try changes), else this plugin's folder: two folders up from this skill's base directory. Its version is `version` in `.claude-plugin/plugin.json`.
 
-**Catalog:** `<template>/modules.json` lists every framework and module: what a module brings (`scripts`, `checks`, `settings` for `.claude/settings.json`, `install` commands, npm packages) and how to suggest it (`detect`, `recommended`). A module's files are in `<template>/modules/<module>/`: `all/` for every framework, `<framework>/` for one, laid out as in the project. Read them; do not guess.
+**Catalog:** `<template>/modules.json` lists every framework and module: what a module brings (`scripts`, `checks`, `settings` for `.claude/settings.json`, `install` commands, npm packages) and how to suggest it (`detect`, `recommended`). A module's files are in `<template>/modules/<category>/<module>/`: `all/` for every framework, `<framework>/` for one, laid out as in the project. Read them; do not guess.
 
 ## 1. Look at the project
 
@@ -27,7 +27,7 @@ Mark each module:
 - **suggested:** its `detect` matches `package.json`, or it is `recommended` and has no `detect`.
 - **offered:** the rest, unselected.
 
-Ask with `AskUserQuestion`, `multiSelect: true`, one question per `category` with the category as its header, up to 4 questions per call (a second call for the rest). Each option: the module id as label, its `description` as description (add what it brings in a few words, such as "plugin superpowers, skill improve-harness"); put "(suggested)" or "(installed)" after the label where it applies. On an update, the installed modules are the starting point; say what removing one does (its files, scripts, hooks, plugins and MCP servers go; npm packages stay).
+Ask with `AskUserQuestion`, `multiSelect: true`, one question per `category` (but `core`) with the category in words as its header (such as "Code quality"), up to 4 questions per call (a second call for the rest). Each option: the module id as label, its `description` as description (add what it brings in a few words, such as "plugin superpowers, skill improve-harness"); put "(suggested)" or "(installed)" after the label where it applies. On an update, the installed modules are the starting point; say what removing one does (its files, scripts, hooks, plugins and MCP servers go; npm packages stay).
 
 Exactly one `linter` module is installed: choose the one the project already uses (its `detect`), else the framework's `linter`. Ask only when the project has both or the user wants the other.
 
@@ -68,9 +68,9 @@ A fix to a harness-owned file (anything the template writes, or the hooks, rules
 
 1. Make the change in `<template>`:
    - `modules.json`: one module per thing the project gets (such as `feature-workflow` or `context7`), with its `category` and what it adds: `scripts`, `checks` and `fileChecks`, `settings` (merged into `.claude/settings.json` as it is: hooks, permissions, `enabledPlugins`), npm `devDependencies`, and `install` commands with the paths each `creates`. For another repo's skill: `npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y` (projects update it with `npx skills update`). For a tool with its own setup (like `npx ctx7 setup` for Context7): that command, with what it writes in `creates`, and the MCP servers it adds in `mcp`.
-   - `modules/<module>/all/` and `modules/<module>/<framework>/`: the module's files, at their paths in the project. Every file is merged: the project's edits and the harness changes since the last install are merged with `git merge-file`, against the copy kept in `.claude/harness-base/`.
+   - `modules/<category>/<module>/all/` and `.../<framework>/`: the module's files, at their paths in the project. Every file is merged: the project's edits and the harness changes since the last install are merged with `git merge-file`, against the copy kept in `.claude/harness-base/`.
    - `tasks/apply.mjs`: how modules are installed, written and removed.
-   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and a `modules/<module>/<framework>/` version of each per-framework file. A file whose text depends on the framework gets one version per framework; a rule that depends on other modules names them in plain text ("With `e2e`: ...").
+   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and a `<framework>/` version of each per-framework file next to the module's `all/`. A file whose text depends on the framework gets one version per framework; a rule that depends on other modules names them in plain text ("With `e2e`: ...").
 2. Try it on a scratch project with a `package.json`: run step 3's command there (with `HARNESS_NO_INSTALL=1` to skip npm installs and install commands).
 3. Raise `version` in `.claude-plugin/plugin.json` (a new module or answer is a minor version, a fix a patch), commit in `<template>` and tag it (`git tag vX.Y.Z`).
 4. Update the project: step 3 with `HARNESS_TEMPLATE` set to `<template>`, or once the plugin itself is updated.
