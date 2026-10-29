@@ -1,9 +1,17 @@
 {
   "$comment": "The rules modules can bring; each goes to .claude/rules/<name>. Each entry says where it comes from and where it goes: `install` (a command) or `input` (a file or folder in library/), and `output` (the path, or paths, it writes in the project). An install runs when one of its outputs is missing. An input file has its Jinja filled in first (`framework`, `modules`, `docs_language`); a folder is copied as it is. `mode` says how an input reaches its output when the project already has it: `override` (the default) writes the harness version; `merge` merges the project's edits with the harness changes since the last install (git merge-file against the copy kept in .claude/harness-base/), and leaves a file the project had before the harness untouched for the skill to merge. Outputs go when no module needs the entry any more (a merged file only when the project did not edit it). An entry with no source is written by another entry's `install` (its output is in that entry's `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out.",
   "rules": {
-    "structure.md": {
+    "react/structure.md": {
       "description": "where new and moved files go.",
-      "input": "rules/structure.md",
+      "frameworks": ["react"],
+      "input": "rules/react/structure.md",
+      "output": ".claude/rules/structure.md",
+      "mode": "merge"
+    },
+    "nextjs/structure.md": {
+      "description": "where new and moved files go.",
+      "frameworks": ["nextjs"],
+      "input": "rules/nextjs/structure.md",
       "output": ".claude/rules/structure.md",
       "mode": "merge"
     },

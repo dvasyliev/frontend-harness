@@ -12,7 +12,7 @@ const catalog = readJson(join(catalogDir, "modules.json"));
 const framework = catalog.frameworks[frameworkId];
 if (!framework) fail(`unknown framework "${frameworkId}"`);
 const skip = new Set(JSON.parse(skipArg || "[]"));
-// The entries' inputs: plain folders (skills/, hooks/, githooks/, rules/, files/), not laid out like a project.
+// The entries' inputs: plain folders (skills/, hooks/, githooks/, rules/, configs/), not laid out like a project.
 const library = join(catalogDir, "..", "library");
 const noInstall = Boolean(process.env.HARNESS_NO_INSTALL);
 
@@ -47,9 +47,10 @@ const kinds = {
   hooks: { file: "hooks.json", key: "hooks" },
   githooks: { file: "githooks.json", key: "githooks" },
   rules: { file: "rules.json", key: "rules" },
-  files: { file: "files.json", key: "files" },
+  configs: { file: "configs.json", key: "configs" },
   mcp: { file: "mcp.json", key: "servers" },
   plugins: { file: "plugins.json", key: "plugins" },
+  permissions: { file: "permissions.json", key: "permissions" },
 };
 // chosen[kind] = [[name, entry], ...]: the modules' entries that fit the framework.
 const chosen = {};
@@ -69,13 +70,13 @@ const installs = entries.filter((x) => x.e.install);
 const created = installs.flatMap(output);
 for (const x of entries) {
   if (x.e.input && typeof x.e.output !== "string") fail(`${x.kind} entry "${x.name}" needs one output path`);
-  if (x.e.install || x.e.input || x.e.server || x.kind === "plugins") continue;
+  if (x.e.install || x.e.input || x.e.server || x.kind === "plugins" || x.kind === "permissions") continue;
   const missing = output(x).filter((path) => !created.includes(path));
   if (!output(x).length || missing.length) fail(`${x.kind} entry "${x.name}" has no install or input, and no install outputs ${missing.join(", ") || "it"}`);
 }
 
 // What the previous run wrote, so what no module needs any more goes too.
-const previous = { scripts: [], paths: [], plugins: [], mcp: [], ...readJson(".claude/harness.json", {}) };
+const previous = { scripts: [], paths: [], plugins: [], mcp: [], permissions: {}, ...readJson(".claude/harness.json", {}) };
 
 // package.json: harness scripts are set, the project's own are kept.
 const pkg = readJson("package.json");
@@ -171,8 +172,18 @@ const plugins = chosen.plugins.map(([name]) => name);
 settings.enabledPlugins ??= {};
 for (const p of previous.plugins) if (!plugins.includes(p)) delete settings.enabledPlugins[p];
 for (const p of plugins) settings.enabledPlugins[p] = true;
+const permissions = {};
+for (const [, { config }] of chosen.permissions) {
+  for (const [list, rules] of Object.entries(config)) permissions[list] = [...new Set([...(permissions[list] ?? []), ...rules])];
+}
 settings.permissions ??= {};
-settings.permissions.deny = [...new Set([...(settings.permissions.deny ?? []), "Read(./.env)", "Read(./.env.*)"])];
+for (const [list, rules] of Object.entries(previous.permissions)) {
+  if (!settings.permissions[list]) continue;
+  settings.permissions[list] = settings.permissions[list].filter((rule) => !rules.includes(rule) || permissions[list]?.includes(rule));
+  if (!settings.permissions[list].length) delete settings.permissions[list];
+}
+for (const [list, rules] of Object.entries(permissions)) settings.permissions[list] = [...new Set([...(settings.permissions[list] ?? []), ...rules])];
+if (!Object.keys(settings.permissions).length) delete settings.permissions;
 writeJson(".claude/settings.json", settings);
 
 // .mcp.json: a server given as `server` is set here (one with `install` writes itself); the project's own are kept.
@@ -198,10 +209,12 @@ writeJson(".claude/harness.json", {
   paths,
   plugins,
   mcp: mcpNames,
+  permissions,
 });
 
 // .claude/harness.md: the always-loaded summary CLAUDE.md imports.
-const list = (kind) => chosen[kind].map(([name, e]) => `- \`${name}\`: ${e.description}`).join("\n");
+// A rule is named by its file (an entry such as react/structure.md is structure.md in the project).
+const list = (kind) => chosen[kind].map(([name, e]) => `- \`${kind === "rules" ? basename(e.output) : name}\`: ${e.description}`).join("\n");
 const scriptDocs = Object.entries(merge("scripts")).map(([name, s]) => `npm run ${name}`.padEnd(24) + `# ${s.description}`);
 const sections = merge("sections");
 const hookDocs = (text) =>

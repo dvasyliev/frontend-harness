@@ -1,5 +1,5 @@
 {
-  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. Each module is one thing the project gets; `dependencies` lists everything it needs by name: other `modules`, `plugins` (plugins.json), `skills` (skills.json), `mcp` servers (mcp.json), `rules` (rules.json), `files` (files.json: configs and other files), `hooks` (hooks.json), `githooks` (githooks.json), and npm `devDependencies` (and `frameworkDevDependencies`). Each of those catalogs says how its entries get into the project: `install` or `input`, with `output` and `mode`. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
+  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. Each module is one thing the project gets; `dependencies` lists everything it needs by name: other `modules`, `plugins` (plugins.json), `skills` (skills.json), `mcp` servers (mcp.json), `rules` (rules.json), `configs` (configs.json: configs and other project files), `hooks` (hooks.json), `githooks` (githooks.json), `permissions` (permissions.json), and npm `devDependencies` (and `frameworkDevDependencies`). Each of those catalogs says how its entries get into the project: `install` or `input`, with `output` and `mode`. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
   "frameworks": {
     "nextjs": {
       "description": "Next.js App Router",
@@ -93,14 +93,19 @@
       },
       "dependencies": {
         "devDependencies": ["typescript", "prettier"],
-        "rules": ["structure.md"],
+        "rules": ["react/structure.md", "nextjs/structure.md"],
         "hooks": [
           "session-start",
           "guard-commands",
           "format-lint-file",
           "check-all"
         ],
-        "files": ["CLAUDE.md", ".prettierrc.json", ".prettierignore"]
+        "permissions": ["env-files"],
+        "configs": [
+          "CLAUDE.md",
+          "react/.prettierignore",
+          "nextjs/.prettierignore"
+        ]
       }
     },
     "feature-workflow": {
@@ -157,7 +162,7 @@
             "eslint-plugin-react-refresh"
           ]
         },
-        "files": ["eslint.config.mjs"]
+        "configs": ["react/eslint.config.mjs", "nextjs/eslint.config.mjs"]
       }
     },
     "oxlint": {
@@ -192,7 +197,7 @@
       ],
       "dependencies": {
         "devDependencies": ["oxlint"],
-        "files": [".oxlintrc.json"]
+        "configs": [".oxlintrc.json"]
       }
     },
     "next-rules": {
@@ -204,7 +209,7 @@
       },
       "dependencies": {
         "rules": ["performance.md"],
-        "files": ["AGENTS.md"]
+        "configs": ["AGENTS.md"]
       }
     },
     "unit": {
@@ -234,7 +239,7 @@
           "@testing-library/dom"
         ],
         "rules": ["tests-unit.md"],
-        "files": ["vitest.config.mts"]
+        "configs": ["react/vitest.config.mts", "nextjs/vitest.config.mts"]
       }
     },
     "e2e": {
@@ -254,7 +259,11 @@
         "devDependencies": ["@playwright/test", "@playwright/cli"],
         "rules": ["tests-e2e.md"],
         "githooks": ["pre-push"],
-        "files": ["playwright.config.ts", "tests/seed.spec.ts"]
+        "configs": [
+          "react/playwright.config.ts",
+          "nextjs/playwright.config.ts",
+          "tests/seed.spec.ts"
+        ]
       }
     },
     "commitlint": {
@@ -270,7 +279,7 @@
           "@commitlint/config-conventional"
         ],
         "githooks": ["commit-msg"],
-        "files": ["commitlint.config.mjs"]
+        "configs": ["commitlint.config.mjs"]
       }
     },
     "quality": {
@@ -298,7 +307,7 @@
       ],
       "dependencies": {
         "devDependencies": ["knip", "jscpd"],
-        "files": ["knip.json"]
+        "configs": ["knip.json"]
       }
     },
     "best-practices": {
@@ -321,14 +330,15 @@
       }
     },
     "tailwind": {
-      "description": "Prettier plugin that sorts Tailwind classes.",
+      "description": "Prettier plugin that sorts Tailwind classes, with its .prettierrc.json.",
       "recommended": true,
       "detect": {
         "dependencies": ["tailwindcss"],
         "devDependencies": ["tailwindcss"]
       },
       "dependencies": {
-        "devDependencies": ["prettier-plugin-tailwindcss"]
+        "devDependencies": ["prettier-plugin-tailwindcss"],
+        "configs": ["react/.prettierrc.json", "nextjs/.prettierrc.json"]
       }
     }
   }
