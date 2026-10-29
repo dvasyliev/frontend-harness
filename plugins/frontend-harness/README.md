@@ -47,7 +47,8 @@ A module that goes takes its files (unless the project edited them), scripts, se
 | core | `core` | required | Claude Code hooks (session start, command guard, format and lint on edit, checks at end of turn), structure and hooks rules, typecheck, Prettier |
 | workflow | `feature-workflow` | recommended | feature-workflow skill, "how we work" rule, superpowers plugin, improve-harness skill |
 | code-quality | `eslint` / `oxlint` | linter | the linter, with no import cycles and a 400-line limit (oxlint: accessibility too) |
-| code-quality | `quality` | recommended | knip and jscpd, run at end of turn |
+| code-quality | `knip` | recommended | knip: unused files, exports and dependencies, run at end of turn |
+| code-quality | `jscpd` | recommended | jscpd: duplicated code, run at end of turn |
 | code-quality | `tailwind` | auto | Prettier plugin that sorts Tailwind classes |
 | testing | `unit` | recommended | Vitest, run at end of turn |
 | testing | `e2e` | recommended | Playwright with axe checks, playwright-cli skill, pre-push hook |

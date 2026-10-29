@@ -234,15 +234,29 @@
       ],
       "devDependencies": ["oxlint"]
     },
-    "quality": {
-      "description": "knip (unused files, exports, dependencies) and jscpd (duplicated code), run at the end of every turn.",
+    "knip": {
+      "description": "knip: unused files, exports and dependencies, checked at the end of every turn.",
       "category": "code-quality",
       "recommended": true,
       "scripts": {
         "knip": {
           "command": "knip --no-progress --reporter compact",
           "description": "unused files, exports and dependencies"
-        },
+        }
+      },
+      "checks": [
+        {
+          "name": "knip",
+          "script": "knip"
+        }
+      ],
+      "devDependencies": ["knip"]
+    },
+    "jscpd": {
+      "description": "jscpd: duplicated code in the source folders, checked at the end of every turn. Often red in older projects.",
+      "category": "code-quality",
+      "recommended": true,
+      "scripts": {
         "dupes": {
           "command": "jscpd {srcDirs} --threshold 0 --reporters console",
           "description": "duplicated code (jscpd)"
@@ -250,15 +264,11 @@
       },
       "checks": [
         {
-          "name": "knip",
-          "script": "knip"
-        },
-        {
           "name": "dupes",
           "script": "dupes"
         }
       ],
-      "devDependencies": ["knip", "jscpd"]
+      "devDependencies": ["jscpd"]
     },
     "tailwind": {
       "description": "Prettier plugin that sorts Tailwind classes, with its .prettierrc.json.",
