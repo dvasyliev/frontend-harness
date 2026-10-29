@@ -188,7 +188,7 @@ else rmSync(".mcp.json", { force: true });
 const checks = collect("checks").filter((c) => !skip.has(c.name));
 const fileChecks = collect("fileChecks").filter((c) => !skip.has(c.name));
 writeJson(".claude/harness.json", {
-  $comment: "Written by the frontend-harness plugin (tasks/apply.mjs). Do not edit; change the answers with the frontend-harness skill.",
+  $comment: "Written by the frontend-harness plugin (tasks/apply.mjs). Do not edit; change the answers with /frontend-harness:setup.",
   version,
   framework: frameworkId,
   modules: modules.map(([id]) => id),

@@ -24,15 +24,15 @@ The plugin only installs and updates the harness. What it installs lives in the 
    | `project` | this project, for everyone who clones it | `.claude/settings.json` |
    | `user` | every project | `~/.claude/settings.json` |
 
-3. Set up the harness: open Claude Code in the project and ask "set up the harness" (or run `/frontend-harness:frontend-harness`). The skill asks the framework and modules, writes the files, merges what the project already had, runs `npm run check` and commits.
+3. Set up the harness: open Claude Code in the project and ask "set up the harness" (or run `/frontend-harness:setup`). The skill asks the framework and modules, writes the files, merges what the project already had, runs `npm run check` and commits.
 
 ## Day to day
 
 | To | Do |
 |---|---|
-| Add or remove modules | Ask "add e2e", "remove sync-deps". |
+| Add or remove modules | `/frontend-harness:setup`, or ask "add e2e", "remove sync-deps". |
 | Turn one check off | Ask "turn off the dupes check" (it goes into `skipChecks`). |
-| Update the harness in a project | Ask "update the harness": its files are merged with the project's edits. |
+| Update the harness in a project | `/frontend-harness:update` (or ask "update the harness"): its files are merged with the project's edits. |
 | Update the plugin | `claude plugin marketplace update dvasyliev-plugins`, then `claude plugin update frontend-harness@dvasyliev-plugins --scope local`, and restart Claude Code. |
 | Remove the plugin | `claude plugin uninstall frontend-harness@dvasyliev-plugins --scope local`. The harness already in the project stays. |
 

@@ -1,9 +1,9 @@
 ---
-name: frontend-harness
-description: Use when the user wants to install, update, add or remove parts of their Claude Code harness (hooks, rules, skills, checks, commitlint, Playwright, Context7) in a React (Vite) or Next.js project, or move a harness fix into the shared template.
+name: setup
+description: Use when the user wants to set up the frontend harness (Claude Code hooks, rules, skills, checks, git hooks) in a React (Vite) or Next.js project, add, remove or change its modules or checks, or move a harness fix into the plugin.
 ---
 
-# Harness
+# Set up the harness
 
 This skill picks the modules that fit the project, runs `tasks/apply.mjs` to write them, and finishes what the script cannot: merge conflicts, `CLAUDE.md`, MCP sign-in, and a green `npm run check`.
 
