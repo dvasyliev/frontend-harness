@@ -105,21 +105,9 @@ for (const path of previous.paths) {
 }
 if (lock) writeJson("skills-lock.json", lock);
 
-// Inputs: a folder is copied as it is; a file has its Jinja filled in (tasks/render.py), then reaches its output by `mode`.
+// Inputs: a folder is copied as it is; a file reaches its output by `mode`.
 for (const x of inputs) if (!existsSync(join(library, x.e.input))) fail(`${x.kind} entry "${x.name}": library/${x.e.input} is missing`);
 const isFile = (x) => statSync(join(library, x.e.input)).isFile();
-const fileInputs = inputs.filter(isFile);
-let rendered = {};
-try {
-  const request = JSON.stringify({
-    context: { framework: frameworkId, modules: modules.map(([id]) => id), docs_language: docsLanguage },
-    files: Object.fromEntries(fileInputs.map((x) => [x.e.output, join(library, x.e.input)])),
-  });
-  const script = join(catalogDir, "..", "tasks", "render.py");
-  rendered = JSON.parse(execSync(`uv run --quiet --no-project --with jinja2 python "${script}"`, { input: request, encoding: "utf8" }));
-} catch (error) {
-  fail(`filling in the Jinja failed: ${error.message}`);
-}
 const write = (path, text) => {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, text);
@@ -132,7 +120,7 @@ for (const x of inputs) {
     cpSync(join(library, x.e.input), path, { recursive: true });
     continue;
   }
-  const next = rendered[path];
+  const next = readFileSync(join(library, x.e.input), "utf8");
   const mode = x.e.mode ?? "override";
   if (mode === "merge" && existsSync(path)) {
     const current = readFileSync(path, "utf8");
@@ -223,6 +211,9 @@ const md = [
   "# Harness",
   "",
   "Written by the harness template from `.claude/harness.json`; do not edit by hand.",
+  "",
+  ...(paths.includes("AGENTS.md") ? ["@../AGENTS.md", ""] : []),
+  `Harness modules: ${modules.map(([id]) => id).join(", ")}. Specs and plans are written in ${docsLanguage}.`,
   "",
   "## Commands",
   "",
