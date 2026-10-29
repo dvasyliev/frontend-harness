@@ -31,7 +31,6 @@ for (const [id, m] of Object.entries(catalog.modules)) if (m.required) wanted.ad
 for (const id of wanted) {
   const m = catalog.modules[id];
   if (!m) fail(`unknown module "${id}"`);
-  if (m.frameworks && !m.frameworks.includes(frameworkId)) fail(`module "${id}" does not fit framework "${frameworkId}"`);
 }
 const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id));
 const linters = Object.entries(catalog.modules).filter(([, m]) => m.linter).map(([id]) => id);

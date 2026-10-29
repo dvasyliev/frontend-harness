@@ -14,12 +14,12 @@ This skill picks the modules that fit the project, runs `tasks/apply.mjs` to wri
 ## 1. Look at the project
 
 1. Run `git status --short`. If anything is uncommitted, stop and tell the user: the harness merges into the project's files, and the changes may be another agent's.
-2. If `.claude/harness.json` exists, this is an **update**: read its `version`, `framework`, `modules`, `skipChecks` and `docsLanguage`. Otherwise it is an **install**. A project installed with Copier also has `.copier-answers.yml`: take `docs_language` from it, and delete it in step 4's commit.
-3. Ask which framework the project uses (`AskUserQuestion`, one option per entry in `frameworks`, its `description` as the label, such as "React (Vite)"). Put the one `frameworks.*.detect` finds in `package.json` first, marked "(detected)"; `nextjs` wins over `react`, since a Next.js project has both. On an update, the `framework` in `.claude/harness.json` is the detected one. The framework decides which modules step 2 offers and which of their skills and configs are installed.
+2. If `.claude/harness.json` exists, this is an **update**: read its `version`, `framework`, `modules`, `skipChecks` and `docsLanguage`. Otherwise it is an **install**. A project installed with Copier also has `.copier-answers.yml`: take `docs_language` from it, and delete it in step 4's commit. A project from before 0.19 may list `next-rules`: replace it with `best-practices`.
+3. Ask which framework the project uses (`AskUserQuestion`, one option per entry in `frameworks`, its `description` as the label, such as "React (Vite)"). Put the one `frameworks.*.detect` finds in `package.json` first, marked "(detected)"; `nextjs` wins over `react`, since a Next.js project has both. On an update, the `framework` in `.claude/harness.json` is the detected one. The framework decides which version of each module's files is installed.
 
 ## 2. Choose modules
 
-For each module whose `frameworks` (if any) include the project's framework, mark it:
+Mark each module:
 
 - **required:** always installed; do not ask.
 - **suggested:** its `detect` matches `package.json`, or it is `recommended` and has no `detect`.
@@ -64,7 +64,7 @@ A fix to a harness-owned file (anything the template writes, or the hooks, rules
    - `modules.json`: one module per thing the project gets (such as `feature-workflow` or `context7`), with what it adds: `scripts`, `checks` and `fileChecks`, `settings` (merged into `.claude/settings.json` as it is: hooks, permissions, `enabledPlugins`), npm `devDependencies`, and `install` commands with the paths each `creates`. For another repo's skill: `npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y` (projects update it with `npx skills update`). For a tool with its own setup (like `npx ctx7 setup` for Context7): that command, with what it writes in `creates`, and the MCP servers it adds in `mcp`.
    - `files/<module>/all/` and `files/<module>/<framework>/`: the module's files, at their paths in the project. Every file is merged: the project's edits and the harness changes since the last install are merged with `git merge-file`, against the copy kept in `.claude/harness-base/`.
    - `tasks/apply.mjs`: how modules are installed, written and removed.
-   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` a `files/<module>/<framework>/` version of each per-framework file, and the framework in the `frameworks` of each module limited to some. A file whose text depends on the framework gets one version per framework; a rule that depends on other modules names them in plain text ("With `e2e`: ...").
+   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and a `files/<module>/<framework>/` version of each per-framework file. A file whose text depends on the framework gets one version per framework; a rule that depends on other modules names them in plain text ("With `e2e`: ...").
 2. Try it on a scratch project with a `package.json`: run step 3's command there (with `HARNESS_NO_INSTALL=1` to skip npm installs and install commands).
 3. Raise `version` in `.claude-plugin/plugin.json` (a new module or answer is a minor version, a fix a patch), commit in `<template>` and tag it (`git tag vX.Y.Z`).
 4. Update the project: step 3 with `HARNESS_TEMPLATE` set to `<template>`, or once the plugin itself is updated.

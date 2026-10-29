@@ -25,8 +25,6 @@ Then decide what the request needs:
 
 Use `superpowers:writing-plans`. List each scenario's user steps with the expected outcome on `- expect:` lines.
 
-With `next-rules`: before changing any code, measure each page the feature will touch as `performance.md` says; these are the "before" numbers for the browser check.
-
 If `superpowers:brainstorming` produced a written spec, show the plan and wait for the user's approval. Otherwise start at once. Either way, do not ask how to carry out the plan; choose:
 
 - **Default:** do every task yourself in this session (`superpowers:executing-plans`).
@@ -43,8 +41,6 @@ Use `superpowers:test-driven-development`: write the tests, watch them fail with
 ## Browser check (with `e2e`)
 
 With the `playwright-cli` skill, drive the feature on the running dev server and confirm the `- expect:` outcomes.
-
-With `next-rules`: then measure each page the feature touches as `performance.md` says (time cold and warm, HTML size, cards sent), and give the before and after numbers in the final message.
 
 ### Screenshots
 
