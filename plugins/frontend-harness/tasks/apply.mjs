@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Copier task: writes everything modules.json drives into the project in the current folder.
-// Usage: node apply.mjs <modules.json> <framework> '<modules JSON>' '<skip_checks JSON>' '<skills JSON>'
+// Usage: node apply.mjs <modules.json> <framework> '<modules JSON>' '<skip_checks JSON>'
 import { execSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-const [catalogPath, frameworkId, modulesArg, skipArg, skillsArg] = process.argv.slice(2);
+const [catalogPath, frameworkId, modulesArg, skipArg] = process.argv.slice(2);
 const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
 const framework = catalog.frameworks[frameworkId];
 if (!framework) fail(`unknown framework "${frameworkId}"`);
@@ -29,7 +29,7 @@ for (const id of wanted) {
   const m = catalog.modules[id];
   if (!m) fail(`unknown module "${id}"`);
   if (m.frameworks && !m.frameworks.includes(frameworkId)) fail(`module "${id}" does not fit framework "${frameworkId}"`);
-  for (const dep of m.requires ?? []) wanted.add(dep);
+  for (const dep of m.dependencies?.modules ?? []) wanted.add(dep);
 }
 const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id));
 // Each group (the linter) takes exactly `pick` of its modules. Copier renders a module's
@@ -41,6 +41,12 @@ for (const [group, g] of Object.entries(catalog.groups ?? {})) {
 }
 const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
 const merge = (key) => Object.assign({}, ...modules.map(([, m]) => m[key] ?? {}));
+// The same, for what a module lists under `dependencies`.
+const collectDep = (key) => modules.flatMap(([, m]) => m.dependencies?.[key] ?? []);
+const mergeDep = (key) => Object.assign({}, ...modules.map(([, m]) => m.dependencies?.[key] ?? {}));
+const commands = collectDep("commands");
+const rules = mergeDep("rules");
+const githooks = mergeDep("githooks");
 
 // What the previous run wrote, so a removed module's scripts, files, skills, plugins and servers go too.
 const previous = { scripts: [], files: [], skills: [], plugins: [], mcp: [], setupFiles: [], ...readJson(".claude/harness.json", {}) };
@@ -70,7 +76,7 @@ settings.hooks = {
   ],
   Stop: [{ hooks: [hook("check-all.sh", { timeout: 600, statusMessage: "Running checks" })] }],
 };
-const plugins = [...new Set(collect("plugins"))];
+const plugins = [...new Set(collectDep("plugins"))];
 settings.enabledPlugins ??= {};
 for (const p of previous.plugins) if (!plugins.includes(p)) delete settings.enabledPlugins[p];
 for (const p of plugins) settings.enabledPlugins[p] = true;
@@ -78,16 +84,11 @@ settings.permissions ??= {};
 settings.permissions.deny = [...new Set([...(settings.permissions.deny ?? []), "Read(./.env)", "Read(./.env.*)"])];
 writeJson(".claude/settings.json", settings);
 
-// .claude/skills: the chosen skills from skills.json. One with `install` comes from its own repo and is installed
-// at the end, with the npm packages; the others are the harness's own, copied whole from library/.claude/skills.
+// .claude/skills: the modules' skills from skills.json that fit the framework. One with `install` comes from its own
+// repo and is installed at the end, with the npm packages; the others are the harness's own, copied whole from library/.claude/skills.
 const skillCatalog = readJson(join(dirname(catalogPath), "skills.json"));
-const skills = JSON.parse(skillsArg || "[]");
-for (const name of skills) {
-  const s = skillCatalog.skills[name];
-  if (!s) fail(`unknown skill "${name}"`);
-  if (!s.frameworks.includes(frameworkId)) fail(`skill "${name}" does not fit framework "${frameworkId}"`);
-  if (s.needs && !modules.some(([id]) => id === s.needs)) fail(`skill "${name}" needs module "${s.needs}"`);
-}
+for (const name of collectDep("skills")) if (!skillCatalog.skills[name]) fail(`unknown skill "${name}"`);
+const skills = [...new Set(collectDep("skills"))].filter((name) => skillCatalog.skills[name].frameworks.includes(frameworkId));
 const lock = readJson("skills-lock.json", null);
 for (const name of previous.skills) {
   if (skills.includes(name)) continue;
@@ -105,11 +106,20 @@ for (const name of skills) {
 }
 
 // Templates: Copier renders them; one missing here means copier.yml `_exclude` and modules.json disagree.
-for (const path of collect("templates")) if (!existsSync(path)) fail(`template "${path}" was not rendered; check _exclude in copier.yml`);
+const setupFiles = commands.flatMap((c) => c.creates);
+const templates = [
+  ...Object.keys(rules).map((name) => `.claude/rules/${name}`).filter((path) => !setupFiles.includes(path)),
+  ...collectDep("configs"),
+];
+for (const path of templates) if (!existsSync(path)) fail(`template "${path}" was not rendered; check _exclude in copier.yml`);
 
 // Files: copied whole from library/ to the same path.
 const values = { port: String(framework.port), css: framework.css, srcDirs: framework.srcDirs.join(" ") };
-const files = [...new Set(collect("files"))];
+const files = [
+  ...collectDep("hooks").map((name) => `.claude/hooks/${name}`),
+  ...Object.keys(githooks).map((name) => `.githooks/${name}`),
+  ...new Set(collectDep("files")),
+];
 for (const path of previous.files ?? []) if (!files.includes(path)) rmSync(path, { force: true });
 for (const path of files) {
   const from = join(library, path);
@@ -118,14 +128,13 @@ for (const path of files) {
   writeFileSync(path, readFileSync(from, "utf8").replace(/\{(port|css|srcDirs)\}/g, (_, key) => values[key]));
 }
 
-// A module's `setup` command (run at the end) writes its own files and MCP servers; `creates` lists those files.
-const setupFiles = modules.flatMap(([, m]) => m.setup?.creates ?? []);
+// A module's `commands` (run at the end) write their own files and MCP servers; `creates` lists those files.
 for (const path of previous.setupFiles) if (!setupFiles.includes(path)) rmSync(path, { recursive: true, force: true });
 
 // .mcp.json: the harness servers are set from library/.mcp.json (except those a setup command writes), the project's own are kept.
 const serverDefs = readJson(join(library, ".mcp.json"), { mcpServers: {} }).mcpServers;
-const mcpNames = [...new Set(collect("mcp"))];
-const fromSetup = new Set(modules.flatMap(([, m]) => (m.setup ? (m.mcp ?? []) : [])));
+const mcpNames = [...new Set(collectDep("mcp"))];
+const fromSetup = new Set(modules.flatMap(([, m]) => (m.dependencies?.commands ? (m.dependencies.mcp ?? []) : [])));
 const servers = Object.fromEntries(
   mcpNames.filter((name) => !fromSetup.has(name)).map((name) => {
     if (!serverDefs[name]) fail(`MCP server "${name}" is missing from library/.mcp.json`);
@@ -160,7 +169,6 @@ writeJson(".claude/harness.json", {
 // .claude/harness.md: the always-loaded summary CLAUDE.md imports.
 const list = (entries, link) => entries.map(([name, text]) => `- ${link(name)}: ${text}`).join("\n");
 const scriptDocs = Object.entries(merge("scripts")).map(([name, s]) => `npm run ${name}`.padEnd(24) + `# ${s.describe}`);
-const githooks = merge("githooks");
 const sections = merge("sections");
 const md = [
   "# Harness",
@@ -176,7 +184,7 @@ const md = [
   "",
   "## Rules in `.claude/rules/`",
   "",
-  list(Object.entries(merge("rules")), (n) => `\`${n}\``),
+  list(Object.entries(rules), (n) => `\`${n}\``),
   "",
   "## Hooks",
   "",
@@ -214,8 +222,8 @@ console.log(`harness: ${modules.map(([id]) => id).join(", ")} on ${frameworkId}`
 // npm packages last, so every file above is written even when the install fails.
 // Install only what the project does not have yet.
 const have = { ...pkg.dependencies, ...pkg.devDependencies };
-const frameworkDeps = modules.flatMap(([, m]) => m.frameworkDevDependencies?.[frameworkId] ?? []);
-const missing = [...new Set([...collect("devDependencies"), ...frameworkDeps])].filter((p) => !(p in have));
+const frameworkDeps = modules.flatMap(([, m]) => m.dependencies?.frameworkDevDependencies?.[frameworkId] ?? []);
+const missing = [...new Set([...collectDep("devDependencies"), ...frameworkDeps])].filter((p) => !(p in have));
 if (missing.length && !process.env.HARNESS_NO_INSTALL) {
   try {
     execSync(`npm install --save-dev ${missing.join(" ")}`, { stdio: "inherit" });
@@ -237,14 +245,14 @@ if (!process.env.HARNESS_NO_INSTALL) {
   }
 }
 
-// Setup commands, only for a module whose files are not all there yet.
+// Module commands, only those whose files are not all there yet.
 if (!process.env.HARNESS_NO_INSTALL) {
-  for (const [id, m] of modules) {
-    if (!m.setup || m.setup.creates.every((path) => existsSync(path))) continue;
+  for (const command of commands) {
+    if (command.creates.every((path) => existsSync(path))) continue;
     try {
-      execSync(m.setup.command, { stdio: "inherit" });
+      execSync(command.run, { stdio: "inherit" });
     } catch {
-      fail(`setup of module "${id}" failed; run by hand: ${m.setup.command}`);
+      fail(`command failed; run by hand: ${command.run}`);
     }
   }
 }

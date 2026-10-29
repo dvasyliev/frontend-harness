@@ -1,5 +1,5 @@
 {
-  "$comment": "The skills the harness offers. `frameworks` lists the frameworks a skill fits. A skill with `install` comes from its own repo: apply.mjs runs that command in the project when the skill is missing (later, `npx skills update` updates a skill installed with `npx skills add`; rerun the command for the others). One without `install` is the harness's own, copied whole from library/.claude/skills. A skill with `needs` is offered only with that module.",
+  "$comment": "The skills modules can bring (modules.json `dependencies.skills`). `frameworks` lists the frameworks a skill fits; a module's skill that does not fit the project's framework is left out. A skill with `install` comes from its own repo: apply.mjs runs that command in the project when the skill is missing (later, `npx skills update` updates a skill installed with `npx skills add`; rerun the command for the others). One without `install` is the harness's own, copied whole from library/.claude/skills.",
   "skills": {
     "web-design-guidelines": {
       "describe": "review UI against the Web Interface Guidelines.",
@@ -19,13 +19,11 @@
     "playwright-cli": {
       "describe": "drive the browser, check a feature, write end-to-end tests.",
       "frameworks": ["react", "nextjs"],
-      "needs": "e2e",
       "install": "npx -y skills add microsoft/playwright-cli --skill playwright-cli -a claude-code --copy -y"
     },
     "committing-with-commitlint": {
       "describe": "use before every commit.",
       "frameworks": ["react", "nextjs"],
-      "needs": "commitlint",
       "install": "mkdir -p .claude/skills/committing-with-commitlint && curl -fLo .claude/skills/committing-with-commitlint/SKILL.md https://raw.githubusercontent.com/conventional-changelog/commitlint/master/skills/committing-with-commitlint/SKILL.md"
     },
     "improve-harness": {
