@@ -89,6 +89,10 @@ const previous = {
 // Paths no module needs any more are removed, except a file the project has edited.
 const basePath = (path) => join(".claude/harness-base", path);
 const edited = (path) => existsSync(basePath(path)) && existsSync(path) && readFileSync(path, "utf8") !== readFileSync(basePath(path), "utf8");
+// A folder a removed file leaves empty goes too.
+const prune = (dir) => {
+  for (; dir !== "." && existsSync(dir) && !readdirSync(dir).length; dir = dirname(dir)) rmSync(dir, { recursive: true });
+};
 const notes = [];
 const lock = readJson("skills-lock.json", null);
 for (const path of previous.paths) {
@@ -96,6 +100,8 @@ for (const path of previous.paths) {
   if (edited(path)) notes.push(`${path}: no module needs it any more, but the project edited it, so it stays`);
   else rmSync(path, { recursive: true, force: true });
   rmSync(basePath(path), { force: true });
+  prune(dirname(path));
+  prune(dirname(basePath(path)));
   if (lock?.skills && path.startsWith(".claude/skills/")) delete lock.skills[path.slice(".claude/skills/".length)];
 }
 if (lock) writeJson("skills-lock.json", lock);
