@@ -55,4 +55,4 @@ A module that goes takes its files (unless the project edited them), scripts, se
   ```
 
   `HARNESS_NO_INSTALL=1` skips npm packages and install commands.
-- Release: raise `version` in `.claude-plugin/plugin.json` (a new module or answer is a minor version, a fix a patch), commit, and tag `vX.Y.Z`. Projects get it with `claude plugin update`, or right away with `HARNESS_TEMPLATE` set to this folder.
+- Release: raise `version` in `.claude-plugin/plugin.json` (a new module or answer is a minor version, a fix a patch), commit, and tag `frontend-harness-vX.Y.Z`. Projects get it with `claude plugin update`, or right away with `HARNESS_TEMPLATE` set to this folder.
