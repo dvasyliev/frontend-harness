@@ -1,28 +1,34 @@
 {
-  "$comment": "The rules modules can bring; each goes to .claude/rules/<name>. Each entry says where it comes from: `install` (a command; it runs when a path in `output` is missing, and those paths go when no module needs the entry any more), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits). An entry with none of these is written by another entry's `install` (listed in its `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out.",
+  "$comment": "The rules modules can bring; each goes to .claude/rules/<name>. Each entry says where it comes from and where it goes: `install` (a command), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits), and `output` (the path, or paths, it writes in the project). An install runs when one of its outputs is missing; outputs go when no module needs the entry any more. An entry with no source is written by another entry's `install` (its output is in that entry's `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out.",
   "rules": {
     "structure.md": {
       "describe": "where new and moved files go.",
-      "template": ".claude/rules/structure.md"
+      "template": ".claude/rules/structure.md",
+      "output": ".claude/rules/structure.md"
     },
     "feature-workflow.md": {
       "describe": "the steps for building a user-facing feature.",
-      "template": ".claude/rules/feature-workflow.md"
+      "template": ".claude/rules/feature-workflow.md",
+      "output": ".claude/rules/feature-workflow.md"
     },
     "performance.md": {
       "describe": "how pages load fast and how to measure it (loads when working in `app/` or `lib/`).",
-      "template": ".claude/rules/performance.md"
+      "template": ".claude/rules/performance.md",
+      "output": ".claude/rules/performance.md"
     },
     "tests-unit.md": {
       "describe": "unit test conventions (loads when working on test files).",
-      "template": ".claude/rules/tests-unit.md"
+      "template": ".claude/rules/tests-unit.md",
+      "output": ".claude/rules/tests-unit.md"
     },
     "tests-e2e.md": {
       "describe": "end-to-end test conventions (loads when working in `tests/`).",
-      "template": ".claude/rules/tests-e2e.md"
+      "template": ".claude/rules/tests-e2e.md",
+      "output": ".claude/rules/tests-e2e.md"
     },
     "context7.md": {
-      "describe": "fetch current library docs through Context7 before answering library questions."
+      "describe": "fetch current library docs through Context7 before answering library questions.",
+      "output": ".claude/rules/context7.md"
     }
   }
 }

@@ -85,10 +85,10 @@
         "devDependencies": ["typescript", "prettier"],
         "rules": ["structure.md"],
         "hooks": [
-          "session-start.sh",
-          "guard-commands.sh",
-          "format-lint-file.sh",
-          "check-all.sh"
+          "session-start",
+          "guard-commands",
+          "format-lint-file",
+          "check-all"
         ],
         "files": [".prettierrc.json", ".prettierignore"]
       }

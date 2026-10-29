@@ -1,36 +1,46 @@
 {
-  "$comment": "Configs and other files modules can bring; the key is the path in the project. Each entry says where it comes from: `install` (a command; it runs when a path in `output` is missing, and those paths go when no module needs the entry any more), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits). An entry with none of these is written by another entry's `install` (listed in its `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out. A copied file has {port}, {css} and {srcDirs} replaced.",
+  "$comment": "Configs and other files modules can bring. Each entry says where it comes from and where it goes: `install` (a command), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits), and `output` (the path, or paths, it writes in the project). An install runs when one of its outputs is missing; outputs go when no module needs the entry any more. An entry with no source is written by another entry's `install` (its output is in that entry's `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out. A copied file has {port}, {css} and {srcDirs} replaced.",
   "files": {
     ".prettierrc.json": {
-      "template": ".prettierrc.json"
+      "template": ".prettierrc.json",
+      "output": ".prettierrc.json"
     },
     ".prettierignore": {
-      "template": ".prettierignore"
+      "template": ".prettierignore",
+      "output": ".prettierignore"
     },
     "eslint.config.mjs": {
-      "template": "eslint.config.mjs"
+      "template": "eslint.config.mjs",
+      "output": "eslint.config.mjs"
     },
     ".oxlintrc.json": {
-      "template": ".oxlintrc.json"
+      "template": ".oxlintrc.json",
+      "output": ".oxlintrc.json"
     },
     "AGENTS.md": {
+      "describe": "tells Claude to read the Next.js docs bundled in node_modules first; `next dev` writes the same block.",
       "copy": "AGENTS.md",
-      "describe": "tells Claude to read the Next.js docs bundled in node_modules first; `next dev` writes the same block."
+      "output": "AGENTS.md"
     },
     "vitest.config.mts": {
-      "template": "vitest.config.mts"
+      "template": "vitest.config.mts",
+      "output": "vitest.config.mts"
     },
     "playwright.config.ts": {
-      "template": "playwright.config.ts"
+      "template": "playwright.config.ts",
+      "output": "playwright.config.ts"
     },
     "tests/seed.spec.ts": {
-      "template": "tests/seed.spec.ts"
+      "template": "tests/seed.spec.ts",
+      "output": "tests/seed.spec.ts"
     },
     "commitlint.config.mjs": {
-      "template": "commitlint.config.mjs"
+      "template": "commitlint.config.mjs",
+      "output": "commitlint.config.mjs"
     },
     "knip.json": {
-      "template": "knip.json"
+      "template": "knip.json",
+      "output": "knip.json"
     }
   }
 }

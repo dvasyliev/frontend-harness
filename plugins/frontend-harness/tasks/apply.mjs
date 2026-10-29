@@ -3,7 +3,7 @@
 // Usage: node apply.mjs <catalog dir> <framework> '<modules JSON>' '<skip_checks JSON>'
 import { execSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 
 const [catalogDir, frameworkId, modulesArg, skipArg] = process.argv.slice(2);
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
@@ -42,13 +42,13 @@ const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
 const merge = (key) => Object.assign({}, ...modules.map(([, m]) => m[key] ?? {}));
 const collectDep = (key) => modules.flatMap(([, m]) => m.dependencies?.[key] ?? []);
 
-// The catalogs a module names entries from, and where each entry goes in the project.
+// The catalogs a module names entries from.
 const kinds = {
-  skills: { file: "skills.json", key: "skills", target: (name) => `.claude/skills/${name}` },
-  hooks: { file: "hooks.json", key: "hooks", target: (name) => `.claude/hooks/${name}` },
-  githooks: { file: "githooks.json", key: "githooks", target: (name) => `.githooks/${name}` },
-  rules: { file: "rules.json", key: "rules", target: (name) => `.claude/rules/${name}` },
-  files: { file: "files.json", key: "files", target: (name) => name },
+  skills: { file: "skills.json", key: "skills" },
+  hooks: { file: "hooks.json", key: "hooks" },
+  githooks: { file: "githooks.json", key: "githooks" },
+  rules: { file: "rules.json", key: "rules" },
+  files: { file: "files.json", key: "files" },
   mcp: { file: "mcp.json", key: "servers" },
   plugins: { file: "plugins.json", key: "plugins" },
 };
@@ -63,13 +63,16 @@ for (const [kind, k] of Object.entries(kinds)) {
     })
     .filter(([, e]) => !e.frameworks || e.frameworks.includes(frameworkId));
 }
-const entries = Object.entries(chosen).flatMap(([kind, list]) => list.map(([name, e]) => ({ kind, name, e, target: kinds[kind].target?.(name) })));
-const output = (x) => x.e.output ?? (x.target ? [x.target] : []);
+// `output`: the path (or paths) an entry writes in the project.
+const entries = Object.entries(chosen).flatMap(([kind, list]) => list.map(([name, e]) => ({ kind, name, e })));
+const output = (x) => [x.e.output ?? []].flat();
 const installs = entries.filter((x) => x.e.install);
 const created = installs.flatMap(output);
 for (const x of entries) {
+  if ((x.e.copy || x.e.template) && typeof x.e.output !== "string") fail(`${x.kind} entry "${x.name}" needs one output path`);
   if (x.e.install || x.e.copy || x.e.template || x.e.server || x.kind === "plugins") continue;
-  if (!created.includes(x.target)) fail(`${x.kind} entry "${x.name}" has no install, copy or template, and no install has ${x.target} in its output`);
+  const missing = output(x).filter((path) => !created.includes(path));
+  if (!output(x).length || missing.length) fail(`${x.kind} entry "${x.name}" has no install, copy or template, and no install outputs ${missing.join(", ") || "it"}`);
 }
 
 // What the previous run wrote, so what no module needs any more goes too.
@@ -87,7 +90,7 @@ writeJson("package.json", pkg);
 
 // Paths: copied entries and what installs create. One no module needs any more is removed.
 const copies = entries.filter((x) => x.e.copy);
-const paths = [...new Set([...copies.map((x) => x.target), ...created])];
+const paths = [...new Set([...copies.map((x) => x.e.output), ...created])];
 const lock = readJson("skills-lock.json", null);
 for (const path of previous.paths) {
   if (paths.includes(path)) continue;
@@ -96,27 +99,28 @@ for (const path of previous.paths) {
 }
 if (lock) writeJson("skills-lock.json", lock);
 
-// Copy: library/<copy> to the entry's target, whole; a file has {port}, {css} and {srcDirs} replaced.
+// Copy: library/<copy> to the entry's output, whole; a file has {port}, {css} and {srcDirs} replaced.
 const values = { port: String(framework.port), css: framework.css, srcDirs: framework.srcDirs.join(" ") };
 for (const x of copies) {
   const from = join(library, x.e.copy);
   if (!existsSync(from)) fail(`${x.kind} entry "${x.name}": library/${x.e.copy} is missing`);
-  rmSync(x.target, { recursive: true, force: true });
-  mkdirSync(dirname(x.target), { recursive: true });
-  if (statSync(from).isDirectory()) cpSync(from, x.target, { recursive: true });
-  else writeFileSync(x.target, readFileSync(from, "utf8").replace(/\{(port|css|srcDirs)\}/g, (_, key) => values[key]));
+  rmSync(x.e.output, { recursive: true, force: true });
+  mkdirSync(dirname(x.e.output), { recursive: true });
+  if (statSync(from).isDirectory()) cpSync(from, x.e.output, { recursive: true });
+  else writeFileSync(x.e.output, readFileSync(from, "utf8").replace(/\{(port|css|srcDirs)\}/g, (_, key) => values[key]));
 }
 
-// Template: Copier renders it; one missing here means copier.yml `_exclude` and the catalog disagree.
+// Template: Copier renders template/<template> at the same path; one missing here means copier.yml `_exclude` and the catalog disagree.
 for (const x of entries.filter((x) => x.e.template)) {
-  if (!existsSync(x.e.template)) fail(`template "${x.e.template}" was not rendered; check _exclude in copier.yml`);
+  if (x.e.template !== x.e.output) fail(`${x.kind} entry "${x.name}": Copier writes a template to its own path, so output must be "${x.e.template}"`);
+  if (!existsSync(x.e.output)) fail(`template "${x.e.template}" was not rendered; check _exclude in copier.yml`);
 }
 
 // .claude/settings.json: the harness owns `hooks` and its plugins; every other key stays.
 const settings = readJson(".claude/settings.json", {});
 settings.hooks = {};
-for (const [name, { event, matcher, timeout, statusMessage }] of chosen.hooks) {
-  const command = { type: "command", command: `bash "$CLAUDE_PROJECT_DIR/.claude/hooks/${name}"`, timeout, statusMessage };
+for (const [, { output, event, matcher, timeout, statusMessage }] of chosen.hooks) {
+  const command = { type: "command", command: `bash "$CLAUDE_PROJECT_DIR/${output}"`, timeout, statusMessage };
   (settings.hooks[event] ??= []).push({ ...(matcher && { matcher }), hooks: [command] });
 }
 const plugins = chosen.plugins.map(([name]) => name);
@@ -178,7 +182,7 @@ const md = [
   "",
   "Claude Code hooks in `.claude/hooks/`, set in `.claude/settings.json`. A red result blocks you until it is fixed.",
   "",
-  ...chosen.hooks.map(([name, e]) => `- \`${name}\` ${hookDocs(e.describe)}`),
+  ...chosen.hooks.map(([, e]) => `- \`${basename(e.output)}\` ${hookDocs(e.describe)}`),
   ...(chosen.githooks.length ? ["", "Git hooks in `.githooks/`, turned on by `npm install`:", "", list("githooks")] : []),
   "",
   "## Skills in `.claude/skills/`",

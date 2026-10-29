@@ -1,13 +1,15 @@
 {
-  "$comment": "The git hooks modules can bring; each goes to .githooks/<name>. Each entry says where it comes from: `install` (a command; it runs when a path in `output` is missing, and those paths go when no module needs the entry any more), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits). An entry with none of these is written by another entry's `install` (listed in its `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out.",
+  "$comment": "The git hooks modules can bring; each goes to .githooks/<name>. Each entry says where it comes from and where it goes: `install` (a command), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits), and `output` (the path, or paths, it writes in the project). An install runs when one of its outputs is missing; outputs go when no module needs the entry any more. An entry with no source is written by another entry's `install` (its output is in that entry's `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out.",
   "githooks": {
     "pre-push": {
       "describe": "runs `npm run verify`; the push is cancelled if it fails.",
-      "copy": "githooks/pre-push"
+      "copy": "githooks/pre-push",
+      "output": ".githooks/pre-push"
     },
     "commit-msg": {
       "describe": "checks the commit message with commitlint.",
-      "copy": "githooks/commit-msg"
+      "copy": "githooks/commit-msg",
+      "output": ".githooks/commit-msg"
     }
   }
 }
