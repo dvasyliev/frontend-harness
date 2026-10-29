@@ -1,5 +1,5 @@
-# Harness template. The `superharness` skill fills these answers from modules.json;
-# run by hand: uvx copier copy --trust -d stack=next -d 'modules=["core"]' <this repo> .
+# Harness template. The `frontend-harness` skill fills these answers from modules.json;
+# run by hand: uvx copier copy --trust -d framework=next -d 'modules=["core"]' <this repo> .
 _subdirectory: template
 _answers_file: .copier-answers.yml
 # Every file in template/ is rendered, so none needs a .jinja suffix.
@@ -7,7 +7,7 @@ _templates_suffix: ""
 _tasks:
   # On install: writes the JSON-driven files (settings.json, .mcp.json, .claude/harness.json,
   # .claude/harness.md, .claude/skills) and adds npm scripts and packages.
-  - command: &apply "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/modules.json' '{{ stack }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}'"
+  - command: &apply "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/modules.json' '{{ framework }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}'"
     when: "{{ _copier_operation == 'copy' }}"
 _migrations:
   # On update: the same, but after Copier has merged the project's own changes back in,
@@ -15,10 +15,10 @@ _migrations:
   - command: *apply
     when: "{{ _stage == 'after' }}"
 
-stack:
+framework:
   type: str
-  help: Project stack
-  choices: [next, vite]
+  help: Frontend framework (react is React + Vite)
+  choices: [react, next]
 
 modules:
   type: json

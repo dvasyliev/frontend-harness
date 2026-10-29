@@ -5,11 +5,11 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { "@": path.resolve(import.meta.dirname{{ '' if stack == 'next' else ', "src"' }}) },
+    alias: { "@": path.resolve(import.meta.dirname{{ '' if framework == 'next' else ', "src"' }}) },
   },
   test: {
     environment: "jsdom",
     // Unit tests sit next to the unit. tests/ holds the Playwright end-to-end tests.
-    include: ["{{ '{app,lib}' if stack == 'next' else 'src' }}/**/*.spec.{ts,tsx}"],
+    include: ["{{ '{app,lib}' if framework == 'next' else 'src' }}/**/*.spec.{ts,tsx}"],
   },
 });

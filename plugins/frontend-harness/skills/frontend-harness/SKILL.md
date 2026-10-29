@@ -1,6 +1,6 @@
 ---
-name: superharness
-description: Use when the user wants to install, update, add or remove parts of their Claude Code harness (hooks, rules, skills, checks, commitlint, Playwright, Context7) in a Next.js or Vite project, or move a harness fix into the shared template.
+name: frontend-harness
+description: Use when the user wants to install, update, add or remove parts of their Claude Code harness (hooks, rules, skills, checks, commitlint, Playwright, Context7) in a React (Vite) or Next.js project, or move a harness fix into the shared template.
 ---
 
 # Harness
@@ -9,17 +9,17 @@ The harness is a Copier template. This skill picks the modules that fit the proj
 
 **Template:** `$HARNESS_TEMPLATE` if set, else `${CLAUDE_PLUGIN_ROOT}` (a git repo; versions are its `vX.Y.Z` tags). Never use the copy in the plugin cache: it has no git history, so `copier update` cannot merge.
 
-**Catalog:** `<template>/modules.json`. Every module, stack, check, script, package, plugin and MCP server is listed there. Read it; do not guess.
+**Catalog:** `<template>/modules.json`. Every module, framework, check, script, package, plugin and MCP server is listed there. Read it; do not guess.
 
 ## 1. Look at the project
 
 1. Run `git status --short`. If anything is uncommitted, stop and tell the user: Copier needs a clean tree, and the changes may be another agent's.
-2. If `.copier-answers.yml` exists, this is an **update**: read its `stack`, `modules`, `skip_checks` and `_commit`. Otherwise it is an **install**.
-3. Pick the stack from `stacks.*.detect` against `package.json`. If none or both match, ask.
+2. If `.copier-answers.yml` exists, this is an **update**: read its `framework`, `modules`, `skip_checks` and `_commit`. Otherwise it is an **install**.
+3. Ask which framework the project uses (`AskUserQuestion`, one option per entry in `frameworks`, its `describe` as description). Put the one `frameworks.*.detect` finds in `package.json` first, marked "(detected)"; `next` wins over `react`, since a Next.js project has both. On an update, the answer in `.copier-answers.yml` is the detected one. The framework decides which modules, configs, skills and plugins step 2 offers.
 
 ## 2. Choose modules
 
-For each module whose `stacks` (if any) include the project's stack, mark it:
+For each module whose `frameworks` (if any) include the project's framework, mark it:
 
 - **required:** always installed; do not ask.
 - **suggested:** its `detect` matches `package.json`, or it is `recommended` and has no `detect`.
@@ -29,7 +29,7 @@ Ask with `AskUserQuestion`, `multiSelect: true`, up to 4 modules per question (s
 
 Add every module a chosen one `requires`, and tell the user which ones you added and why.
 
-A `group` in `modules.json` (the linter) takes exactly `pick` modules: choose the one the project already uses (its `detect`), else the group's `default` for the stack. Ask only when the project has both or the user wants the other.
+A `group` in `modules.json` (the linter) takes exactly `pick` modules: choose the one the project already uses (its `detect`), else the group's `default` for the framework. Ask only when the project has both or the user wants the other.
 
 Ask about `skip_checks` only when the user asks to turn a check off, or in step 5.
 
@@ -39,7 +39,7 @@ Install:
 
 ```bash
 uvx copier copy --trust --overwrite --defaults \
-  -d stack=<stack> -d 'modules=[...]' -d 'skip_checks=[...]' -d docs_language=<language> \
+  -d framework=<framework> -d 'modules=[...]' -d 'skip_checks=[...]' -d docs_language=<language> \
   <template> .
 ```
 
@@ -76,12 +76,13 @@ Copier writes `CLAUDE.md` only when there is none. If the project already had on
 A fix to a harness-owned file (anything the template writes, or the hooks, rules and skills it installs) goes into the template, not only into the project, or the next update overwrites it.
 
 1. Make the change in `<template>`:
-   - `template/`: every file a project may edit: configs (ESLint, oxlint, Prettier, Vitest, Playwright, knip, commitlint), `.claude/rules/`, `CLAUDE.md`. Copier renders them per stack and modules and merges them with the project's edits. A file only some modules use goes in copier.yml `_exclude` and in that module's `templates`.
+   - `template/`: every file a project may edit: configs (ESLint, oxlint, Prettier, Vitest, Playwright, knip, commitlint), `.claude/rules/`, `CLAUDE.md`. Copier renders them per framework and modules and merges them with the project's edits. A file only some modules use goes in copier.yml `_exclude` and in that module's `templates`.
    - `library/`: files projects never edit, copied whole to the same path: hooks in `library/.claude/hooks/`, git hooks in `library/.githooks/`, `AGENTS.md`, skills, MCP servers.
    - Skills: in `library/`, run `npx skills add <owner/repo> --skill <name> -a claude-code` to add one, `npx skills update` to update them (it reads `library/skills-lock.json`), or edit `library/.claude/skills/<name>/` by hand.
    - MCP servers: in `library/`, run `claude mcp add --scope project <name> ...`, or edit `library/.mcp.json`.
    - `modules.json`: which module brings which template, file, skill, server, check, script, package or plugin. A new file reaches no project until a module lists it.
    - `tasks/apply.mjs`: what is generated from `modules.json`.
-2. Try it on a scratch project: `uvx copier copy --trust --defaults -d stack=<stack> -d 'modules=[...]' <template> <scratch>` (with `HARNESS_NO_INSTALL=1` to skip npm installs).
+   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and in copier.yml `framework` choices, its branch in each `template/` file that checks `framework`, `frameworks` on the modules that fit only some frameworks, and its skills in `library/`.
+2. Try it on a scratch project: `uvx copier copy --trust --defaults -d framework=<framework> -d 'modules=[...]' <template> <scratch>` (with `HARNESS_NO_INSTALL=1` to skip npm installs).
 3. Commit in `<template>` and tag the next version (`git tag vX.Y.Z`; a new module or answer is a minor version, a fix a patch).
 4. Update the project with step 3's update command.

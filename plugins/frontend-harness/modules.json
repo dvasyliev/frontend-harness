@@ -1,6 +1,6 @@
 {
-  "$comment": "The harness catalog. The superharness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `templates` (configs and .claude/rules) live in template/: Copier renders them per stack and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. Its `files` and `skills` live in library/ (laid out like a project) and are copied whole to the same path, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per stack when the project shows none.",
-  "stacks": {
+  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `templates` (configs and .claude/rules) live in template/: Copier renders them per framework and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. Its `files` and `skills` live in library/ (laid out like a project) and are copied whole to the same path, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
+  "frameworks": {
     "next": {
       "describe": "Next.js App Router",
       "port": 3000,
@@ -10,12 +10,12 @@
       },
       "css": "./app/globals.css"
     },
-    "vite": {
+    "react": {
       "describe": "React + Vite",
       "port": 5173,
       "srcDirs": ["src"],
       "detect": {
-        "devDependencies": ["vite"]
+        "dependencies": ["react"]
       },
       "css": "./src/index.css"
     }
@@ -26,7 +26,7 @@
       "pick": 1,
       "default": {
         "next": "eslint",
-        "vite": "oxlint"
+        "react": "oxlint"
       }
     }
   },
@@ -114,9 +114,9 @@
         "eslint-config-prettier",
         "typescript-eslint"
       ],
-      "stackDevDependencies": {
+      "frameworkDevDependencies": {
         "next": ["eslint-config-next", "eslint-plugin-boundaries"],
-        "vite": [
+        "react": [
           "@eslint/js",
           "globals",
           "eslint-plugin-react-hooks",
@@ -184,7 +184,7 @@
     },
     "next-rules": {
       "describe": "Next.js page performance rule (streaming, lists in batches, caching, media) and the note to read the bundled Next.js docs.",
-      "stacks": ["next"],
+      "frameworks": ["next"],
       "recommended": true,
       "detect": {
         "dependencies": ["next"]

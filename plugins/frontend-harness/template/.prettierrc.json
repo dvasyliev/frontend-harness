@@ -1,7 +1,7 @@
 {%- if 'tailwind' in modules -%}
 {
   "plugins": ["prettier-plugin-tailwindcss"],
-  "tailwindStylesheet": "{{ './app/globals.css' if stack == 'next' else './src/index.css' }}"
+  "tailwindStylesheet": "{{ './app/globals.css' if framework == 'next' else './src/index.css' }}"
 }
 {%- else -%}
 {}

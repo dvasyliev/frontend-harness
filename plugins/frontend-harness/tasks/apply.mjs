@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // Copier task: writes everything modules.json drives into the project in the current folder.
-// Usage: node apply.mjs <modules.json> <stack> '<modules JSON>' '<skip_checks JSON>'
+// Usage: node apply.mjs <modules.json> <framework> '<modules JSON>' '<skip_checks JSON>'
 import { execSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-const [catalogPath, stackId, modulesArg, skipArg] = process.argv.slice(2);
+const [catalogPath, frameworkId, modulesArg, skipArg] = process.argv.slice(2);
 const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
-const stack = catalog.stacks[stackId];
-if (!stack) fail(`unknown stack "${stackId}"`);
+const framework = catalog.frameworks[frameworkId];
+if (!framework) fail(`unknown framework "${frameworkId}"`);
 const skip = new Set(JSON.parse(skipArg || "[]"));
 // Skills and MCP servers live in library/, laid out like a project (.claude/skills, skills-lock.json, .mcp.json)
 // so `npx skills add|update -a claude-code` and `claude mcp add --scope project` work there.
@@ -28,7 +28,7 @@ for (const [id, m] of Object.entries(catalog.modules)) if (m.required) wanted.ad
 for (const id of wanted) {
   const m = catalog.modules[id];
   if (!m) fail(`unknown module "${id}"`);
-  if (m.stacks && !m.stacks.includes(stackId)) fail(`module "${id}" does not fit stack "${stackId}"`);
+  if (m.frameworks && !m.frameworks.includes(frameworkId)) fail(`module "${id}" does not fit framework "${frameworkId}"`);
   for (const dep of m.requires ?? []) wanted.add(dep);
 }
 const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id));
@@ -37,7 +37,7 @@ const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id))
 for (const [group, g] of Object.entries(catalog.groups ?? {})) {
   const members = Object.entries(catalog.modules).filter(([, m]) => m.group === group).map(([id]) => id);
   const chosen = members.filter((id) => wanted.has(id));
-  if (chosen.length !== g.pick) fail(`choose ${g.pick} ${group} of ${members.join(", ")} (default for ${stackId}: ${g.default?.[stackId]})`);
+  if (chosen.length !== g.pick) fail(`choose ${g.pick} ${group} of ${members.join(", ")} (default for ${frameworkId}: ${g.default?.[frameworkId]})`);
 }
 const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
 const merge = (key) => Object.assign({}, ...modules.map(([, m]) => m[key] ?? {}));
@@ -48,7 +48,7 @@ const previous = { scripts: [], files: [], skills: [], plugins: [], mcp: [], ...
 // package.json: harness scripts are set, the project's own are kept.
 const pkg = readJson("package.json");
 const scripts = Object.fromEntries(
-  Object.entries(merge("scripts")).map(([name, s]) => [name, s.run.replace("{srcDirs}", stack.srcDirs.join(" "))]),
+  Object.entries(merge("scripts")).map(([name, s]) => [name, s.run.replace("{srcDirs}", framework.srcDirs.join(" "))]),
 );
 pkg.scripts ??= {};
 for (const name of previous.scripts) if (!(name in scripts)) delete pkg.scripts[name];
@@ -93,7 +93,7 @@ for (const name of skills) {
 for (const path of collect("templates")) if (!existsSync(path)) fail(`template "${path}" was not rendered; check _exclude in copier.yml`);
 
 // Files: copied whole from library/ to the same path.
-const values = { port: String(stack.port), css: stack.css, srcDirs: stack.srcDirs.join(" ") };
+const values = { port: String(framework.port), css: framework.css, srcDirs: framework.srcDirs.join(" ") };
 const files = [...new Set(collect("files"))];
 for (const path of previous.files ?? []) if (!files.includes(path)) rmSync(path, { force: true });
 for (const path of files) {
@@ -121,8 +121,8 @@ const checks = collect("checks").filter((c) => !skip.has(c.name));
 const fileChecks = collect("fileChecks").filter((c) => !skip.has(c.name));
 writeJson(".claude/harness.json", {
   $comment: "Written by the harness template (tasks/apply.mjs). Do not edit; change the Copier answers instead.",
-  stack: stackId,
-  port: stack.port,
+  framework: frameworkId,
+  port: framework.port,
   modules: modules.map(([id]) => id),
   skipChecks: [...skip],
   checks,
@@ -147,7 +147,7 @@ const md = [
   "## Commands",
   "",
   "```bash",
-  "npm run dev".padEnd(24) + `# http://localhost:${stack.port}`,
+  "npm run dev".padEnd(24) + `# http://localhost:${framework.port}`,
   ...scriptDocs,
   "```",
   "",
@@ -186,13 +186,13 @@ try {
   // Not a git repo yet; `npm install` runs `prepare` later.
 }
 
-console.log(`harness: ${modules.map(([id]) => id).join(", ")} on ${stackId}`);
+console.log(`harness: ${modules.map(([id]) => id).join(", ")} on ${frameworkId}`);
 
 // npm packages last, so every file above is written even when the install fails.
 // Install only what the project does not have yet.
 const have = { ...pkg.dependencies, ...pkg.devDependencies };
-const stackDeps = modules.flatMap(([, m]) => m.stackDevDependencies?.[stackId] ?? []);
-const missing = [...new Set([...collect("devDependencies"), ...stackDeps])].filter((p) => !(p in have));
+const frameworkDeps = modules.flatMap(([, m]) => m.frameworkDevDependencies?.[frameworkId] ?? []);
+const missing = [...new Set([...collect("devDependencies"), ...frameworkDeps])].filter((p) => !(p in have));
 if (missing.length && !process.env.HARNESS_NO_INSTALL) {
   try {
     execSync(`npm install --save-dev ${missing.join(" ")}`, { stdio: "inherit" });

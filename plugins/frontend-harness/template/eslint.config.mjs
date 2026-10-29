@@ -1,4 +1,4 @@
-{%- if stack == 'next' -%}
+{%- if framework == 'next' -%}
 import { defineConfig, globalIgnores } from "eslint/config";
 import boundaries from "eslint-plugin-boundaries";
 import nextVitals from "eslint-config-next/core-web-vitals";
