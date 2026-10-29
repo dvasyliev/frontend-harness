@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.30.0 (2026-10-29)
+
+### Features
+
+- give each project its own dev server port (40a8697)
+
 ## 0.29.3 (2026-10-29)
 
 ### Fixes
