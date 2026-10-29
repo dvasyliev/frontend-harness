@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 // Starting point for generated end-to-end tests: opens the home page and checks it
 // for accessibility problems (WCAG 2.1 A and AA).

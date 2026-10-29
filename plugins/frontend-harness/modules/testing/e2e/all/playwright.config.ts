@@ -10,7 +10,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   reporter: "list",
-  use: { baseURL, trace: "on-first-retry" },
+  // The tests never retry, so a trace is kept for every failure instead.
+  use: { baseURL, trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   // Reuse the dev server when one already listens on that port; never start a second.
   webServer: {

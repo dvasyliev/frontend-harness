@@ -7,5 +7,6 @@ paths:
 # End-to-end tests
 
 - End-to-end tests live in `tests/<feature>/<scenario>.spec.ts`, one per file, written with the `playwright-cli` skill starting from `tests/seed.spec.ts`. Assertions come from the plan's `- expect:` lines. Use `getByRole`, `getByLabel`, `getByTestId`, never CSS selectors. Each page a test opens is also checked with axe, as in `tests/seed.spec.ts`.
+- Specs import `test` and `expect` from `tests/fixtures.ts`, not `@playwright/test`: after every `goto`, `reload` and `goBack` it waits until React has taken over every link, button and field, so no click lands before React handles it.
 - `playwright.config.ts` reuses the running dev server (port from `PORT`, else the `port` in `.claude/harness.json`) and starts one only if none is running.
 - The `pre-push` git hook runs `npm run verify`; the push is cancelled if it fails.
