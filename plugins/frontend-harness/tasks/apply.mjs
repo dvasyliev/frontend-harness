@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 // Copier task: writes everything the catalog drives into the project in the current folder.
-// Usage: node apply.mjs <catalog dir> <framework> '<modules JSON>' '<skip_checks JSON>'
+// Usage: node apply.mjs <catalog dir> <framework> '<modules JSON>' '<skip_checks JSON>' <docs_language>
 import { execSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 
-const [catalogDir, frameworkId, modulesArg, skipArg] = process.argv.slice(2);
+const [catalogDir, frameworkId, modulesArg, skipArg, docsLanguage] = process.argv.slice(2);
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
 const writeJson = (path, data) => writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
 const catalog = readJson(join(catalogDir, "modules.json"));
 const framework = catalog.frameworks[frameworkId];
 if (!framework) fail(`unknown framework "${frameworkId}"`);
 const skip = new Set(JSON.parse(skipArg || "[]"));
-// Files the harness copies whole: plain folders (skills/, hooks/, githooks/), not laid out like a project.
+// The entries' inputs: plain folders (skills/, hooks/, githooks/, rules/, files/), not laid out like a project.
 const library = join(catalogDir, "..", "library");
 const noInstall = Boolean(process.env.HARNESS_NO_INSTALL);
 
@@ -31,8 +31,7 @@ for (const id of wanted) {
   for (const dep of m.dependencies?.modules ?? []) wanted.add(dep);
 }
 const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id));
-// Each group (the linter) takes exactly `pick` of its modules. Copier renders a module's
-// templates from the answers, so a missing one is an error here, not a silent default.
+// Each group (the linter) takes exactly `pick` of its modules; a missing one is an error, not a silent default.
 for (const [group, g] of Object.entries(catalog.groups ?? {})) {
   const members = Object.entries(catalog.modules).filter(([, m]) => m.group === group).map(([id]) => id);
   const chosen = members.filter((id) => wanted.has(id));
@@ -69,10 +68,10 @@ const output = (x) => [x.e.output ?? []].flat();
 const installs = entries.filter((x) => x.e.install);
 const created = installs.flatMap(output);
 for (const x of entries) {
-  if ((x.e.copy || x.e.template) && typeof x.e.output !== "string") fail(`${x.kind} entry "${x.name}" needs one output path`);
-  if (x.e.install || x.e.copy || x.e.template || x.e.server || x.kind === "plugins") continue;
+  if (x.e.input && typeof x.e.output !== "string") fail(`${x.kind} entry "${x.name}" needs one output path`);
+  if (x.e.install || x.e.input || x.e.server || x.kind === "plugins") continue;
   const missing = output(x).filter((path) => !created.includes(path));
-  if (!output(x).length || missing.length) fail(`${x.kind} entry "${x.name}" has no install, copy or template, and no install outputs ${missing.join(", ") || "it"}`);
+  if (!output(x).length || missing.length) fail(`${x.kind} entry "${x.name}" has no install or input, and no install outputs ${missing.join(", ") || "it"}`);
 }
 
 // What the previous run wrote, so what no module needs any more goes too.
@@ -81,39 +80,83 @@ const previous = { scripts: [], paths: [], plugins: [], mcp: [], ...readJson(".c
 // package.json: harness scripts are set, the project's own are kept.
 const pkg = readJson("package.json");
 const scripts = Object.fromEntries(
-  Object.entries(merge("scripts")).map(([name, s]) => [name, s.run.replace("{srcDirs}", framework.srcDirs.join(" "))]),
+  Object.entries(merge("scripts")).map(([name, s]) => [name, s.command.replace("{srcDirs}", framework.srcDirs.join(" "))]),
 );
 pkg.scripts ??= {};
 for (const name of previous.scripts) if (!(name in scripts)) delete pkg.scripts[name];
 Object.assign(pkg.scripts, scripts);
 writeJson("package.json", pkg);
 
-// Paths: copied entries and what installs create. One no module needs any more is removed.
-const copies = entries.filter((x) => x.e.copy);
-const paths = [...new Set([...copies.map((x) => x.e.output), ...created])];
+// Paths: the inputs' outputs and what installs create. One no module needs any more is removed,
+// except a merged file the project has edited.
+const inputs = entries.filter((x) => x.e.input);
+const paths = [...new Set([...inputs.map((x) => x.e.output), ...created])];
+const basePath = (path) => join(".claude/harness-base", path);
+const edited = (path) => existsSync(basePath(path)) && existsSync(path) && readFileSync(path, "utf8") !== readFileSync(basePath(path), "utf8");
+const notes = [];
 const lock = readJson("skills-lock.json", null);
 for (const path of previous.paths) {
   if (paths.includes(path)) continue;
-  rmSync(path, { recursive: true, force: true });
+  if (edited(path)) notes.push(`${path}: no module needs it any more, but the project edited it, so it stays`);
+  else rmSync(path, { recursive: true, force: true });
+  rmSync(basePath(path), { force: true });
   if (lock?.skills && path.startsWith(".claude/skills/")) delete lock.skills[path.slice(".claude/skills/".length)];
 }
 if (lock) writeJson("skills-lock.json", lock);
 
-// Copy: library/<copy> to the entry's output, whole; a file has {port}, {css} and {srcDirs} replaced.
-const values = { port: String(framework.port), css: framework.css, srcDirs: framework.srcDirs.join(" ") };
-for (const x of copies) {
-  const from = join(library, x.e.copy);
-  if (!existsSync(from)) fail(`${x.kind} entry "${x.name}": library/${x.e.copy} is missing`);
-  rmSync(x.e.output, { recursive: true, force: true });
-  mkdirSync(dirname(x.e.output), { recursive: true });
-  if (statSync(from).isDirectory()) cpSync(from, x.e.output, { recursive: true });
-  else writeFileSync(x.e.output, readFileSync(from, "utf8").replace(/\{(port|css|srcDirs)\}/g, (_, key) => values[key]));
+// Inputs: a folder is copied as it is; a file has its Jinja filled in (tasks/render.py), then reaches its output by `mode`.
+for (const x of inputs) if (!existsSync(join(library, x.e.input))) fail(`${x.kind} entry "${x.name}": library/${x.e.input} is missing`);
+const isFile = (x) => statSync(join(library, x.e.input)).isFile();
+const fileInputs = inputs.filter(isFile);
+let rendered = {};
+try {
+  const request = JSON.stringify({
+    context: { framework: frameworkId, modules: modules.map(([id]) => id), docs_language: docsLanguage },
+    files: Object.fromEntries(fileInputs.map((x) => [x.e.output, join(library, x.e.input)])),
+  });
+  const script = join(catalogDir, "..", "tasks", "render.py");
+  rendered = JSON.parse(execSync(`uv run --quiet --no-project --with jinja2 python "${script}"`, { input: request, encoding: "utf8" }));
+} catch (error) {
+  fail(`filling in the Jinja failed: ${error.message}`);
 }
-
-// Template: Copier renders template/<template> at the same path; one missing here means copier.yml `_exclude` and the catalog disagree.
-for (const x of entries.filter((x) => x.e.template)) {
-  if (x.e.template !== x.e.output) fail(`${x.kind} entry "${x.name}": Copier writes a template to its own path, so output must be "${x.e.template}"`);
-  if (!existsSync(x.e.output)) fail(`template "${x.e.template}" was not rendered; check _exclude in copier.yml`);
+const write = (path, text) => {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, text);
+};
+for (const x of inputs) {
+  const path = x.e.output;
+  if (!isFile(x)) {
+    rmSync(path, { recursive: true, force: true });
+    mkdirSync(dirname(path), { recursive: true });
+    cpSync(join(library, x.e.input), path, { recursive: true });
+    continue;
+  }
+  const next = rendered[path];
+  const mode = x.e.mode ?? "override";
+  if (mode === "merge" && existsSync(path)) {
+    const current = readFileSync(path, "utf8");
+    if (!existsSync(basePath(path))) {
+      // The project had this file before the harness: leave it for the skill to merge.
+      if (current !== next) {
+        notes.push(`${path}: the project already had it; merge the harness version by hand (saved as ${basePath(path)}.new)`);
+        write(`${basePath(path)}.new`, next);
+        continue;
+      }
+    } else if (current !== readFileSync(basePath(path), "utf8")) {
+      // Project edits and harness changes: three-way merge, as git merges branches.
+      write(`${basePath(path)}.next`, next);
+      try {
+        execSync(`git merge-file -L project -L last-install -L harness "${path}" "${basePath(path)}" "${basePath(path)}.next"`, { stdio: "ignore" });
+      } catch {
+        notes.push(`${path}: merge conflicts; resolve the <<<<<<< markers`);
+      }
+      rmSync(`${basePath(path)}.next`);
+      write(basePath(path), next);
+      continue;
+    }
+  }
+  write(path, next);
+  if (mode === "merge") write(basePath(path), next);
 }
 
 // .claude/settings.json: the harness owns `hooks` and its plugins; every other key stays.
@@ -157,8 +200,8 @@ writeJson(".claude/harness.json", {
 });
 
 // .claude/harness.md: the always-loaded summary CLAUDE.md imports.
-const list = (kind) => chosen[kind].map(([name, e]) => `- \`${name}\`: ${e.describe}`).join("\n");
-const scriptDocs = Object.entries(merge("scripts")).map(([name, s]) => `npm run ${name}`.padEnd(24) + `# ${s.describe}`);
+const list = (kind) => chosen[kind].map(([name, e]) => `- \`${name}\`: ${e.description}`).join("\n");
+const scriptDocs = Object.entries(merge("scripts")).map(([name, s]) => `npm run ${name}`.padEnd(24) + `# ${s.description}`);
 const sections = merge("sections");
 const hookDocs = (text) =>
   text.replace("{checks}", checks.map((c) => c.name).join(", ")).replace("{fileChecks}", fileChecks.map((c) => c.name).join(", "));
@@ -182,7 +225,7 @@ const md = [
   "",
   "Claude Code hooks in `.claude/hooks/`, set in `.claude/settings.json`. A red result blocks you until it is fixed.",
   "",
-  ...chosen.hooks.map(([, e]) => `- \`${basename(e.output)}\` ${hookDocs(e.describe)}`),
+  ...chosen.hooks.map(([, e]) => `- \`${basename(e.output)}\` ${hookDocs(e.description)}`),
   ...(chosen.githooks.length ? ["", "Git hooks in `.githooks/`, turned on by `npm install`:", "", list("githooks")] : []),
   "",
   "## Skills in `.claude/skills/`",
@@ -205,6 +248,7 @@ try {
 }
 
 console.log(`harness: ${modules.map(([id]) => id).join(", ")} on ${frameworkId}`);
+for (const note of notes) console.log(`harness: ${note}`);
 
 // npm packages last, so every file above is written even when the install fails.
 // Install only what the project does not have yet.

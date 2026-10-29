@@ -1,8 +1,8 @@
 {
-  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. Each module is one thing the project gets; `dependencies` lists everything it needs by name: other `modules`, `plugins` (plugins.json), `skills` (skills.json), `mcp` servers (mcp.json), `rules` (rules.json), `files` (files.json: configs and other files), `hooks` (hooks.json), `githooks` (githooks.json), and npm `devDependencies` (and `frameworkDevDependencies`). Each of those catalogs says how its entries get into the project: `install`, `copy` or `template`. copier.yml `_exclude` leaves out the template files of unselected modules. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
+  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. Each module is one thing the project gets; `dependencies` lists everything it needs by name: other `modules`, `plugins` (plugins.json), `skills` (skills.json), `mcp` servers (mcp.json), `rules` (rules.json), `files` (files.json: configs and other files), `hooks` (hooks.json), `githooks` (githooks.json), and npm `devDependencies` (and `frameworkDevDependencies`). Each of those catalogs says how its entries get into the project: `install` or `input`, with `output` and `mode`. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
   "frameworks": {
     "nextjs": {
-      "describe": "Next.js App Router",
+      "description": "Next.js App Router",
       "port": 3000,
       "srcDirs": ["app", "lib"],
       "detect": {
@@ -11,7 +11,7 @@
       "css": "./app/globals.css"
     },
     "react": {
-      "describe": "React (Vite)",
+      "description": "React (Vite)",
       "port": 5173,
       "srcDirs": ["src"],
       "detect": {
@@ -22,7 +22,7 @@
   },
   "groups": {
     "linter": {
-      "describe": "The linter the hooks and checks run.",
+      "description": "The linter the hooks and checks run.",
       "pick": 1,
       "default": {
         "nextjs": "eslint",
@@ -32,32 +32,32 @@
   },
   "modules": {
     "core": {
-      "describe": "Claude Code hooks, the structure rule, typecheck and Prettier on every edit and turn.",
+      "description": "Claude Code hooks, the structure rule, typecheck and Prettier on every edit and turn.",
       "required": true,
       "scripts": {
         "typecheck": {
-          "run": "tsc -b",
-          "describe": "TypeScript; never `tsc --noEmit`"
+          "command": "tsc -b",
+          "description": "TypeScript; never `tsc --noEmit`"
         },
         "format": {
-          "run": "prettier --write .",
-          "describe": "Prettier, whole repo"
+          "command": "prettier --write .",
+          "description": "Prettier, whole repo"
         },
         "format:check": {
-          "run": "prettier --check .",
-          "describe": "Prettier check only"
+          "command": "prettier --check .",
+          "description": "Prettier check only"
         },
         "format:file": {
-          "run": "prettier --write",
-          "describe": "Prettier on one file (used by the edit hook)"
+          "command": "prettier --write",
+          "description": "Prettier on one file (used by the edit hook)"
         },
         "check": {
-          "run": ".claude/hooks/check-all.sh --force",
-          "describe": "all checks at once, as the Stop hook runs them"
+          "command": ".claude/hooks/check-all.sh --force",
+          "description": "all checks at once, as the Stop hook runs them"
         },
         "prepare": {
-          "run": "git config core.hooksPath .githooks",
-          "describe": "turns on the git hooks in .githooks/ (npm runs it on install)"
+          "command": "git config core.hooksPath .githooks",
+          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
         }
       },
       "checks": [
@@ -74,8 +74,18 @@
         {
           "name": "format",
           "script": "format:file",
-          "ext": ["ts", "tsx", "mts", "js", "jsx", "mjs", "css", "json", "md"],
-          "block": false
+          "extensions": [
+            "ts",
+            "tsx",
+            "mts",
+            "js",
+            "jsx",
+            "mjs",
+            "css",
+            "json",
+            "md"
+          ],
+          "blocking": false
         }
       ],
       "sections": {
@@ -90,11 +100,11 @@
           "format-lint-file",
           "check-all"
         ],
-        "files": [".prettierrc.json", ".prettierignore"]
+        "files": ["CLAUDE.md", ".prettierrc.json", ".prettierignore"]
       }
     },
     "feature-workflow": {
-      "describe": "The steps for building a feature (spec, plan, tests first, browser check, end-to-end tests, improve the harness), with the superpowers plugin and the improve-harness skill.",
+      "description": "The steps for building a feature (spec, plan, tests first, browser check, end-to-end tests, improve the harness), with the superpowers plugin and the improve-harness skill.",
       "recommended": true,
       "dependencies": {
         "plugins": ["superpowers@claude-plugins-official"],
@@ -103,19 +113,19 @@
       }
     },
     "eslint": {
-      "describe": "ESLint with type-aware typescript-eslint rules, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
+      "description": "ESLint with type-aware typescript-eslint rules, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
       "group": "linter",
       "detect": {
         "devDependencies": ["eslint"]
       },
       "scripts": {
         "lint": {
-          "run": "eslint --max-warnings 0",
-          "describe": "ESLint, no warnings allowed"
+          "command": "eslint --max-warnings 0",
+          "description": "ESLint, no warnings allowed"
         },
         "lint:file": {
-          "run": "eslint --max-warnings 0",
-          "describe": "ESLint on one file (used by the edit hook)"
+          "command": "eslint --max-warnings 0",
+          "description": "ESLint on one file (used by the edit hook)"
         }
       },
       "checks": [
@@ -128,8 +138,8 @@
         {
           "name": "lint",
           "script": "lint:file",
-          "ext": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
-          "block": true
+          "extensions": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
+          "blocking": true
         }
       ],
       "dependencies": {
@@ -151,19 +161,19 @@
       }
     },
     "oxlint": {
-      "describe": "oxlint (what create-vite sets up; works with TypeScript 7) with a 400-line file limit.",
+      "description": "oxlint (what create-vite sets up; works with TypeScript 7) with a 400-line file limit.",
       "group": "linter",
       "detect": {
         "devDependencies": ["oxlint"]
       },
       "scripts": {
         "lint": {
-          "run": "oxlint --deny-warnings",
-          "describe": "oxlint, no warnings allowed"
+          "command": "oxlint --deny-warnings",
+          "description": "oxlint, no warnings allowed"
         },
         "lint:file": {
-          "run": "oxlint --deny-warnings",
-          "describe": "oxlint on one file (used by the edit hook)"
+          "command": "oxlint --deny-warnings",
+          "description": "oxlint on one file (used by the edit hook)"
         }
       },
       "checks": [
@@ -176,8 +186,8 @@
         {
           "name": "lint",
           "script": "lint:file",
-          "ext": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
-          "block": true
+          "extensions": ["ts", "tsx", "mts", "js", "jsx", "mjs"],
+          "blocking": true
         }
       ],
       "dependencies": {
@@ -186,7 +196,7 @@
       }
     },
     "next-rules": {
-      "describe": "Next.js page performance rule (streaming, lists in batches, caching, media) and the note to read the bundled Next.js docs.",
+      "description": "Next.js page performance rule (streaming, lists in batches, caching, media) and the note to read the bundled Next.js docs.",
       "frameworks": ["nextjs"],
       "recommended": true,
       "detect": {
@@ -198,15 +208,15 @@
       }
     },
     "unit": {
-      "describe": "Vitest unit tests, run at the end of every turn.",
+      "description": "Vitest unit tests, run at the end of every turn.",
       "recommended": true,
       "detect": {
         "devDependencies": ["vitest"]
       },
       "scripts": {
         "test": {
-          "run": "vitest run --passWithNoTests",
-          "describe": "all unit tests (Vitest); `npx vitest run <file>` for one"
+          "command": "vitest run --passWithNoTests",
+          "description": "all unit tests (Vitest); `npx vitest run <file>` for one"
         }
       },
       "checks": [
@@ -228,15 +238,15 @@
       }
     },
     "e2e": {
-      "describe": "Playwright end-to-end tests, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
+      "description": "Playwright end-to-end tests, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
       "recommended": true,
       "detect": {
         "devDependencies": ["@playwright/test"]
       },
       "scripts": {
         "verify": {
-          "run": "playwright test",
-          "describe": "all end-to-end tests; `npx playwright test <file>` for one"
+          "command": "playwright test",
+          "description": "all end-to-end tests; `npx playwright test <file>` for one"
         }
       },
       "dependencies": {
@@ -248,7 +258,7 @@
       }
     },
     "commitlint": {
-      "describe": "Conventional Commits checked by commitlint in a commit-msg hook, plus the skill that writes valid messages.",
+      "description": "Conventional Commits checked by commitlint in a commit-msg hook, plus the skill that writes valid messages.",
       "recommended": true,
       "sections": {
         "Commits": "Before every commit, use the `committing-with-commitlint` skill."
@@ -264,16 +274,16 @@
       }
     },
     "quality": {
-      "describe": "knip (unused files, exports, dependencies) and jscpd (duplicated code), run at the end of every turn.",
+      "description": "knip (unused files, exports, dependencies) and jscpd (duplicated code), run at the end of every turn.",
       "recommended": true,
       "scripts": {
         "knip": {
-          "run": "knip --no-progress --reporter compact",
-          "describe": "unused files, exports and dependencies"
+          "command": "knip --no-progress --reporter compact",
+          "description": "unused files, exports and dependencies"
         },
         "dupes": {
-          "run": "jscpd {srcDirs} --threshold 0 --reporters console",
-          "describe": "duplicated code (jscpd)"
+          "command": "jscpd {srcDirs} --threshold 0 --reporters console",
+          "description": "duplicated code (jscpd)"
         }
       },
       "checks": [
@@ -292,7 +302,7 @@
       }
     },
     "best-practices": {
-      "describe": "Best-practice skills for the framework: Vercel's React and Next.js performance rules, composition patterns and the Web Interface Guidelines review.",
+      "description": "Best-practice skills for the framework: Vercel's React and Next.js performance rules, composition patterns and the Web Interface Guidelines review.",
       "recommended": true,
       "dependencies": {
         "skills": [
@@ -303,16 +313,15 @@
       }
     },
     "context7": {
-      "describe": "Context7 MCP server, rule and skill for current library docs.",
+      "description": "Context7 MCP server, rule and skill for current library docs.",
       "recommended": true,
       "dependencies": {
         "mcp": ["context7"],
-        "rules": ["context7.md"],
         "skills": ["context7-mcp"]
       }
     },
     "tailwind": {
-      "describe": "Prettier plugin that sorts Tailwind classes.",
+      "description": "Prettier plugin that sorts Tailwind classes.",
       "recommended": true,
       "detect": {
         "dependencies": ["tailwindcss"],

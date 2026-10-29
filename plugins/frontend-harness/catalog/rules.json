@@ -1,34 +1,35 @@
 {
-  "$comment": "The rules modules can bring; each goes to .claude/rules/<name>. Each entry says where it comes from and where it goes: `install` (a command), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits), and `output` (the path, or paths, it writes in the project). An install runs when one of its outputs is missing; outputs go when no module needs the entry any more. An entry with no source is written by another entry's `install` (its output is in that entry's `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out.",
+  "$comment": "The rules modules can bring; each goes to .claude/rules/<name>. Each entry says where it comes from and where it goes: `install` (a command) or `input` (a file or folder in library/), and `output` (the path, or paths, it writes in the project). An install runs when one of its outputs is missing. An input file has its Jinja filled in first (`framework`, `modules`, `docs_language`); a folder is copied as it is. `mode` says how an input reaches its output when the project already has it: `override` (the default) writes the harness version; `merge` merges the project's edits with the harness changes since the last install (git merge-file against the copy kept in .claude/harness-base/), and leaves a file the project had before the harness untouched for the skill to merge. Outputs go when no module needs the entry any more (a merged file only when the project did not edit it). An entry with no source is written by another entry's `install` (its output is in that entry's `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out.",
   "rules": {
     "structure.md": {
-      "describe": "where new and moved files go.",
-      "template": ".claude/rules/structure.md",
-      "output": ".claude/rules/structure.md"
+      "description": "where new and moved files go.",
+      "input": "rules/structure.md",
+      "output": ".claude/rules/structure.md",
+      "mode": "merge"
     },
     "feature-workflow.md": {
-      "describe": "the steps for building a user-facing feature.",
-      "template": ".claude/rules/feature-workflow.md",
-      "output": ".claude/rules/feature-workflow.md"
+      "description": "the steps for building a user-facing feature.",
+      "input": "rules/feature-workflow.md",
+      "output": ".claude/rules/feature-workflow.md",
+      "mode": "merge"
     },
     "performance.md": {
-      "describe": "how pages load fast and how to measure it (loads when working in `app/` or `lib/`).",
-      "template": ".claude/rules/performance.md",
-      "output": ".claude/rules/performance.md"
+      "description": "how pages load fast and how to measure it (loads when working in `app/` or `lib/`).",
+      "input": "rules/performance.md",
+      "output": ".claude/rules/performance.md",
+      "mode": "merge"
     },
     "tests-unit.md": {
-      "describe": "unit test conventions (loads when working on test files).",
-      "template": ".claude/rules/tests-unit.md",
-      "output": ".claude/rules/tests-unit.md"
+      "description": "unit test conventions (loads when working on test files).",
+      "input": "rules/tests-unit.md",
+      "output": ".claude/rules/tests-unit.md",
+      "mode": "merge"
     },
     "tests-e2e.md": {
-      "describe": "end-to-end test conventions (loads when working in `tests/`).",
-      "template": ".claude/rules/tests-e2e.md",
-      "output": ".claude/rules/tests-e2e.md"
-    },
-    "context7.md": {
-      "describe": "fetch current library docs through Context7 before answering library questions.",
-      "output": ".claude/rules/context7.md"
+      "description": "end-to-end test conventions (loads when working in `tests/`).",
+      "input": "rules/tests-e2e.md",
+      "output": ".claude/rules/tests-e2e.md",
+      "mode": "merge"
     }
   }
 }

@@ -1,13 +1,13 @@
 # Harness template. The `frontend-harness` skill fills these answers from catalog/modules.json;
 # run by hand: uvx copier copy --trust -d framework=nextjs -d 'modules=["core"]' <this repo> .
+# Copier keeps the answers and the version; template/ holds only its answers file.
+# Every other file comes from catalog/ and library/ through tasks/apply.mjs.
 _subdirectory: template
 _answers_file: .copier-answers.yml
-# Every file in template/ is rendered, so none needs a .jinja suffix.
 _templates_suffix: ""
 _tasks:
-  # On install: writes the JSON-driven files (settings.json, .mcp.json, .claude/harness.json,
-  # .claude/harness.md, .claude/skills) and adds npm scripts and packages.
-  - command: &apply "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/catalog' '{{ framework }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}'"
+  # On install: writes everything the catalog lists for the chosen modules.
+  - command: &apply "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/catalog' '{{ framework }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}' '{{ docs_language }}'"
     when: "{{ _copier_operation == 'copy' }}"
 _migrations:
   # On update: the same, but after Copier has merged the project's own changes back in,
@@ -38,21 +38,3 @@ docs_language:
   type: str
   help: Language of specs and plans
   default: English
-
-# Configs and rules that only some modules use; catalog/rules.json and files.json list the same files as `template`.
-_exclude:
-  - "{% if 'unit' not in modules %}vitest.config.mts{% endif %}"
-  - "{% if 'e2e' not in modules %}playwright.config.ts{% endif %}"
-  - "{% if 'e2e' not in modules %}tests{% endif %}"
-  - "{% if 'quality' not in modules %}knip.json{% endif %}"
-  - "{% if 'commitlint' not in modules %}commitlint.config.mjs{% endif %}"
-  - "{% if 'eslint' not in modules %}eslint.config.mjs{% endif %}"
-  - "{% if 'oxlint' not in modules %}.oxlintrc.json{% endif %}"
-  - "{% if 'next-rules' not in modules %}.claude/rules/performance.md{% endif %}"
-  - "{% if 'unit' not in modules %}.claude/rules/tests-unit.md{% endif %}"
-  - "{% if 'e2e' not in modules %}.claude/rules/tests-e2e.md{% endif %}"
-  - "{% if 'feature-workflow' not in modules %}.claude/rules/feature-workflow.md{% endif %}"
-
-# CLAUDE.md belongs to the project once written; the skill adds the imports to an existing one.
-_skip_if_exists:
-  - CLAUDE.md
