@@ -9,5 +9,6 @@
     "lint-staged",
     "@secretlint/secretlint-rule-preset-recommend",
     "@size-limit/file"
-  ]
+  ],
+  "ignore": [".claude/**"]
 }
