@@ -2,14 +2,41 @@
 
 A Claude Code plugin that installs and updates a harness (hooks, rules, skills, checks, git hooks) in React (Vite) and Next.js projects, from modules the project picks.
 
-Install it from the `dvasyliev-plugins` marketplace (the `claude-plugins` folder):
+The plugin only installs and updates the harness. What it installs lives in the project's own files (`.claude/`, `.githooks/`, configs, `package.json`) and works without the plugin.
 
-```
-/plugin marketplace add /path/to/marketplace
-/plugin install frontend-harness@dvasyliev-plugins
-```
+## Getting started
 
-Run it with the `frontend-harness` skill ("install the harness", "add e2e", "update the harness"). By hand, from the project folder:
+1. Add the marketplace once (the `claude-plugins` folder):
+
+   ```bash
+   claude plugin marketplace add /path/to/marketplace
+   ```
+
+2. Install the plugin in each project that should have it, from that project's folder:
+
+   ```bash
+   claude plugin install frontend-harness@dvasyliev-plugins --scope local
+   ```
+
+   | Scope | Where it is on | Written to |
+   |---|---|---|
+   | `local` | this project, only for you | `.claude/settings.local.json` (not committed) |
+   | `project` | this project, for everyone who clones it | `.claude/settings.json` |
+   | `user` | every project | `~/.claude/settings.json` |
+
+3. Set up the harness: open Claude Code in the project and ask "set up the harness" (or run `/frontend-harness:frontend-harness`). The skill asks the framework and modules, writes the files, merges what the project already had, runs `npm run check` and commits.
+
+## Day to day
+
+| To | Do |
+|---|---|
+| Add or remove modules | Ask "add e2e", "remove sync-deps". |
+| Turn one check off | Ask "turn off the dupes check" (it goes into `skipChecks`). |
+| Update the harness in a project | Ask "update the harness": its files are merged with the project's edits. |
+| Update the plugin | `claude plugin marketplace update dvasyliev-plugins`, then `claude plugin update frontend-harness@dvasyliev-plugins --scope local`, and restart Claude Code. |
+| Remove the plugin | `claude plugin uninstall frontend-harness@dvasyliev-plugins --scope local`. The harness already in the project stays. |
+
+By hand, from the project folder (answers left out keep their values from `.claude/harness.json`):
 
 ```bash
 node <plugin>/tasks/apply.mjs '{"framework": "nextjs", "modules": ["core", "eslint", "unit"]}'
