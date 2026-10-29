@@ -54,7 +54,6 @@ _exclude:
   - "{% if 'eslint' not in modules %}eslint.config.mjs{% endif %}"
   - "{% if 'oxlint' not in modules %}.oxlintrc.json{% endif %}"
   - "{% if 'next-rules' not in modules %}.claude/rules/performance.md{% endif %}"
-  - "{% if 'context7' not in modules %}.claude/rules/context7.md{% endif %}"
   - "{% if 'unit' not in modules %}.claude/rules/tests-unit.md{% endif %}"
   - "{% if 'e2e' not in modules %}.claude/rules/tests-e2e.md{% endif %}"
 

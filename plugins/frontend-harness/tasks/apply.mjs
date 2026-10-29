@@ -43,7 +43,7 @@ const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
 const merge = (key) => Object.assign({}, ...modules.map(([, m]) => m[key] ?? {}));
 
 // What the previous run wrote, so a removed module's scripts, files, skills, plugins and servers go too.
-const previous = { scripts: [], files: [], skills: [], plugins: [], mcp: [], ...readJson(".claude/harness.json", {}) };
+const previous = { scripts: [], files: [], skills: [], plugins: [], mcp: [], setupFiles: [], ...readJson(".claude/harness.json", {}) };
 
 // package.json: harness scripts are set, the project's own are kept.
 const pkg = readJson("package.json");
@@ -118,16 +118,22 @@ for (const path of files) {
   writeFileSync(path, readFileSync(from, "utf8").replace(/\{(port|css|srcDirs)\}/g, (_, key) => values[key]));
 }
 
-// .mcp.json: the harness servers are set from library/.mcp.json, the project's own are kept.
+// A module's `setup` command (run at the end) writes its own files and MCP servers; `creates` lists those files.
+const setupFiles = modules.flatMap(([, m]) => m.setup?.creates ?? []);
+for (const path of previous.setupFiles) if (!setupFiles.includes(path)) rmSync(path, { recursive: true, force: true });
+
+// .mcp.json: the harness servers are set from library/.mcp.json (except those a setup command writes), the project's own are kept.
 const serverDefs = readJson(join(library, ".mcp.json"), { mcpServers: {} }).mcpServers;
+const mcpNames = [...new Set(collect("mcp"))];
+const fromSetup = new Set(modules.flatMap(([, m]) => (m.setup ? (m.mcp ?? []) : [])));
 const servers = Object.fromEntries(
-  [...new Set(collect("mcp"))].map((name) => {
+  mcpNames.filter((name) => !fromSetup.has(name)).map((name) => {
     if (!serverDefs[name]) fail(`MCP server "${name}" is missing from library/.mcp.json`);
     return [name, serverDefs[name]];
   }),
 );
 const mcp = readJson(".mcp.json", { mcpServers: {} });
-for (const name of previous.mcp) if (!(name in servers)) delete mcp.mcpServers[name];
+for (const name of previous.mcp) if (!mcpNames.includes(name)) delete mcp.mcpServers[name];
 Object.assign(mcp.mcpServers, servers);
 if (Object.keys(mcp.mcpServers).length) writeJson(".mcp.json", mcp);
 
@@ -146,7 +152,8 @@ writeJson(".claude/harness.json", {
   skills,
   files,
   plugins,
-  mcp: Object.keys(servers),
+  mcp: mcpNames,
+  setupFiles,
 });
 
 // .claude/harness.md: the always-loaded summary CLAUDE.md imports.
@@ -225,6 +232,18 @@ if (!process.env.HARNESS_NO_INSTALL) {
       execSync(command, { stdio: "inherit" });
     } catch {
       fail(`installing skill "${name}" failed; run by hand: ${command}`);
+    }
+  }
+}
+
+// Setup commands, only for a module whose files are not all there yet.
+if (!process.env.HARNESS_NO_INSTALL) {
+  for (const [id, m] of modules) {
+    if (!m.setup || m.setup.creates.every((path) => existsSync(path))) continue;
+    try {
+      execSync(m.setup.command, { stdio: "inherit" });
+    } catch {
+      fail(`setup of module "${id}" failed; run by hand: ${m.setup.command}`);
     }
   }
 }

@@ -1,12 +1,6 @@
 {
   "$comment": "The skills the harness offers. `frameworks` lists the frameworks a skill fits. A skill with `install` comes from its own repo: apply.mjs runs that command in the project when the skill is missing (later, `npx skills update` updates a skill installed with `npx skills add`; rerun the command for the others). One without `install` is the harness's own, copied whole from library/.claude/skills. A skill with `needs` is offered only with that module.",
   "skills": {
-    "context7-mcp": {
-      "describe": "library docs and code examples through Context7.",
-      "frameworks": ["react", "nextjs"],
-      "needs": "context7",
-      "install": "npx -y skills add upstash/context7 --skill context7-mcp -a claude-code --copy -y"
-    },
     "web-design-guidelines": {
       "describe": "review UI against the Web Interface Guidelines.",
       "frameworks": ["react", "nextjs"],

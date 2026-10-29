@@ -1,5 +1,5 @@
 {
-  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `templates` (configs and .claude/rules) live in template/: Copier renders them per framework and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. Its `files` live in library/ (laid out like a project) and are copied whole to the same path, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none. Skills are listed in skills.json.",
+  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `templates` (configs and .claude/rules) live in template/: Copier renders them per framework and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. Its `files` live in library/ (laid out like a project) and are copied whole to the same path, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none. A module's `setup` command writes files and MCP servers itself (`creates` lists the files, `mcp` the servers); it runs when one of those files is missing. Skills are listed in skills.json.",
   "frameworks": {
     "nextjs": {
       "describe": "Next.js App Router",
@@ -291,7 +291,10 @@
       "describe": "Context7 MCP server, rule and skill for current library docs.",
       "recommended": true,
       "mcp": ["context7"],
-      "templates": [".claude/rules/context7.md"],
+      "setup": {
+        "command": "npx -y ctx7 setup --claude --project --oauth --mcp -y",
+        "creates": [".claude/rules/context7.md", ".claude/skills/context7-mcp"]
+      },
       "rules": {
         "context7.md": "fetch current library docs through Context7 before answering library questions."
       }
