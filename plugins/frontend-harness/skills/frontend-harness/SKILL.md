@@ -9,7 +9,7 @@ The harness is a Copier template. This skill picks the modules that fit the proj
 
 **Template:** `$HARNESS_TEMPLATE` if set, else `${CLAUDE_PLUGIN_ROOT}` (a git repo; versions are its `vX.Y.Z` tags). Never use the copy in the plugin cache: it has no git history, so `copier update` cannot merge.
 
-**Catalog:** `<template>/catalog/`. `modules.json` lists every framework and module; each module's `dependencies` names everything it brings: other modules, npm packages, and entries of `plugins.json`, `skills.json`, `mcp.json`, `rules.json`, `configs.json`, `hooks.json`, `githooks.json` and `permissions.json` (permission rules, as `config` for `.claude/settings.json`). Every file entry has a `description`, a source (`install`: a command, or `input`: a file or folder in `library/`), its `output` path in the project, and for an input file a `mode` (`override` or `merge`). Read them; do not guess.
+**Catalog:** `<template>/modules.json` lists every framework and module: what a module brings (`scripts`, `checks`, `settings` for `.claude/settings.json`, `install` commands, npm packages) and how to suggest it (`detect`, `recommended`). A module's files are in `<template>/files/<module>/`: `all/` for every framework, `<framework>/` for one, laid out as in the project. Read them; do not guess.
 
 ## 1. Look at the project
 
@@ -25,11 +25,9 @@ For each module whose `frameworks` (if any) include the project's framework, mar
 - **suggested:** its `detect` matches `package.json`, or it is `recommended` and has no `detect`.
 - **offered:** the rest, unselected.
 
-Ask with `AskUserQuestion`, `multiSelect: true`, up to 4 modules per question (split into several questions in one call). Each option: the module id as label, its `description` as description (add what its `dependencies` bring in a few words, such as "plugin superpowers, skill improve-harness"); put "(suggested)" or "(installed)" after the label where it applies. On an update, the installed modules are the starting point; say what removing one does (its files, scripts, hooks, plugins and MCP servers go; npm packages stay).
+Ask with `AskUserQuestion`, `multiSelect: true`, up to 4 modules per question (split into several questions in one call). Each option: the module id as label, its `description` as description (add what it brings in a few words, such as "plugin superpowers, skill improve-harness"); put "(suggested)" or "(installed)" after the label where it applies. On an update, the installed modules are the starting point; say what removing one does (its files, scripts, hooks, plugins and MCP servers go; npm packages stay).
 
-Add every module in a chosen one's `dependencies.modules`, and tell the user which ones you added and why.
-
-A `group` in `catalog/modules.json` (the linter) takes exactly `pick` modules: choose the one the project already uses (its `detect`), else the group's `default` for the framework. Ask only when the project has both or the user wants the other.
+Exactly one `linter` module is installed: choose the one the project already uses (its `detect`), else the framework's `linter`. Ask only when the project has both or the user wants the other.
 
 Skills come with their modules; there is no separate skill question.
 
@@ -51,13 +49,13 @@ Update (same `-d` answers; Copier keeps any you leave out):
 uvx copier update --trust --defaults -d 'modules=[...]' -d 'skip_checks=[...]'
 ```
 
-`--trust` lets the template's task (`tasks/apply.mjs`) run: it writes each `input` to its `output`, writes `.claude/settings.json` hooks and plugins, `.mcp.json`, `.claude/harness.json`, `.claude/harness.md` and the npm scripts, installs missing npm packages, and runs each `install` command whose outputs are not all there (a plugin's runs every time). `docs_language` is the language of specs and plans; ask if the project's docs do not show it.
+`--trust` lets the template's task (`tasks/apply.mjs`) run: it writes each module's files, merges its `scripts` into `package.json` and its `settings` into `.claude/settings.json` (the project's own keys stay), writes `.claude/harness.json` and `.claude/harness.md`, installs missing npm packages, and runs each `install` command whose `creates` paths are not all there (one without `creates` runs every time). `docs_language` is the language of specs and plans; ask if the project's docs do not show it.
 
 Then read the `harness:` lines it printed, `git status` and `git diff`:
 
-- **Merge conflicts:** a `merge` file with `<<<<<<< project` markers. Resolve each so both the project's change and the harness change survive; ask the user when the two contradict.
-- **Files the project had before the harness:** a `merge` file the project already had is left as it was, with the harness version in `.claude/harness-base/<path>.new`. Merge the harness version into the project's file, asking the user where they contradict; then move the `.new` file over `.claude/harness-base/<path>`, so the next update merges from there. For `CLAUDE.md`, that means adding `@.claude/harness.md` under its first heading; `.claude/harness.md` lists the commands, rules, hooks, skills and commits, so if `CLAUDE.md` repeats any of these sections, ask the user before removing them.
-- **Kept files:** a `merge` file no module needs any more stays when the project edited it. Ask the user whether to delete it.
+- **Merge conflicts:** a file with `<<<<<<< project` markers. Resolve each so both the project's change and the harness change survive; ask the user when the two contradict.
+- **Files the project had before the harness:** a file the project already had is left as it was, with the harness version in `.claude/harness-base/<path>.new`. Merge the harness version into the project's file, asking the user where they contradict; then move the `.new` file over `.claude/harness-base/<path>`, so the next update merges from there. For `CLAUDE.md`, that means adding `@.claude/harness.md` under its first heading; `.claude/harness.md` lists the commands and `.claude/rules/` the rest, so if `CLAUDE.md` repeats any of these, ask the user before removing it.
+- **Kept files:** a file no module needs any more stays when the project edited it. Ask the user whether to delete it.
 
 ## 4. Finish
 
@@ -71,12 +69,10 @@ Then read the `harness:` lines it printed, `git status` and `git diff`:
 A fix to a harness-owned file (anything the template writes, or the hooks, rules and skills it installs) goes into the template, not only into the project, or the next update overwrites it.
 
 1. Make the change in `<template>`:
-   - `catalog/`: `modules.json` holds one module per thing the project gets (such as `feature-workflow` or `context7`): its `dependencies` name everything it needs, and `scripts`, `checks` and `sections` what it adds. The other files are catalogs of entries by kind; a new entry reaches no project until a module names it. Every entry has the same fields: `description`, optional `frameworks`, one source, and `output`:
-     - `install`: a command; `output` lists every path it writes. For another repo's skill: `npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y` (projects update it with `npx skills update`). For a tool with its own setup (like `npx ctx7 setup` for Context7): that command, with what it writes in `output`.
-     - `input`: a file or folder in `library/` (`skills/`, `hooks/`, `githooks/`, `rules/`, `configs/`); `output` is its one path in the project. A folder is copied as it is. A file's `mode` decides: `override` (the default, for files projects never edit: hooks, git hooks, `AGENTS.md`) or `merge` (for files projects edit: rules, configs, `CLAUDE.md`; the project's edits and the harness changes since the last install are merged with `git merge-file`).
-   - Hooks also have `config`: `event`, optional `matcher`, and `hook`, copied as it is into `.claude/settings.json` (a command hook's `command` must run its `output`); an MCP server may give its definition as `server` instead of a source.
-   - `tasks/apply.mjs`: how entries are installed, written and removed.
-   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `catalog/modules.json` `frameworks` and in copier.yml `framework` choices, its own version of each per-framework file (`library/configs/<framework>/`, `library/rules/<framework>/`, with an entry for each whose `frameworks` names it, listed by the same modules as the others), and the framework in the `frameworks` of each module and entry that fits it. A file whose text depends on the framework gets one version per framework; a rule that depends on other modules names them in plain text ("With `e2e`: ...").
+   - `modules.json`: one module per thing the project gets (such as `feature-workflow` or `context7`), with what it adds: `scripts`, `checks` and `fileChecks`, `settings` (merged into `.claude/settings.json` as it is: hooks, permissions, `enabledPlugins`), npm `devDependencies`, and `install` commands with the paths each `creates`. For another repo's skill: `npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y` (projects update it with `npx skills update`). For a tool with its own setup (like `npx ctx7 setup` for Context7): that command, with what it writes in `creates`, and the MCP servers it adds in `mcp`.
+   - `files/<module>/all/` and `files/<module>/<framework>/`: the module's files, at their paths in the project. Every file is merged: the project's edits and the harness changes since the last install are merged with `git merge-file`, against the copy kept in `.claude/harness-base/`.
+   - `tasks/apply.mjs`: how modules are installed, written and removed.
+   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and in copier.yml `framework` choices, a `files/<module>/<framework>/` version of each per-framework file, and the framework in the `frameworks` of each module limited to some. A file whose text depends on the framework gets one version per framework; a rule that depends on other modules names them in plain text ("With `e2e`: ...").
 2. Try it on a scratch project: `uvx copier copy --trust --defaults -d framework=<framework> -d 'modules=[...]' <template> <scratch>` (with `HARNESS_NO_INSTALL=1` to skip npm installs).
 3. Commit in `<template>` and tag the next version (`git tag vX.Y.Z`; a new module or answer is a minor version, a fix a patch).
 4. Update the project with step 3's update command.

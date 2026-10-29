@@ -1,0 +1,10 @@
+# Only the project's own code is formatted and checked: app, lib,
+# tests and the code files at the root. Docs, public assets,
+# notes such as CLAUDE.md and Claude Code's own files stay as written.
+/*
+!/app/
+!/lib/
+!/tests/
+!/*.ts
+!/*.mts
+!/*.mjs

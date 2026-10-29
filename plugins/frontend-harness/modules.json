@@ -1,5 +1,5 @@
 {
-  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. Each module is one thing the project gets; `dependencies` lists everything it needs by name: other `modules`, `plugins` (plugins.json), `skills` (skills.json), `mcp` servers (mcp.json), `rules` (rules.json), `configs` (configs.json: configs and other project files), `hooks` (hooks.json), `githooks` (githooks.json), `permissions` (permissions.json), and npm `devDependencies` (and `frameworkDevDependencies`). Each of those catalogs says how its entries get into the project: `install` or `input`, with `output` and `mode`. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
+  "$comment": "Every framework and module the harness can install. A module's files are in files/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, exactly one `linter` module is, and `frameworks` limits a module to those frameworks. The frontend-harness skill suggests modules by `detect` and `recommended`.",
   "frameworks": {
     "nextjs": {
       "description": "Next.js App Router",
@@ -8,7 +8,7 @@
       "detect": {
         "dependencies": ["next"]
       },
-      "css": "./app/globals.css"
+      "linter": "eslint"
     },
     "react": {
       "description": "React (Vite)",
@@ -17,17 +17,7 @@
       "detect": {
         "dependencies": ["react"]
       },
-      "css": "./src/index.css"
-    }
-  },
-  "groups": {
-    "linter": {
-      "description": "The linter the hooks and checks run.",
-      "pick": 1,
-      "default": {
-        "nextjs": "eslint",
-        "react": "oxlint"
-      }
+      "linter": "oxlint"
     }
   },
   "modules": {
@@ -88,41 +78,83 @@
           "blocking": false
         }
       ],
-      "sections": {
-        "Several agents at once": "- Several agents may work in this repo at the same time, all on `main`. Changes you did not make are another agent's work in progress, not a mess to clean up.\n- Touch only your own changes. Never revert, reformat, stash or commit another agent's files.\n- Before editing a file, check `git status`. If it has changes you did not make, tell the user which file and wait instead of editing it.\n- If the end-of-turn checks fail, first make sure none of the failures come from your own changes. If they all sit in another agent's files, finish with one short line saying so; do not analyse, list or fix them.\n- Commit only your own files (`git add <paths>`, never `git add -A`)."
-      },
-      "dependencies": {
-        "devDependencies": ["typescript", "prettier"],
-        "rules": ["react/structure.md", "nextjs/structure.md"],
-        "hooks": [
-          "session-start",
-          "guard-commands",
-          "format-lint-file",
-          "check-all"
-        ],
-        "permissions": ["env-files"],
-        "configs": [
-          "CLAUDE.md",
-          "react/.prettierignore",
-          "nextjs/.prettierignore"
-        ]
+      "devDependencies": ["typescript", "prettier"],
+      "settings": {
+        "hooks": {
+          "SessionStart": [
+            {
+              "matcher": "startup|resume|clear",
+              "hooks": [
+                {
+                  "type": "command",
+                  "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\""
+                }
+              ]
+            }
+          ],
+          "PreToolUse": [
+            {
+              "matcher": "Bash",
+              "hooks": [
+                {
+                  "type": "command",
+                  "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-commands.sh\"",
+                  "statusMessage": "Checking command"
+                }
+              ]
+            }
+          ],
+          "PostToolUse": [
+            {
+              "matcher": "Edit|Write",
+              "hooks": [
+                {
+                  "type": "command",
+                  "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-lint-file.sh\"",
+                  "timeout": 60,
+                  "statusMessage": "Formatting and linting"
+                }
+              ]
+            }
+          ],
+          "Stop": [
+            {
+              "hooks": [
+                {
+                  "type": "command",
+                  "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-all.sh\"",
+                  "timeout": 600,
+                  "statusMessage": "Running checks"
+                }
+              ]
+            }
+          ]
+        },
+        "permissions": {
+          "deny": ["Read(./.env)", "Read(./.env.*)"]
+        }
       }
     },
     "feature-workflow": {
       "description": "The steps for building a feature (spec, plan, tests first, browser check, end-to-end tests, improve the harness), with the superpowers plugin and the improve-harness skill.",
       "recommended": true,
-      "dependencies": {
-        "plugins": ["superpowers@claude-plugins-official"],
-        "skills": ["improve-harness"],
-        "rules": ["feature-workflow.md"]
-      }
+      "settings": {
+        "enabledPlugins": {
+          "superpowers@claude-plugins-official": true
+        }
+      },
+      "install": [
+        {
+          "command": "claude plugin install superpowers@claude-plugins-official --scope project"
+        }
+      ]
     },
     "eslint": {
       "description": "ESLint with type-aware typescript-eslint rules, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
-      "group": "linter",
       "detect": {
         "devDependencies": ["eslint"]
       },
+      "linter": true,
       "scripts": {
         "lint": {
           "command": "eslint --max-warnings 0",
@@ -147,30 +179,27 @@
           "blocking": true
         }
       ],
-      "dependencies": {
-        "devDependencies": [
-          "eslint",
-          "eslint-config-prettier",
-          "typescript-eslint"
-        ],
-        "frameworkDevDependencies": {
-          "nextjs": ["eslint-config-next", "eslint-plugin-boundaries"],
-          "react": [
-            "@eslint/js",
-            "globals",
-            "eslint-plugin-react-hooks",
-            "eslint-plugin-react-refresh"
-          ]
-        },
-        "configs": ["react/eslint.config.mjs", "nextjs/eslint.config.mjs"]
+      "devDependencies": [
+        "eslint",
+        "eslint-config-prettier",
+        "typescript-eslint"
+      ],
+      "frameworkDevDependencies": {
+        "nextjs": ["eslint-config-next", "eslint-plugin-boundaries"],
+        "react": [
+          "@eslint/js",
+          "globals",
+          "eslint-plugin-react-hooks",
+          "eslint-plugin-react-refresh"
+        ]
       }
     },
     "oxlint": {
       "description": "oxlint (what create-vite sets up; works with TypeScript 7) with a 400-line file limit.",
-      "group": "linter",
       "detect": {
         "devDependencies": ["oxlint"]
       },
+      "linter": true,
       "scripts": {
         "lint": {
           "command": "oxlint --deny-warnings",
@@ -195,21 +224,14 @@
           "blocking": true
         }
       ],
-      "dependencies": {
-        "devDependencies": ["oxlint"],
-        "configs": [".oxlintrc.json"]
-      }
+      "devDependencies": ["oxlint"]
     },
     "next-rules": {
       "description": "Next.js page performance rule (streaming, lists in batches, caching, media) and the note to read the bundled Next.js docs.",
-      "frameworks": ["nextjs"],
       "recommended": true,
+      "frameworks": ["nextjs"],
       "detect": {
         "dependencies": ["next"]
-      },
-      "dependencies": {
-        "rules": ["performance.md"],
-        "configs": ["AGENTS.md"]
       }
     },
     "unit": {
@@ -230,17 +252,13 @@
           "script": "test"
         }
       ],
-      "dependencies": {
-        "devDependencies": [
-          "vitest",
-          "jsdom",
-          "@vitejs/plugin-react",
-          "@testing-library/react",
-          "@testing-library/dom"
-        ],
-        "rules": ["tests-unit.md"],
-        "configs": ["react/vitest.config.mts", "nextjs/vitest.config.mts"]
-      }
+      "devDependencies": [
+        "vitest",
+        "jsdom",
+        "@vitejs/plugin-react",
+        "@testing-library/react",
+        "@testing-library/dom"
+      ]
     },
     "e2e": {
       "description": "Playwright end-to-end tests, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
@@ -254,33 +272,24 @@
           "description": "all end-to-end tests; `npx playwright test <file>` for one"
         }
       },
-      "dependencies": {
-        "skills": ["playwright-cli"],
-        "devDependencies": ["@playwright/test", "@playwright/cli"],
-        "rules": ["tests-e2e.md"],
-        "githooks": ["pre-push"],
-        "configs": [
-          "react/playwright.config.ts",
-          "nextjs/playwright.config.ts",
-          "tests/seed.spec.ts"
-        ]
-      }
+      "devDependencies": ["@playwright/test", "@playwright/cli"],
+      "install": [
+        {
+          "command": "npx -y skills add microsoft/playwright-cli --skill playwright-cli -a claude-code --copy -y",
+          "creates": [".claude/skills/playwright-cli"]
+        }
+      ]
     },
     "commitlint": {
       "description": "Conventional Commits checked by commitlint in a commit-msg hook, plus the skill that writes valid messages.",
       "recommended": true,
-      "sections": {
-        "Commits": "Before every commit, use the `committing-with-commitlint` skill."
-      },
-      "dependencies": {
-        "skills": ["committing-with-commitlint"],
-        "devDependencies": [
-          "@commitlint/cli",
-          "@commitlint/config-conventional"
-        ],
-        "githooks": ["commit-msg"],
-        "configs": ["commitlint.config.mjs"]
-      }
+      "devDependencies": ["@commitlint/cli", "@commitlint/config-conventional"],
+      "install": [
+        {
+          "command": "mkdir -p .claude/skills/committing-with-commitlint && curl -fLo .claude/skills/committing-with-commitlint/SKILL.md https://raw.githubusercontent.com/conventional-changelog/commitlint/master/skills/committing-with-commitlint/SKILL.md",
+          "creates": [".claude/skills/committing-with-commitlint"]
+        }
+      ]
     },
     "quality": {
       "description": "knip (unused files, exports, dependencies) and jscpd (duplicated code), run at the end of every turn.",
@@ -305,29 +314,39 @@
           "script": "dupes"
         }
       ],
-      "dependencies": {
-        "devDependencies": ["knip", "jscpd"],
-        "configs": ["knip.json"]
-      }
+      "devDependencies": ["knip", "jscpd"]
     },
     "best-practices": {
       "description": "Best-practice skills for the framework: Vercel's React and Next.js performance rules, composition patterns and the Web Interface Guidelines review.",
       "recommended": true,
-      "dependencies": {
-        "skills": [
-          "vercel-react-best-practices",
-          "vercel-composition-patterns",
-          "web-design-guidelines"
-        ]
-      }
+      "install": [
+        {
+          "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y",
+          "creates": [".claude/skills/vercel-react-best-practices"]
+        },
+        {
+          "command": "npx -y skills add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y",
+          "creates": [".claude/skills/vercel-composition-patterns"]
+        },
+        {
+          "command": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
+          "creates": [".claude/skills/web-design-guidelines"]
+        }
+      ]
     },
     "context7": {
       "description": "Context7 MCP server, rule and skill for current library docs.",
       "recommended": true,
-      "dependencies": {
-        "mcp": ["context7"],
-        "skills": ["context7-mcp"]
-      }
+      "mcp": ["context7"],
+      "install": [
+        {
+          "command": "npx -y ctx7 setup --claude --project --oauth --mcp -y",
+          "creates": [
+            ".claude/rules/context7.md",
+            ".claude/skills/context7-mcp"
+          ]
+        }
+      ]
     },
     "tailwind": {
       "description": "Prettier plugin that sorts Tailwind classes, with its .prettierrc.json.",
@@ -336,10 +355,7 @@
         "dependencies": ["tailwindcss"],
         "devDependencies": ["tailwindcss"]
       },
-      "dependencies": {
-        "devDependencies": ["prettier-plugin-tailwindcss"],
-        "configs": ["react/.prettierrc.json", "nextjs/.prettierrc.json"]
-      }
+      "devDependencies": ["prettier-plugin-tailwindcss"]
     }
   }
 }

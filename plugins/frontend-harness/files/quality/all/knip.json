@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreDependencies": [
+    "@playwright/cli",
+    "@commitlint/cli",
+    "@testing-library/react",
+    "@testing-library/dom",
+    "prettier-plugin-tailwindcss"
+  ]
+}

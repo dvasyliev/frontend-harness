@@ -1,19 +1,17 @@
 #!/usr/bin/env node
-// Copier task: writes everything the catalog drives into the project in the current folder.
-// Usage: node apply.mjs <catalog dir> <framework> '<modules JSON>' '<skip_checks JSON>' <docs_language>
+// Copier task: writes the chosen modules (modules.json, files/) into the project in the current folder.
+// Usage: node apply.mjs <template dir> <framework> '<modules JSON>' '<skip_checks JSON>' <docs_language>
 import { execSync } from "node:child_process";
-import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 
-const [catalogDir, frameworkId, modulesArg, skipArg, docsLanguage] = process.argv.slice(2);
+const [root, frameworkId, modulesArg, skipArg, docsLanguage] = process.argv.slice(2);
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
 const writeJson = (path, data) => writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
-const catalog = readJson(join(catalogDir, "modules.json"));
+const catalog = readJson(join(root, "modules.json"));
 const framework = catalog.frameworks[frameworkId];
 if (!framework) fail(`unknown framework "${frameworkId}"`);
 const skip = new Set(JSON.parse(skipArg || "[]"));
-// The entries' inputs: plain folders (skills/, hooks/, githooks/, rules/, configs/), not laid out like a project.
-const library = join(catalogDir, "..", "library");
 const noInstall = Boolean(process.env.HARNESS_NO_INSTALL);
 
 function fail(message) {
@@ -21,77 +19,69 @@ function fail(message) {
   process.exit(1);
 }
 
-// Selected modules plus the ones they need, in catalog order.
+// Selected modules plus the required ones, in catalog order, with exactly one linter.
 const wanted = new Set(JSON.parse(modulesArg));
 for (const [id, m] of Object.entries(catalog.modules)) if (m.required) wanted.add(id);
 for (const id of wanted) {
   const m = catalog.modules[id];
   if (!m) fail(`unknown module "${id}"`);
   if (m.frameworks && !m.frameworks.includes(frameworkId)) fail(`module "${id}" does not fit framework "${frameworkId}"`);
-  for (const dep of m.dependencies?.modules ?? []) wanted.add(dep);
 }
 const modules = Object.entries(catalog.modules).filter(([id]) => wanted.has(id));
-// Each group (the linter) takes exactly `pick` of its modules; a missing one is an error, not a silent default.
-for (const [group, g] of Object.entries(catalog.groups ?? {})) {
-  const members = Object.entries(catalog.modules).filter(([, m]) => m.group === group).map(([id]) => id);
-  const chosen = members.filter((id) => wanted.has(id));
-  if (chosen.length !== g.pick) fail(`choose ${g.pick} ${group} of ${members.join(", ")} (default for ${frameworkId}: ${g.default?.[frameworkId]})`);
-}
+const linters = Object.entries(catalog.modules).filter(([, m]) => m.linter).map(([id]) => id);
+if (modules.filter(([, m]) => m.linter).length !== 1) fail(`choose one linter of ${linters.join(", ")} (default for ${frameworkId}: ${framework.linter})`);
 const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
-const merge = (key) => Object.assign({}, ...modules.map(([, m]) => m[key] ?? {}));
-const collectDep = (key) => modules.flatMap(([, m]) => m.dependencies?.[key] ?? []);
 
-// The catalogs a module names entries from.
-const kinds = {
-  skills: { file: "skills.json", key: "skills" },
-  hooks: { file: "hooks.json", key: "hooks" },
-  githooks: { file: "githooks.json", key: "githooks" },
-  rules: { file: "rules.json", key: "rules" },
-  configs: { file: "configs.json", key: "configs" },
-  mcp: { file: "mcp.json", key: "servers" },
-  plugins: { file: "plugins.json", key: "plugins" },
-  permissions: { file: "permissions.json", key: "permissions" },
-};
-// chosen[kind] = [[name, entry], ...]: the modules' entries that fit the framework.
-const chosen = {};
-for (const [kind, k] of Object.entries(kinds)) {
-  const entries = readJson(join(catalogDir, k.file))[k.key];
-  chosen[kind] = [...new Set(collectDep(kind))]
-    .map((name) => {
-      if (!entries[name]) fail(`unknown ${kind} entry "${name}" (not in ${k.file})`);
-      return [name, entries[name]];
-    })
-    .filter(([, e]) => !e.frameworks || e.frameworks.includes(frameworkId));
+// JSON the modules add to the project's own files: objects by key, arrays by item.
+// `unmerge` takes back what the previous run added, so what no module needs any more goes.
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+function merge(target, add) {
+  for (const [k, v] of Object.entries(add)) {
+    if (Array.isArray(v)) target[k] = [...(target[k] ?? []), ...v.filter((x) => !(target[k] ?? []).some((y) => same(x, y)))];
+    else if (isObject(v)) merge((target[k] ??= {}), v);
+    else target[k] = v;
+  }
+  return target;
 }
-// `output`: the path (or paths) an entry writes in the project.
-const entries = Object.entries(chosen).flatMap(([kind, list]) => list.map(([name, e]) => ({ kind, name, e })));
-const output = (x) => [x.e.output ?? []].flat();
-const installs = entries.filter((x) => x.e.install);
-const created = installs.flatMap(output);
-for (const x of entries) {
-  if (x.e.input && typeof x.e.output !== "string") fail(`${x.kind} entry "${x.name}" needs one output path`);
-  if (x.e.install || x.e.input || x.e.server || x.kind === "plugins" || x.kind === "permissions") continue;
-  const missing = output(x).filter((path) => !created.includes(path));
-  if (!output(x).length || missing.length) fail(`${x.kind} entry "${x.name}" has no install or input, and no install outputs ${missing.join(", ") || "it"}`);
+function unmerge(target, added) {
+  for (const [k, v] of Object.entries(added)) {
+    if (!(k in target)) continue;
+    if (Array.isArray(v)) target[k] = target[k].filter((x) => !v.some((y) => same(x, y)));
+    else if (isObject(v)) unmerge(target[k], v);
+    else delete target[k];
+    if (k in target && !Object.keys(target[k]).length) delete target[k];
+  }
 }
+
+// Files: files/<module>/all/ and files/<module>/<framework>/, each written at the same path in the project.
+const files = {};
+for (const [id] of modules) {
+  for (const dir of ["all", frameworkId]) {
+    const base = join(root, "files", id, dir);
+    if (!existsSync(base)) continue;
+    for (const d of readdirSync(base, { recursive: true, withFileTypes: true })) {
+      if (d.isFile() && d.name !== ".DS_Store") files[relative(base, join(d.parentPath, d.name))] = join(d.parentPath, d.name);
+    }
+  }
+}
+const installs = collect("install");
+const paths = [...new Set([...Object.keys(files), ...installs.flatMap((i) => i.creates ?? [])])];
 
 // What the previous run wrote, so what no module needs any more goes too.
-const previous = { scripts: [], paths: [], plugins: [], mcp: [], permissions: {}, ...readJson(".claude/harness.json", {}) };
+// A harness.json from before `merged` lists the scripts, plugins and permissions it set instead.
+const old = readJson(".claude/harness.json", {});
+const previous = {
+  paths: [],
+  mcp: [],
+  merged: {
+    "package.json": { scripts: Object.fromEntries((old.scripts ?? []).map((name) => [name, ""])) },
+    ".claude/settings.json": { enabledPlugins: Object.fromEntries((old.plugins ?? []).map((p) => [p, true])), permissions: old.permissions ?? {} },
+  },
+  ...old,
+};
 
-// package.json: harness scripts are set, the project's own are kept.
-const pkg = readJson("package.json");
-const scripts = Object.fromEntries(
-  Object.entries(merge("scripts")).map(([name, s]) => [name, s.command.replace("{srcDirs}", framework.srcDirs.join(" "))]),
-);
-pkg.scripts ??= {};
-for (const name of previous.scripts) if (!(name in scripts)) delete pkg.scripts[name];
-Object.assign(pkg.scripts, scripts);
-writeJson("package.json", pkg);
-
-// Paths: the inputs' outputs and what installs create. One no module needs any more is removed,
-// except a merged file the project has edited.
-const inputs = entries.filter((x) => x.e.input);
-const paths = [...new Set([...inputs.map((x) => x.e.output), ...created])];
+// Paths no module needs any more are removed, except a file the project has edited.
 const basePath = (path) => join(".claude/harness-base", path);
 const edited = (path) => existsSync(basePath(path)) && existsSync(path) && readFileSync(path, "utf8") !== readFileSync(basePath(path), "utf8");
 const notes = [];
@@ -105,34 +95,17 @@ for (const path of previous.paths) {
 }
 if (lock) writeJson("skills-lock.json", lock);
 
-// Inputs: a folder is copied as it is; a file reaches its output by `mode`.
-for (const x of inputs) if (!existsSync(join(library, x.e.input))) fail(`${x.kind} entry "${x.name}": library/${x.e.input} is missing`);
-const isFile = (x) => statSync(join(library, x.e.input)).isFile();
+// Each file keeps the project's edits: .claude/harness-base/ holds what the harness wrote last,
+// and the harness changes since then are merged into the project's version, as git merges branches.
 const write = (path, text) => {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, text);
 };
-for (const x of inputs) {
-  const path = x.e.output;
-  if (!isFile(x)) {
-    rmSync(path, { recursive: true, force: true });
-    mkdirSync(dirname(path), { recursive: true });
-    cpSync(join(library, x.e.input), path, { recursive: true });
-    continue;
-  }
-  const next = readFileSync(join(library, x.e.input), "utf8");
-  const mode = x.e.mode ?? "override";
-  if (mode === "merge" && existsSync(path)) {
-    const current = readFileSync(path, "utf8");
-    if (!existsSync(basePath(path))) {
-      // The project had this file before the harness: leave it for the skill to merge.
-      if (current !== next) {
-        notes.push(`${path}: the project already had it; merge the harness version by hand (saved as ${basePath(path)}.new)`);
-        write(`${basePath(path)}.new`, next);
-        continue;
-      }
-    } else if (current !== readFileSync(basePath(path), "utf8")) {
-      // Project edits and harness changes: three-way merge, as git merges branches.
+for (const [path, source] of Object.entries(files)) {
+  const next = readFileSync(source, "utf8");
+  const current = existsSync(path) ? readFileSync(path, "utf8") : next;
+  if (current !== next && existsSync(basePath(path))) {
+    if (current !== readFileSync(basePath(path), "utf8")) {
       write(`${basePath(path)}.next`, next);
       try {
         execSync(`git merge-file -L project -L last-install -L harness "${path}" "${basePath(path)}" "${basePath(path)}.next"`, { stdio: "ignore" });
@@ -143,42 +116,32 @@ for (const x of inputs) {
       write(basePath(path), next);
       continue;
     }
+  } else if (current !== next && !previous.paths.includes(path)) {
+    // The project had this file before the harness: leave it for the skill to merge.
+    notes.push(`${path}: the project already had it; merge the harness version by hand (saved as ${basePath(path)}.new)`);
+    write(`${basePath(path)}.new`, next);
+    continue;
   }
   write(path, next);
-  if (mode === "merge") write(basePath(path), next);
+  write(basePath(path), next);
 }
 
-// .claude/settings.json: the harness owns `hooks` and its plugins; every other key stays.
-const settings = readJson(".claude/settings.json", {});
-settings.hooks = {};
-for (const [name, { output, config }] of chosen.hooks) {
-  const { event, matcher, hook } = config;
-  if (hook.type === "command" && !hook.command.includes(output)) fail(`hook "${name}": its command does not run its output ${output}`);
-  (settings.hooks[event] ??= []).push({ ...(matcher && { matcher }), hooks: [hook] });
+// package.json scripts and .claude/settings.json: the modules' keys are set, the project's own are kept.
+const scripts = Object.assign({}, ...modules.map(([, m]) => m.scripts ?? {}));
+const merged = {
+  "package.json": { scripts: Object.fromEntries(Object.entries(scripts).map(([name, s]) => [name, s.command.replace("{srcDirs}", framework.srcDirs.join(" "))])) },
+  ".claude/settings.json": modules.reduce((settings, [, m]) => merge(settings, m.settings ?? {}), {}),
+};
+for (const [path, add] of Object.entries(merged)) {
+  const json = readJson(path, {});
+  unmerge(json, previous.merged[path] ?? {});
+  writeJson(path, merge(json, add));
 }
-const plugins = chosen.plugins.map(([name]) => name);
-settings.enabledPlugins ??= {};
-for (const p of previous.plugins) if (!plugins.includes(p)) delete settings.enabledPlugins[p];
-for (const p of plugins) settings.enabledPlugins[p] = true;
-const permissions = {};
-for (const [, { config }] of chosen.permissions) {
-  for (const [list, rules] of Object.entries(config)) permissions[list] = [...new Set([...(permissions[list] ?? []), ...rules])];
-}
-settings.permissions ??= {};
-for (const [list, rules] of Object.entries(previous.permissions)) {
-  if (!settings.permissions[list]) continue;
-  settings.permissions[list] = settings.permissions[list].filter((rule) => !rules.includes(rule) || permissions[list]?.includes(rule));
-  if (!settings.permissions[list].length) delete settings.permissions[list];
-}
-for (const [list, rules] of Object.entries(permissions)) settings.permissions[list] = [...new Set([...(settings.permissions[list] ?? []), ...rules])];
-if (!Object.keys(settings.permissions).length) delete settings.permissions;
-writeJson(".claude/settings.json", settings);
 
-// .mcp.json: a server given as `server` is set here (one with `install` writes itself); the project's own are kept.
-const mcpNames = chosen.mcp.map(([name]) => name);
+// .mcp.json: a server whose module went is removed (the installs add them); the project's own are kept.
+const mcpNames = collect("mcp");
 const mcp = readJson(".mcp.json", { mcpServers: {} });
 for (const name of previous.mcp) if (!mcpNames.includes(name)) delete mcp.mcpServers[name];
-for (const [name, e] of chosen.mcp) if (e.server) mcp.mcpServers[name] = e.server;
 if (Object.keys(mcp.mcpServers).length) writeJson(".mcp.json", mcp);
 else rmSync(".mcp.json", { force: true });
 
@@ -193,20 +156,12 @@ writeJson(".claude/harness.json", {
   skipChecks: [...skip],
   checks,
   fileChecks,
-  scripts: Object.keys(scripts),
   paths,
-  plugins,
+  merged,
   mcp: mcpNames,
-  permissions,
 });
 
 // .claude/harness.md: the always-loaded summary CLAUDE.md imports.
-// A rule is named by its file (an entry such as react/structure.md is structure.md in the project).
-const list = (kind) => chosen[kind].map(([name, e]) => `- \`${kind === "rules" ? basename(e.output) : name}\`: ${e.description}`).join("\n");
-const scriptDocs = Object.entries(merge("scripts")).map(([name, s]) => `npm run ${name}`.padEnd(24) + `# ${s.description}`);
-const sections = merge("sections");
-const hookDocs = (text) =>
-  text.replace("{checks}", checks.map((c) => c.name).join(", ")).replace("{fileChecks}", fileChecks.map((c) => c.name).join(", "));
 const md = [
   "# Harness",
   "",
@@ -219,24 +174,8 @@ const md = [
   "",
   "```bash",
   "npm run dev".padEnd(24) + `# http://localhost:${framework.port}`,
-  ...scriptDocs,
+  ...Object.entries(scripts).map(([name, s]) => `npm run ${name}`.padEnd(24) + `# ${s.description}`),
   "```",
-  "",
-  "## Rules in `.claude/rules/`",
-  "",
-  list("rules"),
-  "",
-  "## Hooks",
-  "",
-  "Claude Code hooks in `.claude/hooks/`, set in `.claude/settings.json`. A red result blocks you until it is fixed.",
-  "",
-  ...chosen.hooks.map(([, e]) => `- \`${basename(e.output)}\` ${hookDocs(e.description)}`),
-  ...(chosen.githooks.length ? ["", "Git hooks in `.githooks/`, turned on by `npm install`:", "", list("githooks")] : []),
-  "",
-  "## Skills in `.claude/skills/`",
-  "",
-  list("skills"),
-  ...Object.entries(sections).flatMap(([title, body]) => ["", `## ${title}`, "", body]),
   "",
 ].join("\n");
 writeFileSync(".claude/harness.md", md);
@@ -257,9 +196,10 @@ for (const note of notes) console.log(`harness: ${note}`);
 
 // npm packages last, so every file above is written even when the install fails.
 // Install only what the project does not have yet.
+const pkg = readJson("package.json");
 const have = { ...pkg.dependencies, ...pkg.devDependencies };
-const frameworkDeps = modules.flatMap(([, m]) => m.dependencies?.frameworkDevDependencies?.[frameworkId] ?? []);
-const missing = [...new Set([...collectDep("devDependencies"), ...frameworkDeps])].filter((p) => !(p in have));
+const frameworkDeps = modules.flatMap(([, m]) => m.frameworkDevDependencies?.[frameworkId] ?? []);
+const missing = [...new Set([...collect("devDependencies"), ...frameworkDeps])].filter((p) => !(p in have));
 if (missing.length && !noInstall) {
   try {
     execSync(`npm install --save-dev ${missing.join(" ")}`, { stdio: "inherit" });
@@ -268,15 +208,14 @@ if (missing.length && !noInstall) {
   }
 }
 
-// Install commands: each runs when a path in its `output` is missing (a plugin, which has no output file, runs every time).
+// Install commands: each runs when a path it creates is missing (one that creates none, every time).
 if (!noInstall) {
-  for (const x of installs) {
-    const paths = output(x);
-    if (paths.length && paths.every((path) => existsSync(path))) continue;
+  for (const i of installs) {
+    if (i.creates?.every((path) => existsSync(path))) continue;
     try {
-      execSync(x.e.install, { stdio: "inherit" });
+      execSync(i.command, { stdio: "inherit" });
     } catch {
-      fail(`installing ${x.kind} entry "${x.name}" failed; run by hand: ${x.e.install}`);
+      fail(`install failed; run by hand: ${i.command}`);
     }
   }
 }
