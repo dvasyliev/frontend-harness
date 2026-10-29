@@ -3,7 +3,8 @@
 // Usage: node apply.mjs '{"framework": "nextjs", "modules": [...], "skipChecks": [...], "docsLanguage": "English"}'
 // An answer left out keeps its value from the last run (.claude/harness.json).
 import { execSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 
 const root = join(import.meta.dirname, "..");
@@ -97,9 +98,21 @@ const previous = {
   ...old,
 };
 
+// What the harness wrote last, by path: the base for the next merge, kept in .claude/harness.json.
+// Before 0.28 it was a folder of copies, .claude/harness-base/; its files move in here.
+const legacyBase = ".claude/harness-base";
+const base = { ...old.base };
+if (existsSync(legacyBase)) {
+  for (const d of readdirSync(legacyBase, { recursive: true, withFileTypes: true })) {
+    if (!d.isFile() || d.name.endsWith(".new")) continue;
+    base[relative(legacyBase, join(d.parentPath, d.name))] ??= readFileSync(join(d.parentPath, d.name), "utf8");
+  }
+}
+// The harness version of a file the skill merges by hand; the skill deletes the folder once merged.
+const mergePath = (path) => join(".claude/harness-merge", path);
+
 // Paths no module needs any more are removed, except a file the project has edited.
-const basePath = (path) => join(".claude/harness-base", path);
-const edited = (path) => existsSync(basePath(path)) && existsSync(path) && readFileSync(path, "utf8") !== readFileSync(basePath(path), "utf8");
+const edited = (path) => path in base && existsSync(path) && readFileSync(path, "utf8") !== base[path];
 // A folder a removed file leaves empty goes too.
 const prune = (dir) => {
   for (; dir !== "." && existsSync(dir) && !readdirSync(dir).length; dir = dirname(dir)) rmSync(dir, { recursive: true });
@@ -110,19 +123,19 @@ for (const path of previous.paths) {
   if (paths.includes(path)) continue;
   if (edited(path)) notes.push(`${path}: no module needs it any more, but the project edited it, so it stays`);
   else rmSync(path, { recursive: true, force: true });
-  rmSync(basePath(path), { force: true });
+  delete base[path];
   prune(dirname(path));
-  prune(dirname(basePath(path)));
   if (lock?.skills && path.startsWith(".claude/skills/")) delete lock.skills[path.slice(".claude/skills/".length)];
 }
 if (lock) writeJson("skills-lock.json", lock);
 
-// Each file keeps the project's edits: .claude/harness-base/ holds what the harness wrote last,
+// Each file keeps the project's edits: `base` holds what the harness wrote last,
 // and the harness changes since then are merged into the project's version, as git merges branches.
 const write = (path, text) => {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, text);
 };
+const tmp = mkdtempSync(join(tmpdir(), "harness-"));
 // The same file under another extension (eslint.config.js for eslint.config.mjs): its tool reads only one.
 const stem = (name) => (name.lastIndexOf(".") > 0 ? name.slice(0, name.lastIndexOf(".")) : name);
 const sibling = (path) =>
@@ -134,33 +147,36 @@ for (const [path, source] of Object.entries(files)) {
   const other = sibling(path) && join(dirname(path), sibling(path));
   if (other && !existsSync(path)) {
     // The project has this file under another name: leave it for the skill to merge and rename.
-    notes.push(`${path}: the project has it as ${other}; merge the harness version into it and rename it to ${path} (saved as ${basePath(path)}.new)`);
-    write(`${basePath(path)}.new`, next);
+    notes.push(`${path}: the project has it as ${other}; merge the harness version into it and rename it to ${path} (saved as ${mergePath(path)})`);
+    write(mergePath(path), next);
+    base[path] = next;
     continue;
   }
   if (other) notes.push(`${path}: ${other} is there too, and its tool reads only one; merge ${other} into ${path} and delete it`);
   const current = existsSync(path) ? readFileSync(path, "utf8") : next;
-  if (current !== next && existsSync(basePath(path))) {
-    if (current !== readFileSync(basePath(path), "utf8")) {
-      write(`${basePath(path)}.next`, next);
+  if (current !== next && path in base) {
+    if (current !== base[path]) {
+      write(join(tmp, "base"), base[path]);
+      write(join(tmp, "next"), next);
       try {
-        execSync(`git merge-file -L project -L last-install -L harness "${path}" "${basePath(path)}" "${basePath(path)}.next"`, { stdio: "ignore" });
+        execSync(`git merge-file -L project -L last-install -L harness "${path}" "${join(tmp, "base")}" "${join(tmp, "next")}"`, { stdio: "ignore" });
       } catch {
         notes.push(`${path}: merge conflicts; resolve the <<<<<<< markers`);
       }
-      rmSync(`${basePath(path)}.next`);
-      write(basePath(path), next);
+      base[path] = next;
       continue;
     }
   } else if (current !== next && !previous.paths.includes(path)) {
     // The project had this file before the harness: leave it for the skill to merge.
-    notes.push(`${path}: the project already had it; merge the harness version by hand (saved as ${basePath(path)}.new)`);
-    write(`${basePath(path)}.new`, next);
+    notes.push(`${path}: the project already had it; merge the harness version by hand (saved as ${mergePath(path)})`);
+    write(mergePath(path), next);
+    base[path] = next;
     continue;
   }
   write(path, next);
-  write(basePath(path), next);
+  base[path] = next;
 }
+rmSync(tmp, { recursive: true });
 
 // package.json scripts, .claude/settings.json and .mcp.json servers: the modules' keys are set, the project's own are kept.
 const scripts = Object.assign({}, ...modules.map(([, m]) => ({ ...m.scripts, ...m.frameworkScripts?.[frameworkId] })));
@@ -200,15 +216,18 @@ writeJson(".claude/harness.json", {
   paths,
   merged,
   mcp: mcpNames,
+  base,
 });
+rmSync(legacyBase, { recursive: true, force: true });
 
-// .claude/harness.md: the always-loaded summary CLAUDE.md imports.
+// .claude/rules/harness.md: the always-loaded summary (a rule with no paths). Before 0.29 it was .claude/harness.md.
+rmSync(".claude/harness.md", { force: true });
 const md = [
   "# Harness",
   "",
   "Written by the frontend-harness plugin from `.claude/harness.json`; do not edit by hand.",
   "",
-  ...(paths.includes("AGENTS.md") ? ["@../AGENTS.md", ""] : []),
+  ...(paths.includes("AGENTS.md") ? ["@../../AGENTS.md", ""] : []),
   `Harness modules: ${modules.map(([id]) => id).join(", ")}. Specs and plans are written in ${answers.docsLanguage}.`,
   "",
   "## Commands",
@@ -219,7 +238,7 @@ const md = [
   "```",
   "",
 ].join("\n");
-writeFileSync(".claude/harness.md", md);
+write(".claude/rules/harness.md", md);
 
 // Hooks must be executable, and git must use .githooks/ (when a module brings git hooks)
 // even before the next npm install; without them, git goes back to the project's own hooks.

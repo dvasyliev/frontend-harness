@@ -2,8 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-@.claude/harness.md
-
 ## What this is
 
 <One paragraph: what the app does and its stack.>

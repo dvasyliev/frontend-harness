@@ -27,11 +27,10 @@ tasks/apply.mjs                            writes the chosen modules into the pr
 
 | Path | Purpose |
 |---|---|
-| module files | Merged with the project's edits (`git merge-file` against `.claude/harness-base/`). A file the project already had, or has under another extension, is left for the skill to merge (`.new`). |
+| module files | Merged with the project's edits (`git merge-file` against `base` in `.claude/harness.json`). A file the project already had, or has under another extension, is left for the skill to merge (its harness version in `.claude/harness-merge/`). |
 | `package.json`, `.claude/settings.json`, `.mcp.json` | The modules' keys are merged in and taken back when their module goes; a value the project set differently stays. |
-| `.claude/harness.json` | Answers, version, the checks the hooks run, and what this run wrote. |
-| `.claude/harness.md` | Installed modules and commands; `CLAUDE.md` imports it. |
-| `.claude/harness-base/` | What the harness wrote last: the base for the next merge. |
+| `.claude/harness.json` | Answers, version, the checks the hooks run, what this run wrote, and `base`: the text of each file the harness wrote last, the base for the next merge. |
+| `.claude/rules/harness.md` | Installed modules and commands; always loaded, as a rule with no `paths`. |
 | `core.hooksPath` | `.githooks` when a module brings git hooks, unless the project runs its hooks from elsewhere (husky). |
 
 A module that goes takes its files (unless the project edited them), scripts, settings and MCP servers with it; npm packages stay.

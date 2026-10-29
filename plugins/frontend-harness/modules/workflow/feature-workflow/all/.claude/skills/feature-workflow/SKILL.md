@@ -7,13 +7,13 @@ description: Use when building any user-facing feature, from the request to the 
 
 Go through the steps below in order.
 
-A step or sentence marked with a module (such as "With `e2e`") applies only when that module is in the harness modules listed in `.claude/harness.md`; skip it otherwise.
+A step or sentence marked with a module (such as "With `e2e`") applies only when that module is in the harness modules listed in `.claude/rules/harness.md`; skip it otherwise.
 
 ## Spec
 
 Start from the feature's spec in `docs/superpowers/specs/`, if it has one. Note what existing code is reused and what the feature replaces.
 
-Specs and plans go where superpowers puts them, in the docs language given in `.claude/harness.md`: a spec (from `superpowers:brainstorming` or written by hand) in `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, a plan in `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md` with the `writing-plans` header and a `**Spec:**` line pointing to its spec.
+Specs and plans go where superpowers puts them, in the docs language given in `.claude/rules/harness.md`: a spec (from `superpowers:brainstorming` or written by hand) in `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`, a plan in `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md` with the `writing-plans` header and a `**Spec:**` line pointing to its spec.
 
 Then decide what the request needs:
 
