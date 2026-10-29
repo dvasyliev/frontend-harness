@@ -44,10 +44,6 @@
         "check": {
           "command": ".claude/hooks/check-all.sh --force",
           "description": "all checks at once, as the Stop hook runs them"
-        },
-        "prepare": {
-          "command": "git config core.hooksPath .githooks",
-          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
         }
       },
       "checks": [
@@ -262,6 +258,10 @@
         "verify": {
           "command": "playwright test",
           "description": "all end-to-end tests; `npx playwright test <file>` for one"
+        },
+        "prepare": {
+          "command": "git config core.hooksPath .githooks",
+          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
         }
       },
       "devDependencies": ["@playwright/test", "@playwright/cli"],
@@ -275,6 +275,12 @@
     "commitlint": {
       "description": "Conventional Commits checked by commitlint in a commit-msg hook, plus the skill that writes valid messages.",
       "recommended": true,
+      "scripts": {
+        "prepare": {
+          "command": "git config core.hooksPath .githooks",
+          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
+        }
+      },
       "devDependencies": ["@commitlint/cli", "@commitlint/config-conventional"],
       "install": [
         {

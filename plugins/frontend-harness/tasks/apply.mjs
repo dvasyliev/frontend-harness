@@ -38,14 +38,19 @@ if (modules.filter(([, m]) => m.linter).length !== 1) fail(`choose one linter of
 const collect = (key) => modules.flatMap(([, m]) => m[key] ?? []);
 
 // JSON the modules add to the project's own files: objects by key, arrays by item.
-// `unmerge` takes back what the previous run added, so what no module needs any more goes.
+// `unmerge` takes back what the previous run added (a value the project changed since stays),
+// so what no module needs any more goes. `merge` keeps a value the project set differently:
+// it is listed in `kept` and dropped from `add`, so it stays the project's.
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
-function merge(target, add) {
+function merge(target, add, kept = [], at = "") {
   for (const [k, v] of Object.entries(add)) {
     if (Array.isArray(v)) target[k] = [...(target[k] ?? []), ...v.filter((x) => !(target[k] ?? []).some((y) => same(x, y)))];
-    else if (isObject(v)) merge((target[k] ??= {}), v);
-    else target[k] = v;
+    else if (isObject(v)) merge((target[k] ??= {}), v, kept, `${at}${k}.`);
+    else if (k in target && !same(target[k], v)) {
+      kept.push({ key: at + k, project: target[k], harness: v });
+      delete add[k];
+    } else target[k] = v;
   }
   return target;
 }
@@ -54,8 +59,8 @@ function unmerge(target, added) {
     if (!(k in target)) continue;
     if (Array.isArray(v)) target[k] = target[k].filter((x) => !v.some((y) => same(x, y)));
     else if (isObject(v)) unmerge(target[k], v);
-    else delete target[k];
-    if (k in target && !Object.keys(target[k]).length) delete target[k];
+    else if (same(target[k], v)) delete target[k];
+    if (isObject(target[k]) || Array.isArray(target[k])) if (!Object.keys(target[k]).length) delete target[k];
   }
 }
 
@@ -79,7 +84,7 @@ const previous = {
   paths: [],
   mcp: [],
   merged: {
-    "package.json": { scripts: Object.fromEntries((old.scripts ?? []).map((name) => [name, ""])) },
+    "package.json": { scripts: Object.fromEntries((old.scripts ?? []).map((name) => [name, readJson("package.json").scripts?.[name]])) },
     ".claude/settings.json": { enabledPlugins: Object.fromEntries((old.plugins ?? []).map((p) => [p, true])), permissions: old.permissions ?? {} },
   },
   ...old,
@@ -145,7 +150,9 @@ const merged = {
 for (const [path, add] of Object.entries(merged)) {
   const json = readJson(path, {});
   unmerge(json, previous.merged[path] ?? {});
-  writeJson(path, merge(json, add));
+  const kept = [];
+  writeJson(path, merge(json, add, kept));
+  for (const k of kept) notes.push(`${path}: the project's ${k.key} stays ${JSON.stringify(k.project)}; the harness one is ${JSON.stringify(k.harness)}`);
 }
 
 // .mcp.json: a server whose module went is removed (the installs add them); the project's own are kept.
@@ -192,13 +199,19 @@ const md = [
 ].join("\n");
 writeFileSync(".claude/harness.md", md);
 
-// Hooks must be executable, and git must use .githooks/ even before the next npm install.
+// Hooks must be executable, and git must use .githooks/ (when a module brings git hooks)
+// even before the next npm install; without them, git goes back to the project's own hooks.
+// A project whose git hooks live elsewhere (husky) keeps them there.
 for (const dir of [".claude/hooks", ".githooks"]) {
   if (!existsSync(dir)) continue;
   for (const f of readdirSync(dir)) chmodSync(`${dir}/${f}`, 0o755);
 }
 try {
-  execSync("git config core.hooksPath .githooks", { stdio: "ignore" });
+  const hooksPath = execSync("git config core.hooksPath || true", { encoding: "utf8" }).trim();
+  if (!existsSync(".githooks")) {
+    if (hooksPath === ".githooks") execSync("git config --unset core.hooksPath");
+  } else if (!hooksPath || hooksPath === ".githooks") execSync("git config core.hooksPath .githooks", { stdio: "ignore" });
+  else notes.push(`git runs its hooks from ${hooksPath}, so the harness git hooks in .githooks/ do not run; call them from there`);
 } catch {
   // Not a git repo yet; `npm install` runs `prepare` later.
 }

@@ -48,6 +48,8 @@ Then read the `harness:` lines it printed, `git status` and `git diff`:
 - **Merge conflicts:** a file with `<<<<<<< project` markers. Resolve each so both the project's change and the harness change survive; ask the user when the two contradict.
 - **Files the project had before the harness:** a file the project already had is left as it was, with the harness version in `.claude/harness-base/<path>.new`. Merge the harness version into the project's file, asking the user where they contradict; then move the `.new` file over `.claude/harness-base/<path>`, so the next update merges from there. For `CLAUDE.md`, that means adding `@.claude/harness.md` under its first heading; `.claude/harness.md` lists the commands and `.claude/rules/` the rest, so if `CLAUDE.md` repeats any of these, ask the user before removing it.
 - **Kept files:** a file no module needs any more stays when the project edited it. Ask the user whether to delete it.
+- **Kept values:** a `package.json` script or `.claude/settings.json` value the project set differently (such as `"prepare": "husky"` or its own `lint`) stays the project's, and the harness one is printed. Ask the user: keep the project's (the checks then run it), or set the harness one; a value equal to the harness one becomes the harness's on the next run.
+- **Git hooks elsewhere:** when git runs its hooks from another folder (husky's `.husky/`), the harness git hooks in `.githooks/` do not run. Offer to call each from the project's hook of the same name (such as `.githooks/commit-msg "$1"` in `.husky/commit-msg`).
 
 ## 4. Finish
 
