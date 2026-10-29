@@ -1,0 +1,11 @@
+{
+  "$comment": "The git hooks modules can bring (modules.json `dependencies.githooks`). Each script lives in library/.githooks/<name>; its `describe` goes into .claude/harness.md.",
+  "githooks": {
+    "pre-push": {
+      "describe": "runs `npm run verify`; the push is cancelled if it fails."
+    },
+    "commit-msg": {
+      "describe": "checks the commit message with commitlint."
+    }
+  }
+}

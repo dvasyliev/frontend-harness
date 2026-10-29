@@ -1,0 +1,29 @@
+{
+  "$comment": "The Claude Code hooks modules can bring (modules.json `dependencies.hooks`). Each script lives in library/.claude/hooks/<name>; apply.mjs writes its `event`, `matcher`, `timeout` and `statusMessage` into .claude/settings.json and its `describe` into .claude/harness.md ({checks} and {fileChecks} become the project's checks).",
+  "hooks": {
+    "session-start.sh": {
+      "describe": "(session start, resume or clear): reports whether dependencies are installed, whether a dev server already runs, and how many files are uncommitted.",
+      "event": "SessionStart",
+      "matcher": "startup|resume|clear"
+    },
+    "guard-commands.sh": {
+      "describe": "(before every Bash command): blocks force push and skipping git hooks (`--no-verify`, `SKIP_VERIFY`).",
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "statusMessage": "Checking command"
+    },
+    "format-lint-file.sh": {
+      "describe": "(after every edit): {fileChecks} on the edited file.",
+      "event": "PostToolUse",
+      "matcher": "Edit|Write",
+      "timeout": 60,
+      "statusMessage": "Formatting and linting"
+    },
+    "check-all.sh": {
+      "describe": "(end of every turn): {checks}; skipped when only `.md` files changed or the same code already passed.",
+      "event": "Stop",
+      "timeout": 600,
+      "statusMessage": "Running checks"
+    }
+  }
+}

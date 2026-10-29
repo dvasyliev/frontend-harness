@@ -1,5 +1,5 @@
 {
-  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. Each module is one thing the project gets; `dependencies` lists everything it needs: other `modules`, `plugins`, `skills` (names from skills.json, installed when they fit the framework), `mcp` servers, `commands` that set something up themselves (run when a file they `creates` is missing), npm `devDependencies` (and `frameworkDevDependencies`), `rules` (.claude/rules/<name>), `configs`, `hooks` (.claude/hooks/<name>), `githooks` (.githooks/<name>) and other `files`. Rules and configs live in template/: Copier renders them per framework and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules (a rule a command `creates` is not in template/). Hooks, git hooks and files live in library/ (laid out like a project) and are copied whole, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
+  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. Each module is one thing the project gets; `dependencies` lists everything it needs: other `modules`, `plugins`, `skills` (names from skills.json, installed when they fit the framework), `mcp` servers, `commands` that set something up themselves (run when a file they `creates` is missing), npm `devDependencies` (and `frameworkDevDependencies`), `rules` (.claude/rules/<name>), `configs`, `hooks` (names from hooks.json), `githooks` (names from githooks.json) and other `files`. Rules and configs live in template/: Copier renders them per framework and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules (a rule a command `creates` is not in template/). Hooks, git hooks and files live in library/ (laid out like a project) and are copied whole, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
   "frameworks": {
     "nextjs": {
       "describe": "Next.js App Router",
@@ -254,9 +254,7 @@
           "tests-e2e.md": "end-to-end test conventions (loads when working in `tests/`)."
         },
         "configs": ["playwright.config.ts", "tests/seed.spec.ts"],
-        "githooks": {
-          "pre-push": "runs `npm run verify`; the push is cancelled if it fails."
-        }
+        "githooks": ["pre-push"]
       }
     },
     "commitlint": {
@@ -272,9 +270,7 @@
           "@commitlint/config-conventional"
         ],
         "configs": ["commitlint.config.mjs"],
-        "githooks": {
-          "commit-msg": "checks the commit message with commitlint."
-        }
+        "githooks": ["commit-msg"]
       }
     },
     "quality": {

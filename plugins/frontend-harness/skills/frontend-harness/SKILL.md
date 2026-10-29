@@ -9,7 +9,7 @@ The harness is a Copier template. This skill picks the modules that fit the proj
 
 **Template:** `$HARNESS_TEMPLATE` if set, else `${CLAUDE_PLUGIN_ROOT}` (a git repo; versions are its `vX.Y.Z` tags). Never use the copy in the plugin cache: it has no git history, so `copier update` cannot merge.
 
-**Catalog:** `<template>/modules.json` lists every framework and module; each module's `dependencies` lists everything it brings (other modules, plugins, skills, MCP servers, commands, npm packages, rules, configs, hooks, git hooks, files). `<template>/skills.json` describes the skills modules name. Read them; do not guess.
+**Catalog:** `<template>/modules.json` lists every framework and module; each module's `dependencies` lists everything it brings (other modules, plugins, skills, MCP servers, commands, npm packages, rules, configs, hooks, git hooks, files). `<template>/skills.json`, `hooks.json` and `githooks.json` describe the skills, Claude Code hooks and git hooks modules name. Read them; do not guess.
 
 ## 1. Look at the project
 
@@ -82,6 +82,7 @@ A fix to a harness-owned file (anything the template writes, or the hooks, rules
    - `library/`: files projects never edit, copied whole to the same path: hooks in `library/.claude/hooks/`, git hooks in `library/.githooks/`, `AGENTS.md`, the harness's own skills, MCP servers.
    - Skills: `skills.json`. A skill from another repo is an entry with its `install` command (`npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y`); projects update it with `npx skills update`. The harness's own skill is an entry without `install`, with its files in `library/.claude/skills/<name>/`. Its `frameworks` lists the frameworks it fits. A module brings it by name in `dependencies.skills`.
    - MCP servers: in `library/`, run `claude mcp add --scope project <name> ...`, or edit `library/.mcp.json`. When the tool has its own setup command (like `npx ctx7 setup` for Context7), add it to the module's `dependencies.commands` instead (`run` and the files it `creates`), with its servers in `dependencies.mcp`.
+   - Hooks: `hooks.json` (event, matcher, timeout, status message, description) with the script in `library/.claude/hooks/<name>`; git hooks: `githooks.json` with the script in `library/.githooks/<name>`. A module brings them by name in `dependencies.hooks` and `dependencies.githooks`.
    - `modules.json`: one module per thing the project gets (such as `feature-workflow` or `context7`); its `dependencies` list everything it needs, and `scripts`, `checks` and `sections` what it adds. A new file reaches no project until a module lists it.
    - `tasks/apply.mjs`: what is generated from `modules.json`.
    - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and in copier.yml `framework` choices, its branch in each `template/` file that checks `framework`, `frameworks` on the modules that fit only some frameworks, and the framework added to the `frameworks` of each skill in `skills.json` that fits it.

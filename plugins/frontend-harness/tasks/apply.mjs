@@ -46,7 +46,12 @@ const collectDep = (key) => modules.flatMap(([, m]) => m.dependencies?.[key] ?? 
 const mergeDep = (key) => Object.assign({}, ...modules.map(([, m]) => m.dependencies?.[key] ?? {}));
 const commands = collectDep("commands");
 const rules = mergeDep("rules");
-const githooks = mergeDep("githooks");
+const hookCatalog = readJson(join(dirname(catalogPath), "hooks.json")).hooks;
+const githookCatalog = readJson(join(dirname(catalogPath), "githooks.json")).githooks;
+const hooks = [...new Set(collectDep("hooks"))];
+const githooks = [...new Set(collectDep("githooks"))];
+for (const name of hooks) if (!hookCatalog[name]) fail(`unknown hook "${name}"`);
+for (const name of githooks) if (!githookCatalog[name]) fail(`unknown git hook "${name}"`);
 
 // What the previous run wrote, so a removed module's scripts, files, skills, plugins and servers go too.
 const previous = { scripts: [], files: [], skills: [], plugins: [], mcp: [], setupFiles: [], ...readJson(".claude/harness.json", {}) };
@@ -63,19 +68,12 @@ writeJson("package.json", pkg);
 
 // .claude/settings.json: the harness owns `hooks` and its plugins; every other key stays.
 const settings = readJson(".claude/settings.json", {});
-const hook = (script, extra = {}) => ({
-  type: "command",
-  command: `bash "$CLAUDE_PROJECT_DIR/.claude/hooks/${script}"`,
-  ...extra,
-});
-settings.hooks = {
-  SessionStart: [{ matcher: "startup|resume|clear", hooks: [hook("session-start.sh")] }],
-  PreToolUse: [{ matcher: "Bash", hooks: [hook("guard-commands.sh", { statusMessage: "Checking command" })] }],
-  PostToolUse: [
-    { matcher: "Edit|Write", hooks: [hook("format-lint-file.sh", { timeout: 60, statusMessage: "Formatting and linting" })] },
-  ],
-  Stop: [{ hooks: [hook("check-all.sh", { timeout: 600, statusMessage: "Running checks" })] }],
-};
+settings.hooks = {};
+for (const name of hooks) {
+  const { event, matcher, timeout, statusMessage } = hookCatalog[name];
+  const command = { type: "command", command: `bash "$CLAUDE_PROJECT_DIR/.claude/hooks/${name}"`, timeout, statusMessage };
+  (settings.hooks[event] ??= []).push({ ...(matcher && { matcher }), hooks: [command] });
+}
 const plugins = [...new Set(collectDep("plugins"))];
 settings.enabledPlugins ??= {};
 for (const p of previous.plugins) if (!plugins.includes(p)) delete settings.enabledPlugins[p];
@@ -116,8 +114,8 @@ for (const path of templates) if (!existsSync(path)) fail(`template "${path}" wa
 // Files: copied whole from library/ to the same path.
 const values = { port: String(framework.port), css: framework.css, srcDirs: framework.srcDirs.join(" ") };
 const files = [
-  ...collectDep("hooks").map((name) => `.claude/hooks/${name}`),
-  ...Object.keys(githooks).map((name) => `.githooks/${name}`),
+  ...hooks.map((name) => `.claude/hooks/${name}`),
+  ...githooks.map((name) => `.githooks/${name}`),
   ...new Set(collectDep("files")),
 ];
 for (const path of previous.files ?? []) if (!files.includes(path)) rmSync(path, { force: true });
@@ -170,6 +168,8 @@ writeJson(".claude/harness.json", {
 const list = (entries, link) => entries.map(([name, text]) => `- ${link(name)}: ${text}`).join("\n");
 const scriptDocs = Object.entries(merge("scripts")).map(([name, s]) => `npm run ${name}`.padEnd(24) + `# ${s.describe}`);
 const sections = merge("sections");
+const hookDocs = (text) =>
+  text.replace("{checks}", checks.map((c) => c.name).join(", ")).replace("{fileChecks}", fileChecks.map((c) => c.name).join(", "));
 const md = [
   "# Harness",
   "",
@@ -190,12 +190,9 @@ const md = [
   "",
   "Claude Code hooks in `.claude/hooks/`, set in `.claude/settings.json`. A red result blocks you until it is fixed.",
   "",
-  "- `session-start.sh` (session start, resume or clear): reports whether dependencies are installed, whether a dev server already runs, and how many files are uncommitted.",
-  "- `guard-commands.sh` (before every Bash command): blocks force push and skipping git hooks (`--no-verify`, `SKIP_VERIFY`).",
-  `- \`format-lint-file.sh\` (after every edit): ${fileChecks.map((c) => c.name).join(", ")} on the edited file.`,
-  `- \`check-all.sh\` (end of every turn): ${checks.map((c) => c.name).join(", ")}; skipped when only \`.md\` files changed or the same code already passed.`,
-  ...(Object.keys(githooks).length
-    ? ["", "Git hooks in `.githooks/`, turned on by `npm install`:", "", list(Object.entries(githooks), (n) => `\`${n}\``)]
+  ...hooks.map((name) => `- \`${name}\` ${hookDocs(hookCatalog[name].describe)}`),
+  ...(githooks.length
+    ? ["", "Git hooks in `.githooks/`, turned on by `npm install`:", "", list(githooks.map((n) => [n, githookCatalog[n].describe]), (n) => `\`${n}\``)]
     : []),
   "",
   "## Skills in `.claude/skills/`",
