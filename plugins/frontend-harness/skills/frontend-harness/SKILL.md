@@ -15,7 +15,7 @@ The harness is a Copier template. This skill picks the modules that fit the proj
 
 1. Run `git status --short`. If anything is uncommitted, stop and tell the user: Copier needs a clean tree, and the changes may be another agent's.
 2. If `.copier-answers.yml` exists, this is an **update**: read its `framework`, `modules`, `skip_checks` and `_commit`. Otherwise it is an **install**.
-3. Ask which framework the project uses (`AskUserQuestion`, one option per entry in `frameworks`, its `describe` as description). Put the one `frameworks.*.detect` finds in `package.json` first, marked "(detected)"; `next` wins over `react`, since a Next.js project has both. On an update, the answer in `.copier-answers.yml` is the detected one. The framework decides which modules, configs, skills and plugins step 2 offers.
+3. Ask which framework the project uses (`AskUserQuestion`, one option per entry in `frameworks`, its `describe` as the label, such as "React (Vite)"). Put the one `frameworks.*.detect` finds in `package.json` first, marked "(detected)"; `next` wins over `react`, since a Next.js project has both. On an update, the answer in `.copier-answers.yml` is the detected one. The framework decides which modules, configs, skills and plugins step 2 offers.
 
 ## 2. Choose modules
 

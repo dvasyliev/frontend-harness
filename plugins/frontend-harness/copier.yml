@@ -17,8 +17,10 @@ _migrations:
 
 framework:
   type: str
-  help: Frontend framework (react is React + Vite)
-  choices: [react, next]
+  help: Frontend framework
+  choices:
+    React (Vite): react
+    Next.js: next
 
 modules:
   type: json

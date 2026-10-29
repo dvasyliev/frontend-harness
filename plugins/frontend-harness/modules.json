@@ -11,7 +11,7 @@
       "css": "./app/globals.css"
     },
     "react": {
-      "describe": "React + Vite",
+      "describe": "React (Vite)",
       "port": 5173,
       "srcDirs": ["src"],
       "detect": {
