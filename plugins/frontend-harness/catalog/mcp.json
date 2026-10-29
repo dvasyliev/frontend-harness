@@ -1,0 +1,10 @@
+{
+  "$comment": "The MCP servers modules can bring. Each entry says where it comes from: `install` (a command; it runs when a path in `output` is missing, and those paths go when no module needs the entry any more), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits). An entry with none of these is written by another entry's `install` (listed in its `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out. An entry may also give the server itself as `server` (merged into .mcp.json).",
+  "servers": {
+    "context7": {
+      "describe": "current library docs; `npx ctx7 setup` writes the server, its rule and its skill.",
+      "install": "npx -y ctx7 setup --claude --project --oauth --mcp -y",
+      "output": [".claude/rules/context7.md", ".claude/skills/context7-mcp"]
+    }
+  }
+}

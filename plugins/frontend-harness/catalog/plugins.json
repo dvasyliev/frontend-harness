@@ -1,0 +1,9 @@
+{
+  "$comment": "The Claude Code plugins modules can bring; each is turned on in .claude/settings.json `enabledPlugins`. Each entry says where it comes from: `install` (a command; it runs when a path in `output` is missing, and those paths go when no module needs the entry any more), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits). An entry with none of these is written by another entry's `install` (listed in its `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out.",
+  "plugins": {
+    "superpowers@claude-plugins-official": {
+      "describe": "process skills (brainstorming, plans, test-driven development, subagents) the feature workflow uses.",
+      "install": "claude plugin install superpowers@claude-plugins-official --scope project"
+    }
+  }
+}

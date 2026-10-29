@@ -1,4 +1,4 @@
-# Harness template. The `frontend-harness` skill fills these answers from modules.json;
+# Harness template. The `frontend-harness` skill fills these answers from catalog/modules.json;
 # run by hand: uvx copier copy --trust -d framework=nextjs -d 'modules=["core"]' <this repo> .
 _subdirectory: template
 _answers_file: .copier-answers.yml
@@ -7,7 +7,7 @@ _templates_suffix: ""
 _tasks:
   # On install: writes the JSON-driven files (settings.json, .mcp.json, .claude/harness.json,
   # .claude/harness.md, .claude/skills) and adds npm scripts and packages.
-  - command: &apply "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/modules.json' '{{ framework }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}'"
+  - command: &apply "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/catalog' '{{ framework }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}'"
     when: "{{ _copier_operation == 'copy' }}"
 _migrations:
   # On update: the same, but after Copier has merged the project's own changes back in,
@@ -24,13 +24,13 @@ framework:
 
 modules:
   type: json
-  help: Harness modules to install (ids from modules.json)
+  help: Harness modules to install (ids from catalog/modules.json)
   default: ["core"]
   validator: "{% if 'core' not in modules %}core is required{% endif %}"
 
 skip_checks:
   type: json
-  help: Checks to turn off in this project (names from modules.json)
+  help: Checks to turn off in this project (names from catalog/modules.json)
   default: []
 
 
@@ -39,7 +39,7 @@ docs_language:
   help: Language of specs and plans
   default: English
 
-# Configs and rules that only some modules use; modules.json lists the same files under each module's `dependencies`.
+# Configs and rules that only some modules use; catalog/rules.json and files.json list the same files as `template`.
 _exclude:
   - "{% if 'unit' not in modules %}vitest.config.mts{% endif %}"
   - "{% if 'e2e' not in modules %}playwright.config.ts{% endif %}"

@@ -9,7 +9,7 @@ The harness is a Copier template. This skill picks the modules that fit the proj
 
 **Template:** `$HARNESS_TEMPLATE` if set, else `${CLAUDE_PLUGIN_ROOT}` (a git repo; versions are its `vX.Y.Z` tags). Never use the copy in the plugin cache: it has no git history, so `copier update` cannot merge.
 
-**Catalog:** `<template>/modules.json` lists every framework and module; each module's `dependencies` lists everything it brings (other modules, plugins, skills, MCP servers, commands, npm packages, rules, configs, hooks, git hooks, files). `<template>/skills.json`, `hooks.json` and `githooks.json` describe the skills, Claude Code hooks and git hooks modules name. Read them; do not guess.
+**Catalog:** `<template>/catalog/`. `modules.json` lists every framework and module; each module's `dependencies` names everything it brings: other modules, npm packages, and entries of `plugins.json`, `skills.json`, `mcp.json`, `rules.json`, `files.json`, `hooks.json` and `githooks.json`. Every such entry says how it gets into the project: `install` (a command), `copy` (from `library/`) or `template` (from `template/`, merged by Copier). Read them; do not guess.
 
 ## 1. Look at the project
 
@@ -29,7 +29,7 @@ Ask with `AskUserQuestion`, `multiSelect: true`, up to 4 modules per question (s
 
 Add every module in a chosen one's `dependencies.modules`, and tell the user which ones you added and why.
 
-A `group` in `modules.json` (the linter) takes exactly `pick` modules: choose the one the project already uses (its `detect`), else the group's `default` for the framework. Ask only when the project has both or the user wants the other.
+A `group` in `catalog/modules.json` (the linter) takes exactly `pick` modules: choose the one the project already uses (its `detect`), else the group's `default` for the framework. Ask only when the project has both or the user wants the other.
 
 Skills come with their modules; there is no separate skill question.
 
@@ -51,7 +51,7 @@ Update (same `-d` answers; Copier keeps any you leave out):
 uvx copier update --trust --defaults -d 'modules=[...]' -d 'skip_checks=[...]'
 ```
 
-`--trust` lets the template's task (`tasks/apply.mjs`) run: it copies the modules' hooks, git hooks, files and the harness's own skills from `library/`, runs each other skill's `install` command (only for a skill the project does not have yet), runs each module's `commands` (only when a file one `creates` is missing), writes `.claude/settings.json` hooks and plugins, `.mcp.json`, `.claude/harness.json`, `.claude/harness.md`, the npm scripts, and installs missing packages. `docs_language` is the language of specs and plans; ask if the project's docs do not show it.
+`--trust` lets the template's task (`tasks/apply.mjs`) run: it copies each `copy` entry from `library/`, checks each `template` entry was rendered, writes `.claude/settings.json` hooks and plugins, `.mcp.json`, `.claude/harness.json`, `.claude/harness.md` and the npm scripts, installs missing npm packages, and runs each `install` command whose `output` paths are not all there (a plugin's runs every time). `docs_language` is the language of specs and plans; ask if the project's docs do not show it.
 
 Then read `git status` and `git diff`:
 
@@ -78,14 +78,13 @@ Copier writes `CLAUDE.md` only when there is none. If the project already had on
 A fix to a harness-owned file (anything the template writes, or the hooks, rules and skills it installs) goes into the template, not only into the project, or the next update overwrites it.
 
 1. Make the change in `<template>`:
-   - `template/`: every file a project may edit: configs (ESLint, oxlint, Prettier, Vitest, Playwright, knip, commitlint), `.claude/rules/`, `CLAUDE.md`. Copier renders them per framework and modules and merges them with the project's edits. A file only some modules use goes in copier.yml `_exclude` and in that module's `dependencies` (`rules` or `configs`).
-   - `library/`: files projects never edit, copied whole to the same path: hooks in `library/.claude/hooks/`, git hooks in `library/.githooks/`, `AGENTS.md`, the harness's own skills, MCP servers.
-   - Skills: `skills.json`. A skill from another repo is an entry with its `install` command (`npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y`); projects update it with `npx skills update`. The harness's own skill is an entry without `install`, with its files in `library/.claude/skills/<name>/`. Its `frameworks` lists the frameworks it fits. A module brings it by name in `dependencies.skills`.
-   - MCP servers: in `library/`, run `claude mcp add --scope project <name> ...`, or edit `library/.mcp.json`. When the tool has its own setup command (like `npx ctx7 setup` for Context7), add it to the module's `dependencies.commands` instead (`run` and the files it `creates`), with its servers in `dependencies.mcp`.
-   - Hooks: `hooks.json` (event, matcher, timeout, status message, description) with the script in `library/.claude/hooks/<name>`; git hooks: `githooks.json` with the script in `library/.githooks/<name>`. A module brings them by name in `dependencies.hooks` and `dependencies.githooks`.
-   - `modules.json`: one module per thing the project gets (such as `feature-workflow` or `context7`); its `dependencies` list everything it needs, and `scripts`, `checks` and `sections` what it adds. A new file reaches no project until a module lists it.
-   - `tasks/apply.mjs`: what is generated from `modules.json`.
-   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and in copier.yml `framework` choices, its branch in each `template/` file that checks `framework`, `frameworks` on the modules that fit only some frameworks, and the framework added to the `frameworks` of each skill in `skills.json` that fits it.
+   - `catalog/`: `modules.json` holds one module per thing the project gets (such as `feature-workflow` or `context7`): its `dependencies` name everything it needs, and `scripts`, `checks` and `sections` what it adds. The other files are catalogs of entries by kind; a new entry reaches no project until a module names it. Each entry has `describe`, optional `frameworks`, and one of:
+     - `install`: a command, with the paths it writes in `output` (a skill's defaults to its folder). For another repo's skill: `npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y` (projects update it with `npx skills update`). For a tool with its own setup (like `npx ctx7 setup` for Context7): that command, and the entries it writes (its rule, its skill) listed without a source.
+     - `copy`: a file or folder in `library/`, copied whole: `library/skills/<name>/`, `library/hooks/<name>`, `library/githooks/<name>`, `library/AGENTS.md`. Projects never edit these.
+     - `template`: a file in `template/` at its project path: configs, `.claude/rules/`, `CLAUDE.md`. Copier renders it per framework and modules and merges it with the project's edits. A template only some modules use also goes in copier.yml `_exclude`.
+   - Hooks also have `event`, `matcher`, `timeout` and `statusMessage` (written to `.claude/settings.json`); an MCP server may give its definition as `server`.
+   - `tasks/apply.mjs`: how entries are installed, copied and removed.
+   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `catalog/modules.json` `frameworks` and in copier.yml `framework` choices, its branch in each `template/` file that checks `framework`, and the framework in the `frameworks` of each module and entry that fits it.
 2. Try it on a scratch project: `uvx copier copy --trust --defaults -d framework=<framework> -d 'modules=[...]' <template> <scratch>` (with `HARNESS_NO_INSTALL=1` to skip npm installs).
 3. Commit in `<template>` and tag the next version (`git tag vX.Y.Z`; a new module or answer is a minor version, a fix a patch).
 4. Update the project with step 3's update command.

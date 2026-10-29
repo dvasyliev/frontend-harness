@@ -1,5 +1,5 @@
 {
-  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. Each module is one thing the project gets; `dependencies` lists everything it needs: other `modules`, `plugins`, `skills` (names from skills.json, installed when they fit the framework), `mcp` servers, `commands` that set something up themselves (run when a file they `creates` is missing), npm `devDependencies` (and `frameworkDevDependencies`), `rules` (.claude/rules/<name>), `configs`, `hooks` (names from hooks.json), `githooks` (names from githooks.json) and other `files`. Rules and configs live in template/: Copier renders them per framework and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules (a rule a command `creates` is not in template/). Hooks, git hooks and files live in library/ (laid out like a project) and are copied whole, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
+  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. Each module is one thing the project gets; `dependencies` lists everything it needs by name: other `modules`, `plugins` (plugins.json), `skills` (skills.json), `mcp` servers (mcp.json), `rules` (rules.json), `files` (files.json: configs and other files), `hooks` (hooks.json), `githooks` (githooks.json), and npm `devDependencies` (and `frameworkDevDependencies`). Each of those catalogs says how its entries get into the project: `install`, `copy` or `template`. copier.yml `_exclude` leaves out the template files of unselected modules. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
   "frameworks": {
     "nextjs": {
       "describe": "Next.js App Router",
@@ -83,16 +83,14 @@
       },
       "dependencies": {
         "devDependencies": ["typescript", "prettier"],
-        "rules": {
-          "structure.md": "where new and moved files go."
-        },
-        "configs": [".prettierrc.json", ".prettierignore"],
+        "rules": ["structure.md"],
         "hooks": [
           "session-start.sh",
           "guard-commands.sh",
           "format-lint-file.sh",
           "check-all.sh"
-        ]
+        ],
+        "files": [".prettierrc.json", ".prettierignore"]
       }
     },
     "feature-workflow": {
@@ -101,9 +99,7 @@
       "dependencies": {
         "plugins": ["superpowers@claude-plugins-official"],
         "skills": ["improve-harness"],
-        "rules": {
-          "feature-workflow.md": "the steps for building a user-facing feature."
-        }
+        "rules": ["feature-workflow.md"]
       }
     },
     "eslint": {
@@ -151,7 +147,7 @@
             "eslint-plugin-react-refresh"
           ]
         },
-        "configs": ["eslint.config.mjs"]
+        "files": ["eslint.config.mjs"]
       }
     },
     "oxlint": {
@@ -186,7 +182,7 @@
       ],
       "dependencies": {
         "devDependencies": ["oxlint"],
-        "configs": [".oxlintrc.json"]
+        "files": [".oxlintrc.json"]
       }
     },
     "next-rules": {
@@ -197,9 +193,7 @@
         "dependencies": ["next"]
       },
       "dependencies": {
-        "rules": {
-          "performance.md": "how pages load fast and how to measure it (loads when working in `app/` or `lib/`)."
-        },
+        "rules": ["performance.md"],
         "files": ["AGENTS.md"]
       }
     },
@@ -229,10 +223,8 @@
           "@testing-library/react",
           "@testing-library/dom"
         ],
-        "rules": {
-          "tests-unit.md": "unit test conventions (loads when working on test files)."
-        },
-        "configs": ["vitest.config.mts"]
+        "rules": ["tests-unit.md"],
+        "files": ["vitest.config.mts"]
       }
     },
     "e2e": {
@@ -250,11 +242,9 @@
       "dependencies": {
         "skills": ["playwright-cli"],
         "devDependencies": ["@playwright/test", "@playwright/cli"],
-        "rules": {
-          "tests-e2e.md": "end-to-end test conventions (loads when working in `tests/`)."
-        },
-        "configs": ["playwright.config.ts", "tests/seed.spec.ts"],
-        "githooks": ["pre-push"]
+        "rules": ["tests-e2e.md"],
+        "githooks": ["pre-push"],
+        "files": ["playwright.config.ts", "tests/seed.spec.ts"]
       }
     },
     "commitlint": {
@@ -269,8 +259,8 @@
           "@commitlint/cli",
           "@commitlint/config-conventional"
         ],
-        "configs": ["commitlint.config.mjs"],
-        "githooks": ["commit-msg"]
+        "githooks": ["commit-msg"],
+        "files": ["commitlint.config.mjs"]
       }
     },
     "quality": {
@@ -298,7 +288,7 @@
       ],
       "dependencies": {
         "devDependencies": ["knip", "jscpd"],
-        "configs": ["knip.json"]
+        "files": ["knip.json"]
       }
     },
     "best-practices": {
@@ -317,18 +307,8 @@
       "recommended": true,
       "dependencies": {
         "mcp": ["context7"],
-        "commands": [
-          {
-            "run": "npx -y ctx7 setup --claude --project --oauth --mcp -y",
-            "creates": [
-              ".claude/rules/context7.md",
-              ".claude/skills/context7-mcp"
-            ]
-          }
-        ],
-        "rules": {
-          "context7.md": "fetch current library docs through Context7 before answering library questions."
-        }
+        "rules": ["context7.md"],
+        "skills": ["context7-mcp"]
       }
     },
     "tailwind": {

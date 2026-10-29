@@ -1,5 +1,5 @@
 {
-  "$comment": "The skills modules can bring (modules.json `dependencies.skills`). `frameworks` lists the frameworks a skill fits; a module's skill that does not fit the project's framework is left out. A skill with `install` comes from its own repo: apply.mjs runs that command in the project when the skill is missing (later, `npx skills update` updates a skill installed with `npx skills add`; rerun the command for the others). One without `install` is the harness's own, copied whole from library/.claude/skills.",
+  "$comment": "The skills modules can bring; each goes to .claude/skills/<name>. Each entry says where it comes from: `install` (a command; it runs when a path in `output` is missing, and those paths go when no module needs the entry any more), `copy` (a file or folder in library/, copied whole) or `template` (a file in template/, which Copier renders and merges with the project's edits). An entry with none of these is written by another entry's `install` (listed in its `output`). `frameworks` (if any) lists the frameworks it fits; elsewhere it is left out. A skill's `output` defaults to its folder. Later, `npx skills update` updates a skill installed with `npx skills add`; rerun the command for the others.",
   "skills": {
     "web-design-guidelines": {
       "describe": "review UI against the Web Interface Guidelines.",
@@ -28,7 +28,11 @@
     },
     "improve-harness": {
       "describe": "end of a feature, or when a hook, rule or skill misbehaved: find harness problems and fix the approved ones.",
-      "frameworks": ["react", "nextjs"]
+      "frameworks": ["react", "nextjs"],
+      "copy": "skills/improve-harness"
+    },
+    "context7-mcp": {
+      "describe": "library docs and code examples through Context7."
     }
   }
 }
