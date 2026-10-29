@@ -62,12 +62,14 @@ function merge(target, add, kept = [], at = "") {
   }
   return target;
 }
-function unmerge(target, added) {
+// What this run adds again (`keep`) stays where it is, so an update does not reorder the file.
+function unmerge(target, added, keep = {}) {
   for (const [k, v] of Object.entries(added)) {
     if (!(k in target)) continue;
-    if (Array.isArray(v)) target[k] = target[k].filter((x) => !v.some((y) => same(x, y)));
-    else if (isObject(v)) unmerge(target[k], v);
-    else if (same(target[k], v)) delete target[k];
+    const kept = (x) => (keep[k] ?? []).some((y) => same(x, y));
+    if (Array.isArray(v)) target[k] = target[k].filter((x) => !v.some((y) => same(x, y)) || kept(x));
+    else if (isObject(v)) unmerge(target[k], v, keep[k] ?? {});
+    else if (same(target[k], v) && !same(keep[k], v)) delete target[k];
     if (isObject(target[k]) || Array.isArray(target[k])) if (!Object.keys(target[k]).length) delete target[k];
   }
 }
@@ -187,7 +189,7 @@ const merged = {
 };
 for (const [path, add] of Object.entries(merged)) {
   const json = readJson(path, {});
-  unmerge(json, previous.merged[path] ?? {});
+  unmerge(json, previous.merged[path] ?? {}, add);
   const kept = [];
   writeJson(path, merge(json, add, kept));
   for (const k of kept) notes.push(`${path}: the project's ${k.key} stays ${JSON.stringify(k.project)}; the harness one is ${JSON.stringify(k.harness)}`);
