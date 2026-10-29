@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.31.0 (2026-10-29)
+
+### Features
+
+- wait for React before each end-to-end click, keep failure traces (7e69833)
+
 ## 0.30.0 (2026-10-29)
 
 ### Features
