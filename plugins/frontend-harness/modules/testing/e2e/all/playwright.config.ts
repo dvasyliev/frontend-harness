@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
 
-// The dev server port: PORT if set, else the framework's default from .claude/harness.json.
+// The dev server port: PORT if set, else the `port` in .claude/harness.json.
 const { port } = JSON.parse(readFileSync(".claude/harness.json", "utf8")) as { port: number };
 const baseURL = `http://localhost:${process.env.PORT ?? port}`;
 

@@ -3,7 +3,6 @@
   "frameworks": {
     "nextjs": {
       "description": "Next.js App Router",
-      "port": 3000,
       "srcDirs": ["app", "lib"],
       "detect": {
         "dependencies": ["next"]
@@ -12,7 +11,6 @@
     },
     "react": {
       "description": "React (Vite)",
-      "port": 5173,
       "srcDirs": ["src"],
       "detect": {
         "dependencies": ["react"]

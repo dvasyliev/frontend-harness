@@ -18,7 +18,7 @@ tasks/apply.mjs                            writes the chosen modules into the pr
 
 | Entity | What it is |
 |---|---|
-| Framework | `modules.json` `frameworks`: `nextjs` or `react`, with its port, source folders, default linter and how to detect it. Picks the `<framework>/` version of each file. |
+| Framework | `modules.json` `frameworks`: `nextjs` or `react`, with its source folders, default linter and how to detect it. Picks the `<framework>/` version of each file. |
 | Module | `modules.json` `modules`: one thing a project gets, in a `category` (the folder its files are in). Brings files, `scripts` / `frameworkScripts` (package.json), `checks` / `fileChecks` (run by the hooks), `settings` (.claude/settings.json), `mcpServers` (.mcp.json), npm `devDependencies` / `frameworkDevDependencies`, and `install` commands with the paths each `creates` (and the `.mcp.json` servers it adds in `mcp`). |
 | How a module is chosen | `required` always; `auto` exactly when its `detect` matches (package.json or files); `linter` exactly one; `recommended` suggested; the rest offered, one question per category. |
 | Answers | `framework`, `modules`, `skipChecks`, `docsLanguage`: passed to `apply.mjs`, kept in `.claude/harness.json`. |

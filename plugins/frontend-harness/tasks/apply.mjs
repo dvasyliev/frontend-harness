@@ -19,6 +19,12 @@ const catalog = readJson(join(root, "modules.json"));
 const frameworkId = answers.framework;
 const framework = catalog.frameworks[frameworkId];
 if (!framework) fail(`unknown framework "${frameworkId}"`);
+// The dev server port the hooks and the end-to-end tests use: the one the `dev` script sets, else one from the
+// folder name, so projects on one machine rarely share it (the `dev` script then gets it below).
+const portIn = (script) => Number(script?.match(/(?:^|\s)(?:--port|-p)[\s=]*(\d+)/)?.[1]) || undefined;
+const devPort = portIn(pkg.scripts?.dev);
+const folderPort = () => 3000 + [...basename(process.cwd())].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 1000, 0);
+const port = devPort ?? folderPort();
 const skip = new Set(answers.skipChecks);
 const noInstall = Boolean(process.env.HARNESS_NO_INSTALL);
 
@@ -202,6 +208,14 @@ for (const [path, add] of Object.entries(merged)) {
   for (const k of kept) notes.push(`${path}: the project's ${k.key} stays ${JSON.stringify(k.project)}; the harness one is ${JSON.stringify(k.harness)}`);
 }
 
+// The `dev` script serves on the port when it names none.
+if (pkg.scripts?.dev && !devPort) {
+  const json = readJson("package.json");
+  json.scripts.dev += ` --port ${port}`;
+  writeJson("package.json", json);
+  notes.push(`package.json: the dev script now serves on port ${port}: ${json.scripts.dev}`);
+}
+
 // .mcp.json: a server an install added goes with its module too; with no servers left, the file goes.
 const mcpNames = [...collect("mcp"), ...Object.keys(merged[".mcp.json"].mcpServers)];
 const mcp = { mcpServers: {}, ...readJson(".mcp.json", {}) };
@@ -219,7 +233,7 @@ writeJson(".claude/harness.json", {
   modules: modules.map(([id]) => id),
   skipChecks: [...skip],
   docsLanguage: answers.docsLanguage,
-  port: framework.port,
+  port,
   checks,
   fileChecks,
   paths,
@@ -242,7 +256,7 @@ const md = [
   "## Commands",
   "",
   "```bash",
-  "npm run dev".padEnd(24) + `# http://localhost:${framework.port}`,
+  "npm run dev".padEnd(24) + `# http://localhost:${port}`,
   ...Object.entries(scripts).map(([name, s]) => `npm run ${name}`.padEnd(24) + `# ${s.description}`),
   "```",
   "",

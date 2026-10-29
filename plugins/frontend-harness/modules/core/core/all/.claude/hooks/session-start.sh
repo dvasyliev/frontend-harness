@@ -4,7 +4,7 @@ cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
 
 echo "Project state at session start:"
 
-# The dev server port: PORT if set, else the framework default from .claude/harness.json.
+# The dev server port: PORT if set, else the `port` in .claude/harness.json.
 port=${PORT:-$(jq -r '.port // 3000' .claude/harness.json 2>/dev/null || echo 3000)}
 
 # Warn if packages are not installed.
