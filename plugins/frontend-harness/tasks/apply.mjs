@@ -82,11 +82,10 @@ writeJson(".claude/settings.json", settings);
 // at the end, with the npm packages; the others are the harness's own, copied whole from library/.claude/skills.
 const skillCatalog = readJson(join(dirname(catalogPath), "skills.json"));
 const skills = JSON.parse(skillsArg || "[]");
-const fitting = [...skillCatalog.common, ...(skillCatalog.frameworks[frameworkId] ?? [])];
 for (const name of skills) {
   const s = skillCatalog.skills[name];
   if (!s) fail(`unknown skill "${name}"`);
-  if (!fitting.includes(name)) fail(`skill "${name}" does not fit framework "${frameworkId}"`);
+  if (!s.frameworks.includes(frameworkId)) fail(`skill "${name}" does not fit framework "${frameworkId}"`);
   if (s.needs && !modules.some(([id]) => id === s.needs)) fail(`skill "${name}" needs module "${s.needs}"`);
 }
 const lock = readJson("skills-lock.json", null);

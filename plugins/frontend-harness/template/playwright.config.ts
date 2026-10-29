@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // The dev server port: PORT if set, else the framework's default.
-const baseURL = `http://localhost:${process.env.PORT ?? {{ 3000 if framework == 'next' else 5173 }}}`;
+const baseURL = `http://localhost:${process.env.PORT ?? {{ 3000 if framework == 'nextjs' else 5173 }}}`;
 
 export default defineConfig({
   testDir: "tests",

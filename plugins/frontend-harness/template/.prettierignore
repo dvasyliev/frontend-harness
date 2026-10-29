@@ -1,8 +1,8 @@
-# Only the project's own code is formatted and checked: {{ 'app, lib' if framework == 'next' else 'src' }},
+# Only the project's own code is formatted and checked: {{ 'app, lib' if framework == 'nextjs' else 'src' }},
 # tests and the code files at the root. Docs, public assets,
 # notes such as CLAUDE.md and Claude Code's own files stay as written.
 /*
-{%- if framework == 'next' %}
+{%- if framework == 'nextjs' %}
 !/app/
 !/lib/
 {%- else %}

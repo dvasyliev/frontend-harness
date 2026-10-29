@@ -1,7 +1,7 @@
 {
   "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `templates` (configs and .claude/rules) live in template/: Copier renders them per framework and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. Its `files` live in library/ (laid out like a project) and are copied whole to the same path, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none. Skills are listed in skills.json.",
   "frameworks": {
-    "next": {
+    "nextjs": {
       "describe": "Next.js App Router",
       "port": 3000,
       "srcDirs": ["app", "lib"],
@@ -25,7 +25,7 @@
       "describe": "The linter the hooks and checks run.",
       "pick": 1,
       "default": {
-        "next": "eslint",
+        "nextjs": "eslint",
         "react": "oxlint"
       }
     }
@@ -112,7 +112,7 @@
         "typescript-eslint"
       ],
       "frameworkDevDependencies": {
-        "next": ["eslint-config-next", "eslint-plugin-boundaries"],
+        "nextjs": ["eslint-config-next", "eslint-plugin-boundaries"],
         "react": [
           "@eslint/js",
           "globals",
@@ -181,7 +181,7 @@
     },
     "next-rules": {
       "describe": "Next.js page performance rule (streaming, lists in batches, caching, media) and the note to read the bundled Next.js docs.",
-      "frameworks": ["next"],
+      "frameworks": ["nextjs"],
       "recommended": true,
       "detect": {
         "dependencies": ["next"]

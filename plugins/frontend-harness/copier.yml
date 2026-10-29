@@ -1,5 +1,5 @@
 # Harness template. The `frontend-harness` skill fills these answers from modules.json;
-# run by hand: uvx copier copy --trust -d framework=next -d 'modules=["core"]' <this repo> .
+# run by hand: uvx copier copy --trust -d framework=nextjs -d 'modules=["core"]' <this repo> .
 _subdirectory: template
 _answers_file: .copier-answers.yml
 # Every file in template/ is rendered, so none needs a .jinja suffix.
@@ -20,7 +20,7 @@ framework:
   help: Frontend framework
   choices:
     React (Vite): react
-    Next.js: next
+    Next.js: nextjs
 
 modules:
   type: json

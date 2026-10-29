@@ -15,7 +15,7 @@ The harness is a Copier template. This skill picks the modules that fit the proj
 
 1. Run `git status --short`. If anything is uncommitted, stop and tell the user: Copier needs a clean tree, and the changes may be another agent's.
 2. If `.copier-answers.yml` exists, this is an **update**: read its `framework`, `modules`, `skills`, `skip_checks` and `_commit`. Otherwise it is an **install**.
-3. Ask which framework the project uses (`AskUserQuestion`, one option per entry in `frameworks`, its `describe` as the label, such as "React (Vite)"). Put the one `frameworks.*.detect` finds in `package.json` first, marked "(detected)"; `next` wins over `react`, since a Next.js project has both. On an update, the answer in `.copier-answers.yml` is the detected one. The framework decides which modules, configs, skills and plugins step 2 offers.
+3. Ask which framework the project uses (`AskUserQuestion`, one option per entry in `frameworks`, its `describe` as the label, such as "React (Vite)"). Put the one `frameworks.*.detect` finds in `package.json` first, marked "(detected)"; `nextjs` wins over `react`, since a Next.js project has both. On an update, the answer in `.copier-answers.yml` is the detected one. The framework decides which modules, configs, skills and plugins step 2 offers.
 
 ## 2. Choose modules
 
@@ -33,7 +33,7 @@ A `group` in `modules.json` (the linter) takes exactly `pick` modules: choose th
 
 ### Skills
 
-From `skills.json`, offer the skills in `common` plus those in `frameworks.<framework>`, leaving out any whose `needs` module is not chosen. Ask with `AskUserQuestion`, `multiSelect: true`, up to 4 per question: the skill name as label, its `describe` as description, all of them marked "(suggested)" (on an update, the installed ones marked "(installed)"). A skill with `install` comes from its own repo; one without is the harness's own.
+From `skills.json`, offer the skills whose `frameworks` include the project's framework, leaving out any whose `needs` module is not chosen. Ask with `AskUserQuestion`, `multiSelect: true`, up to 4 per question: the skill name as label, its `describe` as description, all of them marked "(suggested)" (on an update, the installed ones marked "(installed)"). A skill with `install` comes from its own repo; one without is the harness's own.
 
 Ask about `skip_checks` only when the user asks to turn a check off, or in step 5.
 
@@ -82,11 +82,11 @@ A fix to a harness-owned file (anything the template writes, or the hooks, rules
 1. Make the change in `<template>`:
    - `template/`: every file a project may edit: configs (ESLint, oxlint, Prettier, Vitest, Playwright, knip, commitlint), `.claude/rules/`, `CLAUDE.md`. Copier renders them per framework and modules and merges them with the project's edits. A file only some modules use goes in copier.yml `_exclude` and in that module's `templates`.
    - `library/`: files projects never edit, copied whole to the same path: hooks in `library/.claude/hooks/`, git hooks in `library/.githooks/`, `AGENTS.md`, the harness's own skills, MCP servers.
-   - Skills: `skills.json`. A skill from another repo is an entry with its `install` command (`npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y`); projects update it with `npx skills update`. The harness's own skill is an entry without `install`, with its files in `library/.claude/skills/<name>/`. Put it in `common`, or in `frameworks.<framework>` when only some frameworks fit; `needs` ties it to a module.
+   - Skills: `skills.json`. A skill from another repo is an entry with its `install` command (`npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y`); projects update it with `npx skills update`. The harness's own skill is an entry without `install`, with its files in `library/.claude/skills/<name>/`. Its `frameworks` lists the frameworks it fits; `needs` ties it to a module.
    - MCP servers: in `library/`, run `claude mcp add --scope project <name> ...`, or edit `library/.mcp.json`.
    - `modules.json`: which module brings which template, file, server, check, script, package or plugin. A new file reaches no project until a module lists it.
    - `tasks/apply.mjs`: what is generated from `modules.json`.
-   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and in copier.yml `framework` choices, its branch in each `template/` file that checks `framework`, `frameworks` on the modules that fit only some frameworks, and its list in `skills.json` `frameworks`.
+   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and in copier.yml `framework` choices, its branch in each `template/` file that checks `framework`, `frameworks` on the modules that fit only some frameworks, and the framework added to the `frameworks` of each skill in `skills.json` that fits it.
 2. Try it on a scratch project: `uvx copier copy --trust --defaults -d framework=<framework> -d 'modules=[...]' -d 'skills=[...]' <template> <scratch>` (with `HARNESS_NO_INSTALL=1` to skip npm installs).
 3. Commit in `<template>` and tag the next version (`git tag vX.Y.Z`; a new module or answer is a minor version, a fix a patch).
 4. Update the project with step 3's update command.
