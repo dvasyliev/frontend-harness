@@ -155,6 +155,13 @@ for (const [path, source] of Object.entries(files)) {
     continue;
   }
   if (other) notes.push(`${path}: ${other} is there too, and its tool reads only one; merge ${other} into ${path} and delete it`);
+  if (existsSync(mergePath(path))) {
+    // Still waiting for the skill to merge it by hand: refresh the harness version, keep the project's file.
+    notes.push(`${path}: not merged yet; merge the harness version by hand (saved as ${mergePath(path)})`);
+    write(mergePath(path), next);
+    base[path] = next;
+    continue;
+  }
   const current = existsSync(path) ? readFileSync(path, "utf8") : next;
   if (current !== next && path in base) {
     if (current !== base[path]) {
