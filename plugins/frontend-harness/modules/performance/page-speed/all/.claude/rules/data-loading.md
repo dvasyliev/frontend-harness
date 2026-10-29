@@ -5,7 +5,7 @@ paths:
   - "lib/**"
 ---
 
-# Performance
+# Data loading
 
 Every feature and every change to a page keeps these rules and those in `page-loading.md`. Check them while building, and measure as `page-loading.md` says before calling the work done.
 

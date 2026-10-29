@@ -428,7 +428,7 @@
         }
       }
     },
-    "performance": {
+    "page-speed": {
       "description": "Rules for fast pages and lists, how to measure them with the Chrome DevTools MCP server, and (on React) a bundle size check.",
       "category": "performance",
       "recommended": true,

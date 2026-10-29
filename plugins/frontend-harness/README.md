@@ -58,7 +58,7 @@ A module that goes takes its files (unless the project edited them), scripts, se
 | best-practices | `best-practices` | recommended | Vercel skills: React and Next.js performance, composition, Web Interface Guidelines |
 | best-practices | `context7` | recommended | Context7 MCP, rule and skill |
 | best-practices | `next-docs` | auto | `AGENTS.md` (bundled Next.js docs), Next.js DevTools MCP |
-| performance | `performance` | recommended | fast pages and lists rules, Chrome DevTools MCP, bundle size check (React) |
+| performance | `page-speed` | recommended | fast pages and lists rules, Chrome DevTools MCP, bundle size check (React) |
 
 ## Changing the harness
 
