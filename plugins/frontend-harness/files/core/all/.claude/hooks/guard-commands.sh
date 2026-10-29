@@ -13,7 +13,7 @@ shopt -s nocasematch
 
 # Rule 1: no force push, it rewrites history on the server.
 [[ "$cmd" =~ git[[:space:]].*push.*(--force|--force-with-lease|-f([[:space:]]|$)) ]] \
-  && deny "force push. Push a new branch instead."
+  && deny "force push. Ask the user."
 
 # Rule 2: no skipping git hooks, only a human decides that.
 [[ "$cmd" =~ (--no-verify|SKIP_VERIFY) ]] \

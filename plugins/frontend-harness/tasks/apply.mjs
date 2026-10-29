@@ -4,12 +4,13 @@
 // An answer left out keeps its value from the last run (.claude/harness.json).
 import { execSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { basename, dirname, join, relative } from "node:path";
 
 const root = join(import.meta.dirname, "..");
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
 const writeJson = (path, data) => writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
 if (!existsSync("package.json")) fail("no package.json here; run this in the project folder");
+const pkg = readJson("package.json");
 const old = readJson(".claude/harness.json", {});
 const answers = { modules: [], skipChecks: [], docsLanguage: "English", ...old, ...JSON.parse(process.argv[2] || "{}") };
 const { version } = readJson(join(root, ".claude-plugin", "plugin.json"));
@@ -25,9 +26,14 @@ function fail(message) {
   process.exit(1);
 }
 
-// Selected modules plus the required ones, in catalog order, with exactly one linter.
+// Selected modules plus the required ones, and the `auto` ones whose `detect` matches package.json,
+// in catalog order, with exactly one linter.
+const detected = (m) => Object.entries(m.detect ?? {}).some(([field, names]) => names.some((name) => name in (pkg[field] ?? {})));
 const wanted = new Set(answers.modules);
-for (const [id, m] of Object.entries(catalog.modules)) if (m.required) wanted.add(id);
+for (const [id, m] of Object.entries(catalog.modules)) {
+  if (m.required || (m.auto && detected(m))) wanted.add(id);
+  else if (m.auto) wanted.delete(id);
+}
 for (const id of wanted) {
   const m = catalog.modules[id];
   if (!m) fail(`unknown module "${id}"`);
@@ -116,8 +122,22 @@ const write = (path, text) => {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, text);
 };
+// The same file under another extension (eslint.config.js for eslint.config.mjs): its tool reads only one.
+const stem = (name) => (name.lastIndexOf(".") > 0 ? name.slice(0, name.lastIndexOf(".")) : name);
+const sibling = (path) =>
+  stem(basename(path)) !== basename(path) && existsSync(dirname(path))
+    ? readdirSync(dirname(path)).find((f) => f !== basename(path) && stem(f) === stem(basename(path)))
+    : undefined;
 for (const [path, source] of Object.entries(files)) {
   const next = readFileSync(source, "utf8");
+  const other = sibling(path) && join(dirname(path), sibling(path));
+  if (other && !existsSync(path)) {
+    // The project has this file under another name: leave it for the skill to merge and rename.
+    notes.push(`${path}: the project has it as ${other}; merge the harness version into it and rename it to ${path} (saved as ${basePath(path)}.new)`);
+    write(`${basePath(path)}.new`, next);
+    continue;
+  }
+  if (other) notes.push(`${path}: ${other} is there too, and its tool reads only one; merge ${other} into ${path} and delete it`);
   const current = existsSync(path) ? readFileSync(path, "utf8") : next;
   if (current !== next && existsSync(basePath(path))) {
     if (current !== readFileSync(basePath(path), "utf8")) {
@@ -221,7 +241,6 @@ for (const note of notes) console.log(`harness: ${note}`);
 
 // npm packages last, so every file above is written even when the install fails.
 // Install only what the project does not have yet.
-const pkg = readJson("package.json");
 const have = { ...pkg.dependencies, ...pkg.devDependencies };
 const frameworkDeps = modules.flatMap(([, m]) => m.frameworkDevDependencies?.[frameworkId] ?? []);
 const missing = [...new Set([...collect("devDependencies"), ...frameworkDeps])].filter((p) => !(p in have));

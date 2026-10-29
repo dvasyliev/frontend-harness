@@ -22,6 +22,7 @@ This skill picks the modules that fit the project, runs `tasks/apply.mjs` to wri
 Mark each module:
 
 - **required:** always installed; do not ask.
+- **auto** (such as `tailwind`): installed exactly when its `detect` matches `package.json`, checked again on every update; do not ask, only say whether it is in.
 - **suggested:** its `detect` matches `package.json`, or it is `recommended` and has no `detect`.
 - **offered:** the rest, unselected.
 
@@ -46,6 +47,7 @@ The script writes each module's files, merges its `scripts` into `package.json` 
 Then read the `harness:` lines it printed, `git status` and `git diff`:
 
 - **Merge conflicts:** a file with `<<<<<<< project` markers. Resolve each so both the project's change and the harness change survive; ask the user when the two contradict.
+- **The same file under another name:** the project's `eslint.config.js` for the harness `eslint.config.mjs` (the tool reads only one). Merge the harness version (`.claude/harness-base/<path>.new`) into the project's file, rename it to the harness name (fix its syntax if the new extension needs it, such as `module.exports` in a `.mjs` file), then move the `.new` file over `.claude/harness-base/<path>`. When both files are there, merge the other into the harness one and delete it.
 - **Files the project had before the harness:** a file the project already had is left as it was, with the harness version in `.claude/harness-base/<path>.new`. Merge the harness version into the project's file, asking the user where they contradict; then move the `.new` file over `.claude/harness-base/<path>`, so the next update merges from there. For `CLAUDE.md`, that means adding `@.claude/harness.md` under its first heading; `.claude/harness.md` lists the commands and `.claude/rules/` the rest, so if `CLAUDE.md` repeats any of these, ask the user before removing it.
 - **Kept files:** a file no module needs any more stays when the project edited it. Ask the user whether to delete it.
 - **Kept values:** a `package.json` script or `.claude/settings.json` value the project set differently (such as `"prepare": "husky"` or its own `lint`) stays the project's, and the harness one is printed. Ask the user: keep the project's (the checks then run it), or set the harness one; a value equal to the harness one becomes the harness's on the next run.
