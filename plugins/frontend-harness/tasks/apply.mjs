@@ -136,6 +136,7 @@ const mcp = readJson(".mcp.json", { mcpServers: {} });
 for (const name of previous.mcp) if (!mcpNames.includes(name)) delete mcp.mcpServers[name];
 Object.assign(mcp.mcpServers, servers);
 if (Object.keys(mcp.mcpServers).length) writeJson(".mcp.json", mcp);
+else rmSync(".mcp.json", { force: true });
 
 // .claude/harness.json: what the hooks read, and what this run wrote.
 const checks = collect("checks").filter((c) => !skip.has(c.name));
