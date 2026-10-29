@@ -2,6 +2,13 @@
 
 A Claude Code plugin that installs and updates a harness (hooks, rules, skills, checks, git hooks) in React (Vite) and Next.js projects, from modules the project picks.
 
+Install it from the `dvasyliev-plugins` marketplace (the `claude-plugins` folder):
+
+```
+/plugin marketplace add /path/to/marketplace
+/plugin install frontend-harness@dvasyliev-plugins
+```
+
 Run it with the `frontend-harness` skill ("install the harness", "add e2e", "update the harness"). By hand, from the project folder:
 
 ```bash
