@@ -26,9 +26,10 @@ function fail(message) {
   process.exit(1);
 }
 
-// Selected modules plus the required ones, and the `auto` ones whose `detect` matches package.json,
+// Selected modules plus the required ones, and the `auto` ones whose `detect` matches (package.json or files),
 // in catalog order, with exactly one linter.
-const detected = (m) => Object.entries(m.detect ?? {}).some(([field, names]) => names.some((name) => name in (pkg[field] ?? {})));
+const detected = (m) =>
+  Object.entries(m.detect ?? {}).some(([field, names]) => names.some((name) => (field === "files" ? existsSync(name) : name in (pkg[field] ?? {}))));
 const wanted = new Set(answers.modules);
 for (const [id, m] of Object.entries(catalog.modules)) {
   if (m.required || (m.auto && detected(m))) wanted.add(id);

@@ -16,13 +16,14 @@ This skill picks the modules that fit the project, runs `tasks/apply.mjs` to wri
 1. Run `git status --short`. If anything is uncommitted, stop and tell the user: the harness merges into the project's files, and the changes may be another agent's.
 2. If `.claude/harness.json` exists, this is an **update**: read its `version`, `framework`, `modules`, `skipChecks` and `docsLanguage`. Otherwise it is an **install**. A project installed with Copier also has `.copier-answers.yml`: take `docs_language` from it, and delete it in step 4's commit. A project from before 0.19 may list `next-rules`: replace it with `best-practices`.
 3. Ask which framework the project uses (`AskUserQuestion`, one option per entry in `frameworks`, its `description` as the label, such as "React (Vite)"). Put the one `frameworks.*.detect` finds in `package.json` first, marked "(detected)"; `nextjs` wins over `react`, since a Next.js project has both. On an update, the `framework` in `.claude/harness.json` is the detected one. The framework decides which version of each module's files is installed.
+4. Check that the code sits where the harness configs look (Prettier, Vitest, the linter, the rules): `app/` and `lib/` for Next.js, `src/` for React. A Next.js project with its code in `src/` or a `components/` folder at the root is not covered there; tell the user before installing, since those folders would go unformatted and untested.
 
 ## 2. Choose modules
 
 Mark each module:
 
 - **required:** always installed; do not ask.
-- **auto** (such as `tailwind`): installed exactly when its `detect` matches `package.json`, checked again on every update; do not ask, only say whether it is in.
+- **auto** (such as `tailwind`, or `next-docs` when `node_modules/next/dist/docs` exists): installed exactly when its `detect` matches, checked again on every update; do not ask, only say whether it is in.
 - **suggested:** its `detect` matches `package.json`, or it is `recommended` and has no `detect`.
 - **offered:** the rest, unselected.
 
@@ -57,8 +58,9 @@ Then read the `harness:` lines it printed, `git status` and `git diff`:
 
 1. **MCP:** for each server in `.claude/harness.json` `mcp`, check `claude mcp list`. A server that needs sign-in: tell the user to run `/mcp`.
 2. **Checks:** run `npm install`, then `npm run check`. When a check fails on code the harness did not touch (for example `dupes` in an old project), ask: fix it now, or turn the check off (rerun step 3 with the check's name added to `skipChecks`).
-3. **Commit** only the files the harness wrote or you merged (including `.claude/harness-base/`), with the message `chore(harness): install harness <version>` or `chore(harness): update harness to <version>`.
-4. Tell the user, in short: modules installed or removed, version, what still needs them (`/mcp` sign-in, a conflict you could not merge).
+3. **`CLAUDE.md`:** if "What this is" or "Architecture" still hold the `<...>` placeholders, read the project (`package.json`, README, folders, main modules) and write them, then show the user what you wrote.
+4. **Commit** only the files the harness wrote or you merged (including `.claude/harness-base/`), with the message `chore(harness): install harness <version>` or `chore(harness): update harness to <version>`.
+5. Tell the user, in short: modules installed or removed, version, what still needs them (`/mcp` sign-in, a conflict you could not merge).
 
 ## Improving the harness itself
 

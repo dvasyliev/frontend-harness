@@ -16,7 +16,7 @@ shopt -s nocasematch
   && deny "force push. Ask the user."
 
 # Rule 2: no skipping git hooks, only a human decides that.
-[[ "$cmd" =~ (--no-verify|SKIP_VERIFY) ]] \
+[[ "$cmd" =~ (--no-verify|(^|[[:space:];&|])SKIP_VERIFY=) ]] \
   && deny "skipping the git hooks is a human decision."
 
 exit 0

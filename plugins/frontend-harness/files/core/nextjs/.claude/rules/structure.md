@@ -7,7 +7,7 @@ Where a new or moved file goes in a Next.js App Router project. Follow these rul
 Decide by who imports it.
 
 - **One route uses it:** put it in that route's folder, next to its `page.tsx`. This is the default; do not extract code before a second user appears.
-- **Two or more routes use it:** move it to the shared components folder (the one the project already has, such as `components/` or `app/components/`) in the same change, inside a topic subfolder named after what it is about.
+- **Two or more routes use it:** move it to `app/components/` in the same change, inside a topic subfolder named after what it is about.
 - **Generic pieces with no app data** (buttons, dialogs, carousels, skeletons) go in the `ui` topic. Test: it would work unchanged in an app about something else.
 - **Data fetching, external APIs, server-only logic and shared types** go in `lib/`, split into topic subfolders once it grows.
 

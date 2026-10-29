@@ -1,5 +1,5 @@
 {
-  "$comment": "Every framework and module the harness can install. A module's files are in files/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, `auto` ones exactly when their `detect` matches package.json, and exactly one `linter` module is. The frontend-harness skill suggests modules by `detect` and `recommended`.",
+  "$comment": "Every framework and module the harness can install. A module's files are in files/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module is. The frontend-harness skill suggests modules by `detect` and `recommended`.",
   "frameworks": {
     "nextjs": {
       "description": "Next.js App Router",
@@ -127,8 +127,22 @@
           ]
         },
         "permissions": {
-          "deny": ["Read(./.env)", "Read(./.env.*)"]
+          "deny": [
+            "Read(./.env)",
+            "Read(./.env.*)",
+            "Bash(cat *.env*)",
+            "Bash(head *.env*)",
+            "Bash(tail *.env*)",
+            "Bash(grep *.env*)"
+          ]
         }
+      }
+    },
+    "next-docs": {
+      "description": "AGENTS.md, which tells Claude to read the Next.js docs bundled in node_modules (Next.js versions that ship them).",
+      "auto": true,
+      "detect": {
+        "files": ["node_modules/next/dist/docs"]
       }
     },
     "feature-workflow": {
