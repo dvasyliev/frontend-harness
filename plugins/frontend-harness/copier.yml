@@ -7,7 +7,7 @@ _templates_suffix: ""
 _tasks:
   # On install: writes the JSON-driven files (settings.json, .mcp.json, .claude/harness.json,
   # .claude/harness.md, .claude/skills) and adds npm scripts and packages.
-  - command: &apply "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/modules.json' '{{ framework }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}'"
+  - command: &apply "test -f package.json || exit 0; node '{{ _copier_conf.src_path }}/tasks/apply.mjs' '{{ _copier_conf.src_path }}/modules.json' '{{ framework }}' '{{ modules | tojson }}' '{{ skip_checks | tojson }}' '{{ skills | tojson }}'"
     when: "{{ _copier_operation == 'copy' }}"
 _migrations:
   # On update: the same, but after Copier has merged the project's own changes back in,
@@ -31,6 +31,11 @@ modules:
 skip_checks:
   type: json
   help: Checks to turn off in this project (names from modules.json)
+  default: []
+
+skills:
+  type: json
+  help: Skills to install (names from skills.json)
   default: []
 
 

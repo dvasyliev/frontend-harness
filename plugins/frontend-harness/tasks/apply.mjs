@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Copier task: writes everything modules.json drives into the project in the current folder.
-// Usage: node apply.mjs <modules.json> <framework> '<modules JSON>' '<skip_checks JSON>'
+// Usage: node apply.mjs <modules.json> <framework> '<modules JSON>' '<skip_checks JSON>' '<skills JSON>'
 import { execSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-const [catalogPath, frameworkId, modulesArg, skipArg] = process.argv.slice(2);
+const [catalogPath, frameworkId, modulesArg, skipArg, skillsArg] = process.argv.slice(2);
 const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
 const framework = catalog.frameworks[frameworkId];
 if (!framework) fail(`unknown framework "${frameworkId}"`);
@@ -78,11 +78,27 @@ settings.permissions ??= {};
 settings.permissions.deny = [...new Set([...(settings.permissions.deny ?? []), "Read(./.env)", "Read(./.env.*)"])];
 writeJson(".claude/settings.json", settings);
 
-// .claude/skills: each module's skills are copied whole from library/.claude/skills, replacing the old copy.
-const skills = Object.keys(merge("skills"));
-for (const name of previous.skills) if (!skills.includes(name)) rmSync(`.claude/skills/${name}`, { recursive: true, force: true });
+// .claude/skills: the chosen skills from skills.json. One with `install` comes from its own repo and is installed
+// at the end, with the npm packages; the others are the harness's own, copied whole from library/.claude/skills.
+const skillCatalog = readJson(join(dirname(catalogPath), "skills.json"));
+const skills = JSON.parse(skillsArg || "[]");
+const fitting = [...skillCatalog.common, ...(skillCatalog.frameworks[frameworkId] ?? [])];
+for (const name of skills) {
+  const s = skillCatalog.skills[name];
+  if (!s) fail(`unknown skill "${name}"`);
+  if (!fitting.includes(name)) fail(`skill "${name}" does not fit framework "${frameworkId}"`);
+  if (s.needs && !modules.some(([id]) => id === s.needs)) fail(`skill "${name}" needs module "${s.needs}"`);
+}
+const lock = readJson("skills-lock.json", null);
+for (const name of previous.skills) {
+  if (skills.includes(name)) continue;
+  rmSync(`.claude/skills/${name}`, { recursive: true, force: true });
+  if (lock?.skills) delete lock.skills[name];
+}
+if (lock) writeJson("skills-lock.json", lock);
 mkdirSync(".claude/skills", { recursive: true });
 for (const name of skills) {
+  if (skillCatalog.skills[name].install) continue;
   const from = join(library, ".claude", "skills", name);
   if (!existsSync(from)) fail(`skill "${name}" is missing from library/.claude/skills`);
   rmSync(`.claude/skills/${name}`, { recursive: true, force: true });
@@ -169,7 +185,7 @@ const md = [
   "",
   "## Skills in `.claude/skills/`",
   "",
-  list(Object.entries(merge("skills")), (n) => `\`${n}\``),
+  list(skills.map((n) => [n, skillCatalog.skills[n].describe]), (n) => `\`${n}\``),
   ...Object.entries(sections).flatMap(([title, body]) => ["", `## ${title}`, "", body]),
   "",
 ].join("\n");
@@ -198,5 +214,18 @@ if (missing.length && !process.env.HARNESS_NO_INSTALL) {
     execSync(`npm install --save-dev ${missing.join(" ")}`, { stdio: "inherit" });
   } catch {
     fail(`npm install failed; install these by hand: ${missing.join(" ")}`);
+  }
+}
+
+// Skills from their own repos, only the ones the project does not have yet; `npx skills update` updates them later.
+const toInstall = skills.filter((n) => skillCatalog.skills[n].install && !existsSync(`.claude/skills/${n}`));
+if (!process.env.HARNESS_NO_INSTALL) {
+  for (const name of toInstall) {
+    const command = skillCatalog.skills[name].install;
+    try {
+      execSync(command, { stdio: "inherit" });
+    } catch {
+      fail(`installing skill "${name}" failed; run by hand: ${command}`);
+    }
   }
 }

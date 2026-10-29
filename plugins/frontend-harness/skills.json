@@ -1,0 +1,45 @@
+{
+  "$comment": "The skills the harness offers. `common` fits every framework; `frameworks` lists the ones only some frameworks get. A skill with `install` comes from its own repo: apply.mjs runs that command in the project when the skill is missing (later, `npx skills update` updates it). One without `install` is the harness's own, copied whole from library/.claude/skills. A skill with `needs` is offered only with that module.",
+  "skills": {
+    "improve-harness": {
+      "describe": "end of a feature, or when a hook, rule or skill misbehaved: find harness problems and fix the approved ones."
+    },
+    "committing-with-commitlint": {
+      "describe": "use before every commit.",
+      "needs": "commitlint"
+    },
+    "playwright-cli": {
+      "describe": "drive the browser, check a feature, write end-to-end tests.",
+      "needs": "e2e",
+      "install": "npx -y skills add microsoft/playwright-cli --skill playwright-cli -a claude-code --copy -y"
+    },
+    "context7-mcp": {
+      "describe": "library docs and code examples through Context7.",
+      "needs": "context7",
+      "install": "npx -y skills add upstash/context7 --skill context7-mcp -a claude-code --copy -y"
+    },
+    "web-design-guidelines": {
+      "describe": "review UI against the Web Interface Guidelines.",
+      "install": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y"
+    },
+    "vercel-react-best-practices": {
+      "describe": "React and Next.js performance rules.",
+      "install": "npx -y skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code --copy -y"
+    },
+    "vercel-composition-patterns": {
+      "describe": "component patterns that scale.",
+      "install": "npx -y skills add vercel-labs/agent-skills --skill vercel-composition-patterns -a claude-code --copy -y"
+    }
+  },
+  "common": [
+    "improve-harness",
+    "committing-with-commitlint",
+    "playwright-cli",
+    "context7-mcp",
+    "web-design-guidelines"
+  ],
+  "frameworks": {
+    "react": ["vercel-react-best-practices", "vercel-composition-patterns"],
+    "next": ["vercel-react-best-practices", "vercel-composition-patterns"]
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `templates` (configs and .claude/rules) live in template/: Copier renders them per framework and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. Its `files` and `skills` live in library/ (laid out like a project) and are copied whole to the same path, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none.",
+  "$comment": "The harness catalog. The frontend-harness skill reads it to suggest modules; tasks/apply.mjs reads it to install them. A module's `templates` (configs and .claude/rules) live in template/: Copier renders them per framework and modules and merges them with the project's edits; copier.yml `_exclude` leaves out those of unselected modules. Its `files` live in library/ (laid out like a project) and are copied whole to the same path, since projects never edit them. A `group` takes exactly `pick` of its modules; `default` names the one to use per framework when the project shows none. Skills are listed in skills.json.",
   "frameworks": {
     "next": {
       "describe": "Next.js App Router",
@@ -95,9 +95,6 @@
       "rules": {
         "structure.md": "where new and moved files go.",
         "feature-workflow.md": "the steps for building a user-facing feature."
-      },
-      "skills": {
-        "improve-harness": "end of a feature, or when a hook, rule or skill misbehaved: find harness problems and fix the approved ones."
       },
       "sections": {
         "Several agents at once": "- Several agents may work in this repo at the same time, all on `main`. Changes you did not make are another agent's work in progress, not a mess to clean up.\n- Touch only your own changes. Never revert, reformat, stash or commit another agent's files.\n- Before editing a file, check `git status`. If it has changes you did not make, tell the user which file and wait instead of editing it.\n- If the end-of-turn checks fail, first make sure none of the failures come from your own changes. If they all sit in another agent's files, finish with one short line saying so; do not analyse, list or fix them.\n- Commit only your own files (`git add <paths>`, never `git add -A`)."
@@ -247,9 +244,6 @@
       "rules": {
         "tests-e2e.md": "end-to-end test conventions (loads when working in `tests/`)."
       },
-      "skills": {
-        "playwright-cli": "drive the browser, check a feature, write end-to-end tests."
-      },
       "githooks": {
         "pre-push": "runs `npm run verify`; the push is cancelled if it fails."
       }
@@ -260,9 +254,6 @@
       "devDependencies": ["@commitlint/cli", "@commitlint/config-conventional"],
       "templates": ["commitlint.config.mjs"],
       "files": [".githooks/commit-msg"],
-      "skills": {
-        "committing-with-commitlint": "use before every commit."
-      },
       "githooks": {
         "commit-msg": "checks the commit message with commitlint."
       },
@@ -296,18 +287,6 @@
       ],
       "templates": ["knip.json"]
     },
-    "react-skills": {
-      "describe": "Vercel's React and Next.js performance rules, composition patterns and the Web Interface Guidelines review.",
-      "recommended": true,
-      "detect": {
-        "dependencies": ["react"]
-      },
-      "skills": {
-        "vercel-react-best-practices": "React and Next.js performance rules.",
-        "vercel-composition-patterns": "component patterns that scale.",
-        "web-design-guidelines": "review UI against the Web Interface Guidelines."
-      }
-    },
     "context7": {
       "describe": "Context7 MCP server, rule and skill for current library docs.",
       "recommended": true,
@@ -315,9 +294,6 @@
       "templates": [".claude/rules/context7.md"],
       "rules": {
         "context7.md": "fetch current library docs through Context7 before answering library questions."
-      },
-      "skills": {
-        "context7-mcp": "library docs and code examples through Context7."
       }
     },
     "tailwind": {
