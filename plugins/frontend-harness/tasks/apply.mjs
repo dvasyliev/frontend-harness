@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Writes the chosen modules (modules.json, files/) into the project in the current folder.
+// Writes the chosen modules (modules.json, modules/) into the project in the current folder.
 // Usage: node apply.mjs '{"framework": "nextjs", "modules": [...], "skipChecks": [...], "docsLanguage": "English"}'
 // An answer left out keeps its value from the last run (.claude/harness.json).
 import { execSync } from "node:child_process";
@@ -71,11 +71,11 @@ function unmerge(target, added) {
   }
 }
 
-// Files: files/<module>/all/ and files/<module>/<framework>/, each written at the same path in the project.
+// Files: modules/<module>/all/ and modules/<module>/<framework>/, each written at the same path in the project.
 const files = {};
 for (const [id] of modules) {
   for (const dir of ["all", frameworkId]) {
-    const base = join(root, "files", id, dir);
+    const base = join(root, "modules", id, dir);
     if (!existsSync(base)) continue;
     for (const d of readdirSync(base, { recursive: true, withFileTypes: true })) {
       if (d.isFile() && d.name !== ".DS_Store") files[relative(base, join(d.parentPath, d.name))] = join(d.parentPath, d.name);
