@@ -1,0 +1,8 @@
+[
+  {
+    "name": "JavaScript loaded first",
+    "path": "dist/assets/index-*.js",
+    "gzip": true,
+    "limit": "200 KB"
+  }
+]

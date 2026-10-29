@@ -163,7 +163,7 @@ for (const [path, source] of Object.entries(files)) {
 }
 
 // package.json scripts, .claude/settings.json and .mcp.json servers: the modules' keys are set, the project's own are kept.
-const scripts = Object.assign({}, ...modules.map(([, m]) => m.scripts ?? {}));
+const scripts = Object.assign({}, ...modules.map(([, m]) => ({ ...m.scripts, ...m.frameworkScripts?.[frameworkId] })));
 const merged = {
   "package.json": { scripts: Object.fromEntries(Object.entries(scripts).map(([name, s]) => [name, s.command.replace("{srcDirs}", framework.srcDirs.join(" "))])) },
   ".claude/settings.json": modules.reduce((settings, [, m]) => merge(settings, m.settings ?? {}), {}),

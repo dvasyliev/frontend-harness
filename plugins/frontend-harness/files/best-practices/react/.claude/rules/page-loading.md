@@ -23,7 +23,7 @@ The app renders in the browser, so a page is as fast as the JavaScript it loads 
 
 Before changing a page, and again before calling the change done:
 
-- Run `npm run build` and note the size (gzip) of the JavaScript the page loads first.
+- Run `npm run size`: it builds the app and fails when the JavaScript loaded first is over the limit in `.size-limit.json`. Raise the limit only when the user agrees.
 - With the `chrome-devtools` MCP server, record a performance trace of the page: when its main content shows (LCP), cold (a fresh load) and warm (navigating from another page), and the requests made before it.
 - Count the items rendered. Give the numbers before and after the change in the final message.
 - Targets: main content under 1 s warm, JavaScript loaded first under ~200 KB gzip, no media requests through an optimizing proxy.

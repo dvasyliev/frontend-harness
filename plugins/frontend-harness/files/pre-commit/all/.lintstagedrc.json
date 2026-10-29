@@ -1,0 +1,5 @@
+{
+  "*": "secretlint",
+  "*.{ts,tsx,mts,js,jsx,mjs}": ["npm run -s format:file --", "npm run -s lint:file --"],
+  "*.{css,json,md}": "npm run -s format:file --"
+}

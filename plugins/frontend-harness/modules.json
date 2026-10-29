@@ -1,5 +1,5 @@
 {
-  "$comment": "Every framework and module the harness can install. A module's files are in files/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module is. The frontend-harness skill suggests modules by `detect` and `recommended`.",
+  "$comment": "Every framework and module the harness can install. A module's files are in files/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` and `frameworkScripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module is. The frontend-harness skill suggests modules by `detect` and `recommended`.",
   "frameworks": {
     "nextjs": {
       "description": "Next.js App Router",
@@ -177,7 +177,7 @@
           "description": "ESLint, no warnings allowed"
         },
         "lint:file": {
-          "command": "eslint --max-warnings 0",
+          "command": "eslint --max-warnings 0 --no-warn-ignored",
           "description": "ESLint on one file (used by the edit hook)"
         }
       },
@@ -314,6 +314,30 @@
         }
       ]
     },
+    "pre-commit": {
+      "description": "A pre-commit git hook that looks for secrets in the staged files (secretlint) and formats and lints the staged code (lint-staged), for commits made without Claude.",
+      "recommended": true,
+      "scripts": {
+        "prepare": {
+          "command": "git config core.hooksPath .githooks",
+          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
+        }
+      },
+      "devDependencies": [
+        "lint-staged",
+        "secretlint",
+        "@secretlint/secretlint-rule-preset-recommend"
+      ]
+    },
+    "sync-deps": {
+      "description": "post-merge and post-checkout git hooks that run npm install when package-lock.json changed.",
+      "scripts": {
+        "prepare": {
+          "command": "git config core.hooksPath .githooks",
+          "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
+        }
+      }
+    },
     "quality": {
       "description": "knip (unused files, exports, dependencies) and jscpd (duplicated code), run at the end of every turn.",
       "recommended": true,
@@ -361,6 +385,17 @@
           "command": "npx",
           "args": ["-y", "chrome-devtools-mcp@latest"]
         }
+      },
+      "frameworkScripts": {
+        "react": {
+          "size": {
+            "command": "vite build && size-limit",
+            "description": "builds and fails when the JavaScript loaded first is over its limit (.size-limit.json)"
+          }
+        }
+      },
+      "frameworkDevDependencies": {
+        "react": ["size-limit", "@size-limit/file"]
       }
     },
     "context7": {

@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# After switching branches: install the packages when package-lock.json differs.
+# Git passes the old and new commit, and 1 for a branch checkout (0 for a file checkout).
+[ "$3" = 1 ] || exit 0
+git diff --quiet "$1" "$2" -- package-lock.json || npm install || echo "post-checkout: npm install failed; run it by hand" >&2

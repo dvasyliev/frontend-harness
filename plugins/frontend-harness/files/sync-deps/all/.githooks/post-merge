@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# After a pull or merge: install the packages when package-lock.json changed.
+git diff --quiet ORIG_HEAD HEAD -- package-lock.json || npm install || echo "post-merge: npm install failed; run it by hand" >&2

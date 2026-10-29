@@ -5,6 +5,8 @@
     "@commitlint/cli",
     "@testing-library/react",
     "@testing-library/dom",
-    "prettier-plugin-tailwindcss"
+    "prettier-plugin-tailwindcss",
+    "@secretlint/secretlint-rule-preset-recommend",
+    "@size-limit/file"
   ]
 }

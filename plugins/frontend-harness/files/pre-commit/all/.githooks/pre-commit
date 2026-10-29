@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Before a commit: look for secrets in the staged files, and format and lint the staged code
+# (.lintstagedrc.json). Claude's edits are formatted already; this covers commits made without it.
+npx --no-install lint-staged
