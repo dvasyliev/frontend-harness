@@ -25,6 +25,6 @@ Caching APIs (`"use cache"`, `cacheLife`, `cacheTag`) follow the Next.js docs bu
 Before changing a page, and again before calling the change done:
 
 - Time it twice, signed in: `curl -w "ttfb=%{time_starttransfer} total=%{time_total} size=%{size_download}"`. The first call is cold, the second warm. In dev a code edit can empty the cache, so cold numbers there are rough.
-- Check in the browser that the top of the page shows before the slow parts, and that navigation is instant.
+- With the `chrome-devtools` MCP server, record a performance trace: the top of the page shows (LCP) before the slow parts, and navigation is instant.
 - Count what the page sends: items rendered and HTML size. Give the numbers before and after the change in the final message.
 - Targets: warm page under 1 s, HTML under ~300 KB, no media requests through an optimizing proxy.

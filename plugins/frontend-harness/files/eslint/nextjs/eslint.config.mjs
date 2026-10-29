@@ -20,6 +20,8 @@ const eslintConfig = defineConfig([
     },
     rules: {
       "@typescript-eslint/consistent-type-imports": "error",
+      // No import cycles: modules that import each other, directly or through others.
+      "import/no-cycle": "error",
     },
   },
   // File-size limit. Tests are exempt.

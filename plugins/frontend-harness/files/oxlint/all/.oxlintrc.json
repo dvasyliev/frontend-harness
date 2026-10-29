@@ -1,11 +1,12 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
+  "plugins": ["react", "typescript", "oxc", "jsx-a11y", "import"],
   "ignorePatterns": ["dist", ".claude/**"],
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }],
     "typescript/consistent-type-imports": "error",
+    "import/no-cycle": "error",
     "max-lines": ["error", { "max": 400, "skipBlankLines": true, "skipComments": true }]
   },
   "overrides": [{ "files": ["**/*.spec.ts", "**/*.spec.tsx"], "rules": { "max-lines": "off" } }]

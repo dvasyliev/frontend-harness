@@ -162,11 +162,12 @@ for (const [path, source] of Object.entries(files)) {
   write(basePath(path), next);
 }
 
-// package.json scripts and .claude/settings.json: the modules' keys are set, the project's own are kept.
+// package.json scripts, .claude/settings.json and .mcp.json servers: the modules' keys are set, the project's own are kept.
 const scripts = Object.assign({}, ...modules.map(([, m]) => m.scripts ?? {}));
 const merged = {
   "package.json": { scripts: Object.fromEntries(Object.entries(scripts).map(([name, s]) => [name, s.command.replace("{srcDirs}", framework.srcDirs.join(" "))])) },
   ".claude/settings.json": modules.reduce((settings, [, m]) => merge(settings, m.settings ?? {}), {}),
+  ".mcp.json": { mcpServers: Object.assign({}, ...modules.map(([, m]) => m.mcpServers ?? {})) },
 };
 for (const [path, add] of Object.entries(merged)) {
   const json = readJson(path, {});
@@ -176,9 +177,9 @@ for (const [path, add] of Object.entries(merged)) {
   for (const k of kept) notes.push(`${path}: the project's ${k.key} stays ${JSON.stringify(k.project)}; the harness one is ${JSON.stringify(k.harness)}`);
 }
 
-// .mcp.json: a server whose module went is removed (the installs add them); the project's own are kept.
-const mcpNames = collect("mcp");
-const mcp = readJson(".mcp.json", { mcpServers: {} });
+// .mcp.json: a server an install added goes with its module too; with no servers left, the file goes.
+const mcpNames = [...collect("mcp"), ...Object.keys(merged[".mcp.json"].mcpServers)];
+const mcp = { mcpServers: {}, ...readJson(".mcp.json", {}) };
 for (const name of previous.mcp) if (!mcpNames.includes(name)) delete mcp.mcpServers[name];
 if (Object.keys(mcp.mcpServers).length) writeJson(".mcp.json", mcp);
 else rmSync(".mcp.json", { force: true });

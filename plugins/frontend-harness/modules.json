@@ -1,5 +1,5 @@
 {
-  "$comment": "Every framework and module the harness can install. A module's files are in files/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module is. The frontend-harness skill suggests modules by `detect` and `recommended`.",
+  "$comment": "Every framework and module the harness can install. A module's files are in files/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module is. The frontend-harness skill suggests modules by `detect` and `recommended`.",
   "frameworks": {
     "nextjs": {
       "description": "Next.js App Router",
@@ -139,10 +139,16 @@
       }
     },
     "next-docs": {
-      "description": "AGENTS.md, which tells Claude to read the Next.js docs bundled in node_modules (Next.js versions that ship them).",
+      "description": "AGENTS.md, which tells Claude to read the Next.js docs bundled in node_modules, and the Next.js DevTools MCP server (Next.js versions that ship them).",
       "auto": true,
       "detect": {
         "files": ["node_modules/next/dist/docs"]
+      },
+      "mcpServers": {
+        "next-devtools": {
+          "command": "npx",
+          "args": ["-y", "next-devtools-mcp@latest"]
+        }
       }
     },
     "feature-workflow": {
@@ -160,7 +166,7 @@
       ]
     },
     "eslint": {
-      "description": "ESLint with type-aware typescript-eslint rules, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
+      "description": "ESLint with type-aware typescript-eslint rules, no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
       "detect": {
         "devDependencies": ["eslint"]
       },
@@ -200,12 +206,13 @@
           "@eslint/js",
           "globals",
           "eslint-plugin-react-hooks",
-          "eslint-plugin-react-refresh"
+          "eslint-plugin-react-refresh",
+          "eslint-plugin-import-x"
         ]
       }
     },
     "oxlint": {
-      "description": "oxlint (what create-vite sets up; works with TypeScript 7) with a 400-line file limit.",
+      "description": "oxlint (what create-vite sets up; works with TypeScript 7) with accessibility rules, no import cycles and a 400-line file limit.",
       "detect": {
         "devDependencies": ["oxlint"]
       },
@@ -263,7 +270,7 @@
       ]
     },
     "e2e": {
-      "description": "Playwright end-to-end tests, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
+      "description": "Playwright end-to-end tests with axe accessibility checks, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
       "recommended": true,
       "detect": {
         "devDependencies": ["@playwright/test"]
@@ -278,7 +285,11 @@
           "description": "turns on the git hooks in .githooks/ (npm runs it on install)"
         }
       },
-      "devDependencies": ["@playwright/test", "@playwright/cli"],
+      "devDependencies": [
+        "@playwright/test",
+        "@playwright/cli",
+        "@axe-core/playwright"
+      ],
       "install": [
         {
           "command": "npx -y skills add microsoft/playwright-cli --skill playwright-cli -a claude-code --copy -y",
@@ -329,7 +340,7 @@
       "devDependencies": ["knip", "jscpd"]
     },
     "best-practices": {
-      "description": "Vercel's React performance, composition and Web Interface Guidelines skills, and the rules for fast pages and lists (with how to measure them) for the framework.",
+      "description": "Vercel's React performance, composition and Web Interface Guidelines skills, the rules for fast pages and lists, and the Chrome DevTools MCP server to measure them.",
       "recommended": true,
       "install": [
         {
@@ -344,7 +355,13 @@
           "command": "npx -y skills add vercel-labs/agent-skills --skill web-design-guidelines -a claude-code --copy -y",
           "creates": [".claude/skills/web-design-guidelines"]
         }
-      ]
+      ],
+      "mcpServers": {
+        "chrome-devtools": {
+          "command": "npx",
+          "args": ["-y", "chrome-devtools-mcp@latest"]
+        }
+      }
     },
     "context7": {
       "description": "Context7 MCP server, rule and skill for current library docs.",

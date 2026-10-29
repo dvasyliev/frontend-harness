@@ -1,6 +1,7 @@
 import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import prettier from "eslint-config-prettier/flat";
+import { createNodeResolver, importX } from "eslint-plugin-import-x";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
@@ -40,6 +41,26 @@ export default defineConfig([
         { max: 400, skipBlankLines: true, skipComments: true },
       ],
     },
+  },
+  // No import cycles: modules that import each other, directly or through others.
+  // The resolver reads tsconfig.json and its references, so `@/` imports count too.
+  {
+    files: ["**/*.{ts,tsx}"],
+    plugins: { "import-x": importX },
+    settings: {
+      "import-x/extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs"],
+      "import-x/parsers": { "@typescript-eslint/parser": [".ts", ".tsx"] },
+      "import-x/resolver-next": [
+        createNodeResolver({
+          extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs", ".json"],
+          tsconfig: {
+            configFile: `${import.meta.dirname}/tsconfig.json`,
+            references: "auto",
+          },
+        }),
+      ],
+    },
+    rules: { "import-x/no-cycle": "error" },
   },
   // Must stay last: turns off rules that conflict with Prettier.
   prettier,
