@@ -1,17 +1,23 @@
 #!/usr/bin/env node
-// Copier task: writes the chosen modules (modules.json, files/) into the project in the current folder.
-// Usage: node apply.mjs <template dir> <framework> '<modules JSON>' '<skip_checks JSON>' <docs_language>
+// Writes the chosen modules (modules.json, files/) into the project in the current folder.
+// Usage: node apply.mjs '{"framework": "nextjs", "modules": [...], "skipChecks": [...], "docsLanguage": "English"}'
+// An answer left out keeps its value from the last run (.claude/harness.json).
 import { execSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
-const [root, frameworkId, modulesArg, skipArg, docsLanguage] = process.argv.slice(2);
+const root = join(import.meta.dirname, "..");
 const readJson = (path, fallback) => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : fallback);
 const writeJson = (path, data) => writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
+if (!existsSync("package.json")) fail("no package.json here; run this in the project folder");
+const old = readJson(".claude/harness.json", {});
+const answers = { modules: [], skipChecks: [], docsLanguage: "English", ...old, ...JSON.parse(process.argv[2] || "{}") };
+const { version } = readJson(join(root, ".claude-plugin", "plugin.json"));
 const catalog = readJson(join(root, "modules.json"));
+const frameworkId = answers.framework;
 const framework = catalog.frameworks[frameworkId];
 if (!framework) fail(`unknown framework "${frameworkId}"`);
-const skip = new Set(JSON.parse(skipArg || "[]"));
+const skip = new Set(answers.skipChecks);
 const noInstall = Boolean(process.env.HARNESS_NO_INSTALL);
 
 function fail(message) {
@@ -20,7 +26,7 @@ function fail(message) {
 }
 
 // Selected modules plus the required ones, in catalog order, with exactly one linter.
-const wanted = new Set(JSON.parse(modulesArg));
+const wanted = new Set(answers.modules);
 for (const [id, m] of Object.entries(catalog.modules)) if (m.required) wanted.add(id);
 for (const id of wanted) {
   const m = catalog.modules[id];
@@ -70,7 +76,6 @@ const paths = [...new Set([...Object.keys(files), ...installs.flatMap((i) => i.c
 
 // What the previous run wrote, so what no module needs any more goes too.
 // A harness.json from before `merged` lists the scripts, plugins and permissions it set instead.
-const old = readJson(".claude/harness.json", {});
 const previous = {
   paths: [],
   mcp: [],
@@ -149,11 +154,13 @@ else rmSync(".mcp.json", { force: true });
 const checks = collect("checks").filter((c) => !skip.has(c.name));
 const fileChecks = collect("fileChecks").filter((c) => !skip.has(c.name));
 writeJson(".claude/harness.json", {
-  $comment: "Written by the harness template (tasks/apply.mjs). Do not edit; change the Copier answers instead.",
+  $comment: "Written by the frontend-harness plugin (tasks/apply.mjs). Do not edit; change the answers with the frontend-harness skill.",
+  version,
   framework: frameworkId,
-  port: framework.port,
   modules: modules.map(([id]) => id),
   skipChecks: [...skip],
+  docsLanguage: answers.docsLanguage,
+  port: framework.port,
   checks,
   fileChecks,
   paths,
@@ -165,10 +172,10 @@ writeJson(".claude/harness.json", {
 const md = [
   "# Harness",
   "",
-  "Written by the harness template from `.claude/harness.json`; do not edit by hand.",
+  "Written by the frontend-harness plugin from `.claude/harness.json`; do not edit by hand.",
   "",
   ...(paths.includes("AGENTS.md") ? ["@../AGENTS.md", ""] : []),
-  `Harness modules: ${modules.map(([id]) => id).join(", ")}. Specs and plans are written in ${docsLanguage}.`,
+  `Harness modules: ${modules.map(([id]) => id).join(", ")}. Specs and plans are written in ${answers.docsLanguage}.`,
   "",
   "## Commands",
   "",
@@ -191,7 +198,7 @@ try {
   // Not a git repo yet; `npm install` runs `prepare` later.
 }
 
-console.log(`harness: ${modules.map(([id]) => id).join(", ")} on ${frameworkId}`);
+console.log(`harness ${version}: ${modules.map(([id]) => id).join(", ")} on ${frameworkId}`);
 for (const note of notes) console.log(`harness: ${note}`);
 
 // npm packages last, so every file above is written even when the install fails.

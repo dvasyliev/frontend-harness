@@ -1,10 +1,10 @@
 {
   "name": "frontend-harness",
-  "version": "0.1.0",
-  "description": "Install and update a Claude Code harness (hooks, rules, skills, checks) in React (Vite) and Next.js projects from a Copier template, picking the modules that fit the project",
+  "version": "0.18.0",
+  "description": "Install and update a Claude Code harness (hooks, rules, skills, checks) in React (Vite) and Next.js projects, picking the modules that fit the project",
   "author": {
     "name": "Dmytro Vasyliev"
   },
   "license": "MIT",
-  "keywords": ["harness", "hooks", "copier", "template"]
+  "keywords": ["harness", "hooks", "template"]
 }
