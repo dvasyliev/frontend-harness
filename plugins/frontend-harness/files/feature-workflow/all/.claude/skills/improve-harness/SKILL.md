@@ -41,7 +41,7 @@ Change nothing without the user's answer.
 For each approved fix, pick the case:
 
 - Harness is broken (a symptom from `references/symptoms.md`): check the causes listed under that symptom one by one and fix the one you confirm.
-- Harness lacked a rule: put it in `eslint.config.mjs` if a machine can check it, in a file under `.claude/rules/` if it applies to one folder, in `CLAUDE.md` only if it applies to the whole project.
+- Harness lacked a rule: put it in the linter config (`eslint.config.mjs` or `.oxlintrc.json`) if a machine can check it, in a file under `.claude/rules/` if it applies to one folder, in `CLAUDE.md` only if it applies to the whole project.
 - The file belongs to the harness template (listed by `.claude/harness.json`, or a hook, rule or skill the template installs): make the fix in the template with the `frontend-harness` skill ("Improving the harness itself"), then update this project from it. A fix made only here is lost on the next update.
 
 <!-- Hard rules: these limits keep each fix small and stop the agent from making a check weaker just to make it pass. -->

@@ -64,4 +64,4 @@ Invoke the `improve-harness` skill.
 
 ## Subagents
 
-Subagents that implement a task run only the unit tests of the files they touch (`npx vitest run <files>`), plus the spec file on the end-to-end task. They do not run `npm run check` or `npm run verify`; the Stop hook and the end-to-end step cover those.
+Subagents that implement a task do not run `npm run check`; the Stop hook does. With `unit`, they run only the unit tests of the files they touch (`npx vitest run <files>`). With `e2e`, the subagent on the end-to-end task runs only its spec files, never `npm run verify`; the end-to-end step does.

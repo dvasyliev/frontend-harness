@@ -75,12 +75,12 @@ Each entry: symptom, causes, and a check you can run yourself.
 
 ## Lint passes on bad code
 
-- File is ignored. Check: `npx eslint <file>`.
-- Rule is off or a warning. Check: `npx eslint --print-config <file>`.
+- File is ignored. Check: `npx eslint <file>` or `npx oxlint <file>`.
+- Rule is off or a warning. Check: `npx eslint --print-config <file>`, or the rule in `.oxlintrc.json`.
 
 ## Lint fails on code nobody touched
 
-- An old warning fails `--max-warnings 0`. Check: `npm run lint`.
+- An old warning fails `--max-warnings 0` (ESLint) or `--deny-warnings` (oxlint). Check: `npm run lint`.
 
 ## A git hook does not run
 
