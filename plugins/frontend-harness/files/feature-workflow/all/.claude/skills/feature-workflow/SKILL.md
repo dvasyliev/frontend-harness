@@ -1,8 +1,11 @@
+---
+name: feature-workflow
+description: Use when building any user-facing feature, from the request to the last commit - spec, plan, tests first, browser check, end-to-end tests and improving the harness.
+---
+
 # Building a feature
 
-For every user-facing feature, go through the steps below in order. Work on `main`; no branches, worktrees or PRs, even when a skill suggests them.
-
-Ask every question that has ready answer options (including "apply this?" after a proposal) with `AskUserQuestion`, never as plain text at the end of a reply. This holds inside `superpowers:brainstorming` too, even where it says to ask open questions in text; only a question with no sensible options stays in text.
+Go through the steps below in order.
 
 A step or sentence marked with a module (such as "With `e2e`") applies only when that module is in the harness modules listed in `.claude/harness.md`; skip it otherwise.
 
@@ -29,7 +32,9 @@ If `superpowers:brainstorming` produced a written spec, show the plan and wait f
 - **Default:** do every task yourself in this session (`superpowers:executing-plans`).
 - **Plan long enough that its later tasks would run on a compacted conversation, or a risky change that needs a review after each task:** use `superpowers:subagent-driven-development`: one subagent per task, in order, with a review after each. Skip its worktree setup and work on `main`; each implementer commits only its own files.
 
-Never run implementer subagents in parallel: they share one working tree on `main`. With `e2e`: make the end-to-end tests the plan's last task, so the final review that both skills end with covers them; that review is the feature's review. The browser check stays with you, not the subagents. Ask the user only about what the spec leaves open, not about how to execute.
+With `e2e`: make the end-to-end tests the plan's last task, so the final review that both skills end with covers them; that review is the feature's review. The browser check stays with you, not the subagents.
+
+Ask the user only about what the spec leaves open, not about how to execute.
 
 ## Unit tests first (with `unit`)
 

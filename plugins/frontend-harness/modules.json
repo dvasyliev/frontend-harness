@@ -136,7 +136,7 @@
       }
     },
     "feature-workflow": {
-      "description": "The steps for building a feature (spec, plan, tests first, browser check, end-to-end tests, improve the harness), with the superpowers plugin and the improve-harness skill.",
+      "description": "The feature-workflow skill (spec, plan, tests first, browser check, end-to-end tests, improve the harness) with a short rule that calls it, the superpowers plugin and the improve-harness skill.",
       "recommended": true,
       "settings": {
         "enabledPlugins": {
