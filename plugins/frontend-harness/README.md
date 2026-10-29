@@ -42,38 +42,6 @@ By hand, from the project folder (answers left out keep their values from `.clau
 node <plugin>/tasks/apply.mjs '{"framework": "nextjs", "modules": ["core", "eslint", "unit"]}'
 ```
 
-## Layout
-
-```
-.claude-plugin/plugin.json                 name and version
-skills/frontend-harness/                   the skill: picks modules, runs apply.mjs, merges what it cannot
-modules.json                               every framework and module
-modules/<category>/<module>/all/           a module's files for every framework, at their paths in the project
-modules/<category>/<module>/<framework>/   its files for one framework
-tasks/apply.mjs                            writes the chosen modules into the project in the current folder
-```
-
-## Entities
-
-| Entity | What it is |
-|---|---|
-| Framework | `modules.json` `frameworks`: `nextjs` or `react`, with its port, source folders, default linter and how to detect it. Picks the `<framework>/` version of each file. |
-| Module | `modules.json` `modules`: one thing a project gets, in a `category` (the folder its files are in). Brings files, `scripts` / `frameworkScripts` (package.json), `checks` / `fileChecks` (run by the hooks), `settings` (.claude/settings.json), `mcpServers` (.mcp.json), npm `devDependencies` / `frameworkDevDependencies`, and `install` commands. |
-| How a module is chosen | `required` always; `auto` exactly when its `detect` matches (package.json or files); `linter` exactly one; `recommended` suggested; the rest offered. |
-| Answers | `framework`, `modules`, `skipChecks`, `docsLanguage`: passed to `apply.mjs`, kept in `.claude/harness.json`. |
-
-## What apply.mjs writes in a project
-
-| Path | Purpose |
-|---|---|
-| module files | Merged with the project's edits (`git merge-file` against `.claude/harness-base/`). A file the project already had, or has under another extension, is left for the skill to merge (`.new`). |
-| `package.json`, `.claude/settings.json`, `.mcp.json` | The modules' keys are merged in and taken back when their module goes; a value the project set differently stays. |
-| `.claude/harness.json` | Answers, version, the checks the hooks run, and what this run wrote. |
-| `.claude/harness.md` | Installed modules and commands; `CLAUDE.md` imports it. |
-| `.claude/harness-base/` | What the harness wrote last: the base for the next merge. |
-
-A module that goes takes its files (unless the project edited them), scripts, settings and MCP servers with it; npm packages stay.
-
 ## Modules
 
 | Category | Module | Chosen | Brings |
@@ -94,8 +62,4 @@ A module that goes takes its files (unless the project edited them), scripts, se
 | best-practices | `next-docs` | auto | `AGENTS.md` (bundled Next.js docs), Next.js DevTools MCP |
 | performance | `page-speed` | recommended | fast pages and lists rules, Chrome DevTools MCP, bundle size check (React) |
 
-## Changing the harness
-
-- New module: an entry in `modules.json` (with its `category`), its files in `modules/<category>/<module>/`.
-- New framework: an entry in `modules.json` `frameworks`, and a `<framework>/` version of each per-framework file next to the module's `all/`.
-- Try it on a scratch project with `HARNESS_NO_INSTALL=1`, raise `version` in `plugin.json`, commit and tag `vX.Y.Z`.
+How the plugin is built and how to change it: `CLAUDE.md`.

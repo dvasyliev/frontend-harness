@@ -66,11 +66,5 @@ Then read the `harness:` lines it printed, `git status` and `git diff`:
 
 A fix to a harness-owned file (anything the template writes, or the hooks, rules and skills it installs) goes into the template, not only into the project, or the next update overwrites it.
 
-1. Make the change in `<template>`:
-   - `modules.json`: one module per thing the project gets (such as `feature-workflow` or `context7`), with its `category` and what it adds: `scripts`, `checks` and `fileChecks`, `settings` (merged into `.claude/settings.json` as it is: hooks, permissions, `enabledPlugins`), npm `devDependencies`, and `install` commands with the paths each `creates`. For another repo's skill: `npx -y skills add <owner/repo> --skill <name> -a claude-code --copy -y` (projects update it with `npx skills update`). For a tool with its own setup (like `npx ctx7 setup` for Context7): that command, with what it writes in `creates`, and the MCP servers it adds in `mcp`.
-   - `modules/<category>/<module>/all/` and `.../<framework>/`: the module's files, at their paths in the project. Every file is merged: the project's edits and the harness changes since the last install are merged with `git merge-file`, against the copy kept in `.claude/harness-base/`.
-   - `tasks/apply.mjs`: how modules are installed, written and removed.
-   - A new framework (Vue, Nuxt, Svelte, Angular): an entry in `modules.json` `frameworks` and a `<framework>/` version of each per-framework file next to the module's `all/`. A file whose text depends on the framework gets one version per framework; a rule that depends on other modules names them in plain text ("With `e2e`: ...").
-2. Try it on a scratch project with a `package.json`: run step 3's command there (with `HARNESS_NO_INSTALL=1` to skip npm installs and install commands).
-3. Raise `version` in `.claude-plugin/plugin.json` (a new module or answer is a minor version, a fix a patch), commit in `<template>` and tag it (`git tag vX.Y.Z`).
-4. Update the project: step 3 with `HARNESS_TEMPLATE` set to `<template>`, or once the plugin itself is updated.
+1. Make the change in a checkout of the plugin (`$HARNESS_TEMPLATE`), not in the plugin cache, as its `CLAUDE.md` says: the layout, the conventions, how to try a change and how to release it.
+2. Update the project: step 3 with `HARNESS_TEMPLATE` set to that checkout, or once the plugin itself is updated.
