@@ -1,6 +1,7 @@
 # How we work
 
 - For every user-facing feature, use the `feature-workflow` skill before writing any code.
+- After a large change made without that skill (a refactor, the fixes of an audit), invoke the `improve-harness` skill.
 - Work on `main`; no branches, worktrees or PRs, even when a skill suggests them.
 - Several agents may work in this repo at the same time. Changes you did not make are another agent's work in progress, not a mess to clean up.
 - Touch only your own changes. Never revert, reformat, stash or commit another agent's files.
