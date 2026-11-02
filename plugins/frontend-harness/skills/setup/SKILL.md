@@ -37,17 +37,17 @@ Ask about `skipChecks` only when the user asks to turn a check off, or in step 4
 
 ### Libraries
 
-With the `libraries` module, ask which library each job uses. The jobs are the `sections` in `<template>/modules/best-practices/libraries/sections.json`. On an update, ask only about sections with no answer in `.claude/harness.json` `libraries`, or all of them if the user asks to change the choices.
+With the `libraries` module, settle which library each job uses. The jobs are the `sections` in `<template>/modules/best-practices/libraries/sections.json`. On an update, handle only sections with no answer in `.claude/harness.json` `libraries`; a section that has one keeps it. Do not look for use cases in the code: the rule is about code to come, and a chosen library is not installed, as a project adds it when its first code needs it.
 
-Ask with `AskUserQuestion`, one question per section, the section's `title` as header, up to 4 questions per call (a second call for the rest). Options, in this order:
+1. Give each section a recommended library, taking the first of these that applies:
+   - The section's current answer in `.claude/harness.json` `libraries`.
+   - An option found in `package.json` (`dependencies` or `devDependencies`; a name in `packages` ending in `/` matches a whole scope). With several found, it is the first in the section's order, and the section gets its own question in step 3.
+   - An option whose `firstWhen` matches another section's recommended library.
+   - The section's first option.
+2. Show the whole list in one `AskUserQuestion`, section titles with their recommended library, with the options "Accept" and "Change by section". On "Accept", these are the answers, except for sections left for step 3.
+3. On "Change by section", ask with `AskUserQuestion`, one question per section, the section's `title` as header, up to 4 questions per call (a second call for the rest). Options, in this order: the recommended library with "(recommended)" after its label, the section's other options in their order, then "No library", described by the section's `platform`. Each option's label is its `name`, its description its `when`. The user names any other library through "Other".
 
-1. Each option found in `package.json` (`dependencies` or `devDependencies`; a name in `packages` ending in `/` matches a whole scope), with "(in the project)" after its label.
-2. The other options, the `recommended` one first with "(recommended)" after its label.
-3. "No library", described by the section's `platform`.
-
-Each option's label is its `name`, its description its `when`. The user names any other library through "Other".
-
-An answer is the option's `id`, `none` for "No library", or the name the user gave. The rule is written from these answers; a chosen library is not installed, as a project adds it when its first code needs it.
+An answer is the option's `id`, `none` for "No library", or the name the user gave.
 
 ## 3. Run the template
 

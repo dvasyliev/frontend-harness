@@ -32,6 +32,7 @@ The plugin only installs and updates the harness. What it installs lives in the 
 |---|---|
 | Add or remove modules | `/frontend-harness:setup`, or ask "add e2e", "remove sync-deps". |
 | Turn one check off | Ask "turn off the dupes check" (it goes into `skipChecks`). |
+| Choose or change the libraries | `/frontend-harness:libraries`, also when the question was skipped at setup. |
 | Update the harness in a project | `/frontend-harness:update` (or ask "update the harness"): its files are merged with the project's edits. |
 | Update the plugin | `claude plugin marketplace update dvasyliev-plugins`, then `claude plugin update frontend-harness@dvasyliev-plugins --scope local`, and restart Claude Code. |
 | Remove the plugin | `claude plugin uninstall frontend-harness@dvasyliev-plugins --scope local`. The harness already in the project stays. |
@@ -59,7 +60,7 @@ node <plugin>/tasks/apply.mjs '{"framework": "nextjs", "modules": ["core", "esli
 | git | `sync-deps` | optional | `npm install` after a pull or checkout that changed the lockfile |
 | best-practices | `best-practices` | recommended | Vercel skills: React and Next.js performance, composition, Web Interface Guidelines |
 | best-practices | `context7` | recommended | Context7 MCP, rule and skill |
-| best-practices | `libraries` | recommended | a rule on when to use the platform and when a library; setup asks which library each job uses, a library already in the project first |
+| best-practices | `libraries` | recommended | a rule on when to use the platform and when a library; setup recommends a library for each job, the one already in the project first, and you accept or change the list |
 | best-practices | `next-docs` | auto | `AGENTS.md` (bundled Next.js docs), Next.js DevTools MCP |
 | performance | `page-speed` | recommended | fast pages and lists rules, Chrome DevTools MCP, bundle size check (React) |
 

@@ -140,12 +140,12 @@ for (const path of previous.paths) {
 if (lock) writeJson("skills-lock.json", lock);
 
 // The libraries rule: its fixed text with one section per sections.json entry, from the `libraries` answers.
-// An answer is an option id, `none`, or a library the user named. A section with no answer yet gets the recommended option.
+// An answer is an option id, `none`, or a library the user named. A section with no answer yet gets its first option.
 function librariesRule() {
   const dir = join(root, "modules", catalog.modules.libraries.category, "libraries");
   const sections = readJson(join(dir, "sections.json")).sections.map((section) => {
     if (!(section.id in answers.libraries)) {
-      answers.libraries[section.id] = section.options.find((o) => o.recommended).id;
+      answers.libraries[section.id] = section.options[0].id;
       notes.push(`libraries: no answer for ${section.id}, so it uses ${answers.libraries[section.id]}`);
     }
     const answer = answers.libraries[section.id];

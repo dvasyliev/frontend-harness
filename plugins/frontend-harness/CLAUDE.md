@@ -8,6 +8,7 @@ How the plugin is built and how to change it. How to use it is in `README.md`.
 .claude-plugin/plugin.json                 name and version
 skills/setup/                              /frontend-harness:setup: picks modules, runs apply.mjs, merges what it cannot
 skills/update/                             /frontend-harness:update: the same, as an update
+skills/libraries/                          /frontend-harness:libraries: chooses or changes the libraries at any time
 modules.json                               every framework and module
 modules/<category>/<module>/all/           a module's files for every framework, at their paths in the project
 modules/<category>/<module>/<framework>/   its files for one framework

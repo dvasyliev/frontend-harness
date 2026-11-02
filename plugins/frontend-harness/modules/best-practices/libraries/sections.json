@@ -1,5 +1,5 @@
 {
-  "$comment": "The sections of the libraries rule. The setup skill asks one question per section; apply.mjs writes the rule from the answers. platform: what to use without a library, always in the rule. use: follows the library's name on its line. notes: rules that hold while a library is chosen. An option's packages find it in package.json (a name ending in / matches a whole scope); when says when to pick it. The answer is an option id, none, or any other name the user gave.",
+  "$comment": "The sections of the libraries rule. The setup skill asks one question per section; apply.mjs writes the rule from the answers. platform: what to use without a library, always in the rule. use: follows the library's name on its line. notes: rules that hold while a library is chosen. Options are in the order they are offered: the first is the recommended one, the rest by popularity. firstWhen moves an option to the front when another section chose the named option. An option's packages find it in package.json (a name ending in / matches a whole scope); when says when to pick it. Keep at most three options per section: a question has room for three and No library. The answer is an option id, none, or any other name the user gave.",
   "sections": [
     {
       "id": "components",
@@ -11,7 +11,6 @@
           "id": "base-ui",
           "name": "Base UI",
           "packages": ["@base-ui/react"],
-          "recommended": true,
           "when": "New projects: one library with every component, unstyled, including search suggestions."
         },
         {
@@ -21,10 +20,10 @@
           "when": "Longest record and widest use, but no ready suggestions field."
         },
         {
-          "id": "react-aria",
-          "name": "React Aria",
-          "packages": ["react-aria-components", "react-aria"],
-          "when": "Accessibility and many languages come first; a larger download."
+          "id": "mui",
+          "name": "MUI",
+          "packages": ["@mui/material"],
+          "when": "A ready set with its own look, for apps with no design of their own."
         }
       ]
     },
@@ -38,7 +37,6 @@
           "id": "react-hook-form",
           "name": "React Hook Form",
           "packages": ["react-hook-form"],
-          "recommended": true,
           "when": "The common default, with the widest use."
         },
         {
@@ -46,12 +44,6 @@
           "name": "TanStack Form",
           "packages": ["@tanstack/react-form"],
           "when": "Strict types and async validation out of the box."
-        },
-        {
-          "id": "conform",
-          "name": "Conform",
-          "packages": ["@conform-to/react"],
-          "when": "Forms on server actions that also work without JavaScript."
         }
       ]
     },
@@ -70,7 +62,6 @@
           "id": "zod",
           "name": "Zod",
           "packages": ["zod"],
-          "recommended": true,
           "when": "The common default, and most libraries connect to it."
         },
         {
@@ -94,7 +85,6 @@
           "id": "nuqs",
           "name": "nuqs",
           "packages": ["nuqs"],
-          "recommended": true,
           "when": "Pages with filters: typed parameters on client and server."
         }
       ]
@@ -114,7 +104,6 @@
           "id": "tanstack-query",
           "name": "TanStack Query",
           "packages": ["@tanstack/react-query"],
-          "recommended": true,
           "when": "The common default: paging, writes with rollback and shared cache."
         },
         {
@@ -141,20 +130,19 @@
           "id": "zustand",
           "name": "Zustand",
           "packages": ["zustand"],
-          "recommended": true,
           "when": "One small store, the simplest choice."
-        },
-        {
-          "id": "jotai",
-          "name": "Jotai",
-          "packages": ["jotai"],
-          "when": "Many small independent pieces of state."
         },
         {
           "id": "redux-toolkit",
           "name": "Redux Toolkit",
           "packages": ["@reduxjs/toolkit"],
           "when": "Large apps with strict patterns, or Redux is already there."
+        },
+        {
+          "id": "jotai",
+          "name": "Jotai",
+          "packages": ["jotai"],
+          "when": "Many small independent pieces of state."
         }
       ]
     },
@@ -165,17 +153,23 @@
       "use": ", when a message must outlive the place it came from. Do not add a second toast library.",
       "options": [
         {
-          "id": "base-ui",
-          "name": "Base UI",
-          "packages": ["@base-ui/react"],
-          "recommended": true,
-          "when": "Components come from Base UI, so nothing new to add."
-        },
-        {
           "id": "sonner",
           "name": "Sonner",
           "packages": ["sonner"],
-          "when": "Components come from elsewhere; ready-made look."
+          "when": "The common default, with a ready-made look."
+        },
+        {
+          "id": "base-ui",
+          "name": "Base UI",
+          "packages": ["@base-ui/react"],
+          "firstWhen": { "components": "base-ui" },
+          "when": "Components come from Base UI, so nothing new to add."
+        },
+        {
+          "id": "react-toastify",
+          "name": "React-Toastify",
+          "packages": ["react-toastify"],
+          "when": "More built-in options, such as progress bars."
         }
       ]
     },
@@ -189,7 +183,6 @@
           "id": "date-fns",
           "name": "date-fns",
           "packages": ["date-fns"],
-          "recommended": true,
           "when": "Plain functions over `Date`; only what is imported is downloaded."
         },
         {
