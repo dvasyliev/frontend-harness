@@ -46,6 +46,13 @@ const eslintConfig = defineConfig([
       "boundaries/elements": [
         { type: "shared", pattern: "app/components", partialMatch: false },
         { type: "api", pattern: "app/api", partialMatch: false },
+        // A route group is not a route: each folder inside it is.
+        {
+          type: "route",
+          pattern: "app/\\(*\\)/*",
+          capture: ["group", "route"],
+          partialMatch: false,
+        },
         {
           type: "route",
           pattern: "app/*",
