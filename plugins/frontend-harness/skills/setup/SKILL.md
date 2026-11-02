@@ -35,10 +35,24 @@ Skills come with their modules; there is no separate skill question.
 
 Ask about `skipChecks` only when the user asks to turn a check off, or in step 4.
 
+### Libraries
+
+With the `libraries` module, ask which library each job uses. The jobs are the `sections` in `<template>/modules/best-practices/libraries/sections.json`. On an update, ask only about sections with no answer in `.claude/harness.json` `libraries`, or all of them if the user asks to change the choices.
+
+Ask with `AskUserQuestion`, one question per section, the section's `title` as header, up to 4 questions per call (a second call for the rest). Options, in this order:
+
+1. Each option found in `package.json` (`dependencies` or `devDependencies`; a name in `packages` ending in `/` matches a whole scope), with "(in the project)" after its label.
+2. The other options, the `recommended` one first with "(recommended)" after its label.
+3. "No library", described by the section's `platform`.
+
+Each option's label is its `name`, its description its `when`. The user names any other library through "Other".
+
+An answer is the option's `id`, `none` for "No library", or the name the user gave. The rule is written from these answers; a chosen library is not installed, as a project adds it when its first code needs it.
+
 ## 3. Run the template
 
 ```bash
-node <template>/tasks/apply.mjs '{"framework": "<framework>", "modules": [...], "skipChecks": [...], "docsLanguage": "<language>"}'
+node <template>/tasks/apply.mjs '{"framework": "<framework>", "modules": [...], "skipChecks": [...], "docsLanguage": "<language>", "libraries": {"<section id>": "<answer>"}}'
 ```
 
 On an update, leave out the answers that do not change; they keep their values from `.claude/harness.json`. `docsLanguage` is the language of specs and plans (default English); ask if the project's docs do not show it. The dev server port, which the hooks and the end-to-end tests use, is the one the project's `dev` script sets (`--port` or `-p`), else one `apply.mjs` derives from the folder name (3000–3999) and adds to the `dev` script, so projects on one machine rarely share it. To change it, change the `dev` script.

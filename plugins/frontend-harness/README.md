@@ -59,6 +59,7 @@ node <plugin>/tasks/apply.mjs '{"framework": "nextjs", "modules": ["core", "esli
 | git | `sync-deps` | optional | `npm install` after a pull or checkout that changed the lockfile |
 | best-practices | `best-practices` | recommended | Vercel skills: React and Next.js performance, composition, Web Interface Guidelines |
 | best-practices | `context7` | recommended | Context7 MCP, rule and skill |
+| best-practices | `libraries` | recommended | a rule on when to use the platform and when a library; setup asks which library each job uses, a library already in the project first |
 | best-practices | `next-docs` | auto | `AGENTS.md` (bundled Next.js docs), Next.js DevTools MCP |
 | performance | `page-speed` | recommended | fast pages and lists rules, Chrome DevTools MCP, bundle size check (React) |
 

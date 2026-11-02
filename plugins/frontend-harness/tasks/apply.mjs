@@ -13,7 +13,7 @@ const writeJson = (path, data) => writeFileSync(path, JSON.stringify(data, null,
 if (!existsSync("package.json")) fail("no package.json here; run this in the project folder");
 const pkg = readJson("package.json");
 const old = readJson(".claude/harness.json", {});
-const answers = { modules: [], skipChecks: [], docsLanguage: "English", ...old, ...JSON.parse(process.argv[2] || "{}") };
+const answers = { modules: [], skipChecks: [], docsLanguage: "English", libraries: {}, ...old, ...JSON.parse(process.argv[2] || "{}") };
 const { version } = readJson(join(root, ".claude-plugin", "plugin.json"));
 const catalog = readJson(join(root, "modules.json"));
 const frameworkId = answers.framework;
@@ -91,6 +91,8 @@ for (const [id, m] of modules) {
     }
   }
 }
+// .claude/rules/libraries.md has no source file: its text comes from the `libraries` answers.
+if (wanted.has("libraries")) files[".claude/rules/libraries.md"] = null;
 const installs = collect("install");
 const paths = [...new Set([...Object.keys(files), ...installs.flatMap((i) => i.creates ?? [])])];
 
@@ -137,6 +139,23 @@ for (const path of previous.paths) {
 }
 if (lock) writeJson("skills-lock.json", lock);
 
+// The libraries rule: its fixed text with one section per sections.json entry, from the `libraries` answers.
+// An answer is an option id, `none`, or a library the user named. A section with no answer yet gets the recommended option.
+function librariesRule() {
+  const dir = join(root, "modules", catalog.modules.libraries.category, "libraries");
+  const sections = readJson(join(dir, "sections.json")).sections.map((section) => {
+    if (!(section.id in answers.libraries)) {
+      answers.libraries[section.id] = section.options.find((o) => o.recommended).id;
+      notes.push(`libraries: no answer for ${section.id}, so it uses ${answers.libraries[section.id]}`);
+    }
+    const answer = answers.libraries[section.id];
+    const name = section.options.find((o) => o.id === answer)?.name ?? answer;
+    const library = answer === "none" ? [] : ["", `**Library:** ${name}${section.use}`, ...(section.notes ? ["", ...section.notes.map((note) => `- ${note}`)] : [])];
+    return [`## ${section.title}`, "", `**Platform:** ${section.platform}`, ...library, ""].join("\n");
+  });
+  return readFileSync(join(dir, "libraries.md"), "utf8").replace("<!-- sections -->\n", () => sections.join("\n") + "\n");
+}
+
 // Each file keeps the project's edits: `base` holds what the harness wrote last,
 // and the harness changes since then are merged into the project's version, as git merges branches.
 const write = (path, text) => {
@@ -151,7 +170,7 @@ const sibling = (path) =>
     ? readdirSync(dirname(path)).find((f) => f !== basename(path) && stem(f) === stem(basename(path)))
     : undefined;
 for (const [path, source] of Object.entries(files)) {
-  const next = readFileSync(source, "utf8");
+  const next = source ? readFileSync(source, "utf8") : librariesRule();
   const other = sibling(path) && join(dirname(path), sibling(path));
   if (other && !existsSync(path)) {
     // The project has this file under another name: leave it for the skill to merge and rename.
@@ -233,6 +252,7 @@ writeJson(".claude/harness.json", {
   modules: modules.map(([id]) => id),
   skipChecks: [...skip],
   docsLanguage: answers.docsLanguage,
+  libraries: answers.libraries,
   port,
   checks,
   fileChecks,

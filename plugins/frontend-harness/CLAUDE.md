@@ -21,7 +21,7 @@ tasks/apply.mjs                            writes the chosen modules into the pr
 | Framework | `modules.json` `frameworks`: `nextjs` or `react`, with its source folders, default linter and how to detect it. Picks the `<framework>/` version of each file. |
 | Module | `modules.json` `modules`: one thing a project gets, in a `category` (the folder its files are in). Brings files, `scripts` / `frameworkScripts` (package.json), `checks` / `fileChecks` (run by the hooks), `settings` (.claude/settings.json), `mcpServers` (.mcp.json), npm `devDependencies` / `frameworkDevDependencies`, and `install` commands with the paths each `creates` (and the `.mcp.json` servers it adds in `mcp`). |
 | How a module is chosen | `required` always; `auto` exactly when its `detect` matches (package.json or files); `linter` exactly one; `recommended` suggested; the rest offered, one question per category. |
-| Answers | `framework`, `modules`, `skipChecks`, `docsLanguage`: passed to `apply.mjs`, kept in `.claude/harness.json`. |
+| Answers | `framework`, `modules`, `skipChecks`, `docsLanguage`, `libraries`: passed to `apply.mjs`, kept in `.claude/harness.json`. |
 
 ## What apply.mjs writes in a project
 
@@ -31,13 +31,14 @@ tasks/apply.mjs                            writes the chosen modules into the pr
 | `package.json`, `.claude/settings.json`, `.mcp.json` | The modules' keys are merged in and taken back when their module goes; a value the project set differently stays. |
 | `.claude/harness.json` | Answers, version, the checks the hooks run, what this run wrote, and `base`: the text of each file the harness wrote last, the base for the next merge. |
 | `.claude/rules/harness.md` | Installed modules and commands; always loaded, as a rule with no `paths`. |
+| `.claude/rules/libraries.md` | With the `libraries` module: `modules/best-practices/libraries/libraries.md` with one section per `sections.json` entry, written from the `libraries` answers, and merged with the project's edits like a module file. |
 | `core.hooksPath` | `.githooks` when a module brings git hooks, unless the project runs its hooks from elsewhere (husky). |
 
 A module that goes takes its files (unless the project edited them), scripts, settings and MCP servers with it; npm packages stay.
 
 ## Conventions
 
-- Plain files, no templating. A file whose text depends on the framework gets one version per framework (`<framework>/`).
+- Plain files, no templating. A file whose text depends on the framework gets one version per framework (`<framework>/`). The exceptions are the two rules `apply.mjs` writes from the answers.
 - Modules stand alone: no file needs another module to be installed. A step that only applies with another module says so in plain text ("With `e2e`: ...").
 - The project's own work wins: edited files are merged, not overwritten; a script, setting or hooks path the project set stays; the harness takes back only what it added.
 - `modules.json` is ordered by category; checks run in module order, so cheap ones come first.

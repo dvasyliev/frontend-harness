@@ -412,6 +412,11 @@
         }
       ]
     },
+    "libraries": {
+      "description": "A rule on when to use the platform and when a library, with the library chosen for each job (components, forms, validation, URL state, data and more).",
+      "category": "best-practices",
+      "recommended": true
+    },
     "next-docs": {
       "description": "AGENTS.md, which tells Claude to read the Next.js docs bundled in node_modules, and the Next.js DevTools MCP server (Next.js versions that ship them).",
       "category": "best-practices",

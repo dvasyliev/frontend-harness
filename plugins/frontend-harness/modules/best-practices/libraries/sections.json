@@ -1,0 +1,204 @@
+{
+  "$comment": "The sections of the libraries rule. The setup skill asks one question per section; apply.mjs writes the rule from the answers. platform: what to use without a library, always in the rule. use: follows the library's name on its line. notes: rules that hold while a library is chosen. An option's packages find it in package.json (a name ending in / matches a whole scope); when says when to pick it. The answer is an option id, none, or any other name the user gave.",
+  "sections": [
+    {
+      "id": "components",
+      "title": "Components",
+      "platform": "a plain `<button>` for toggles, a native `<select>` for a short list of options.",
+      "use": " for menus, popovers, windows, confirmations, radio groups, bottom panels and search suggestions. The platform covers only part of these: focus, keyboard navigation and positioning stay on you.",
+      "options": [
+        {
+          "id": "base-ui",
+          "name": "Base UI",
+          "packages": ["@base-ui/react"],
+          "recommended": true,
+          "when": "New projects: one library with every component, unstyled, including search suggestions."
+        },
+        {
+          "id": "radix",
+          "name": "Radix",
+          "packages": ["radix-ui", "@radix-ui/"],
+          "when": "Longest record and widest use, but no ready suggestions field."
+        },
+        {
+          "id": "react-aria",
+          "name": "React Aria",
+          "packages": ["react-aria-components", "react-aria"],
+          "when": "Accessibility and many languages come first; a larger download."
+        }
+      ]
+    },
+    {
+      "id": "forms",
+      "title": "Forms",
+      "platform": "a native `<form>`, enough for a few independent fields.",
+      "use": ", when a form has many fields, fields that depend on each other, fields added at runtime, or errors per field as the user types. It uses the same schema as the server.",
+      "options": [
+        {
+          "id": "react-hook-form",
+          "name": "React Hook Form",
+          "packages": ["react-hook-form"],
+          "recommended": true,
+          "when": "The common default, with the widest use."
+        },
+        {
+          "id": "tanstack-form",
+          "name": "TanStack Form",
+          "packages": ["@tanstack/react-form"],
+          "when": "Strict types and async validation out of the box."
+        },
+        {
+          "id": "conform",
+          "name": "Conform",
+          "packages": ["@conform-to/react"],
+          "when": "Forms on server actions that also work without JavaScript."
+        }
+      ]
+    },
+    {
+      "id": "validation",
+      "title": "Validation",
+      "platform": "field attributes help the user; they protect nothing, as the server can get any request.",
+      "use": " for data from outside the code: request bodies, server action arguments, query values. Do not check these by hand or cast them.",
+      "notes": [
+        "Validate at the edge of a route or action; code behind it gets typed data and does not check again.",
+        "Keep the library out of client code unless a form needs it, so the browser does not download it.",
+        "Validate a third-party API's response only where a wrong answer would do real harm."
+      ],
+      "options": [
+        {
+          "id": "zod",
+          "name": "Zod",
+          "packages": ["zod"],
+          "recommended": true,
+          "when": "The common default, and most libraries connect to it."
+        },
+        {
+          "id": "valibot",
+          "name": "Valibot",
+          "packages": ["valibot"],
+          "when": "Validation runs in the browser and its download matters."
+        }
+      ]
+    },
+    {
+      "id": "url",
+      "title": "URL state",
+      "platform": "`URLSearchParams` for building a one-off link or an address for a request.",
+      "use": " for filters and anything else that reads and changes the page's query parameters. Check that it works with the framework's caching before relying on it.",
+      "notes": [
+        "Changes that wait for a button, such as Apply in a panel, stay in local state until it is pressed."
+      ],
+      "options": [
+        {
+          "id": "nuqs",
+          "name": "nuqs",
+          "packages": ["nuqs"],
+          "recommended": true,
+          "when": "Pages with filters: typed parameters on client and server."
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "platform": "a single request from the browser with nothing shared or saved around it is a plain `fetch`.",
+      "use": " for data in the browser: next pages of a list, search suggestions, data shared by many components, and every write that shows at once. In an app without server rendering, for all server data.",
+      "notes": [
+        "Do not write rollback by hand; a failed write puts the old data back through the library.",
+        "Writes to one item run in order, so quick clicks cannot race.",
+        "Do not fetch in `useEffect` when a query fits."
+      ],
+      "options": [
+        {
+          "id": "tanstack-query",
+          "name": "TanStack Query",
+          "packages": ["@tanstack/react-query"],
+          "recommended": true,
+          "when": "The common default: paging, writes with rollback and shared cache."
+        },
+        {
+          "id": "swr",
+          "name": "SWR",
+          "packages": ["swr"],
+          "when": "Mostly reading data; a smaller download and fewer features."
+        },
+        {
+          "id": "rtk-query",
+          "name": "RTK Query",
+          "packages": ["@reduxjs/toolkit"],
+          "when": "The project is built on Redux."
+        }
+      ]
+    },
+    {
+      "id": "client-state",
+      "title": "Client state",
+      "platform": "the URL for what a link should keep, `useState` for one component, Context for a few components under one provider. Data from the server does not go in a hand-written store.",
+      "use": ", when state is shared by distant components and Context re-renders are measured as a real slowdown.",
+      "options": [
+        {
+          "id": "zustand",
+          "name": "Zustand",
+          "packages": ["zustand"],
+          "recommended": true,
+          "when": "One small store, the simplest choice."
+        },
+        {
+          "id": "jotai",
+          "name": "Jotai",
+          "packages": ["jotai"],
+          "when": "Many small independent pieces of state."
+        },
+        {
+          "id": "redux-toolkit",
+          "name": "Redux Toolkit",
+          "packages": ["@reduxjs/toolkit"],
+          "when": "Large apps with strict patterns, or Redux is already there."
+        }
+      ]
+    },
+    {
+      "id": "notifications",
+      "title": "Notifications",
+      "platform": "an error shows in place as `role=\"alert\"`, through one shared component.",
+      "use": ", when a message must outlive the place it came from. Do not add a second toast library.",
+      "options": [
+        {
+          "id": "base-ui",
+          "name": "Base UI",
+          "packages": ["@base-ui/react"],
+          "recommended": true,
+          "when": "Components come from Base UI, so nothing new to add."
+        },
+        {
+          "id": "sonner",
+          "name": "Sonner",
+          "packages": ["sonner"],
+          "when": "Components come from elsewhere; ready-made look."
+        }
+      ]
+    },
+    {
+      "id": "dates",
+      "title": "Dates and numbers",
+      "platform": "`Intl` and `Date`.",
+      "use": ", only for calculations these cannot do, such as time zone arithmetic.",
+      "options": [
+        {
+          "id": "date-fns",
+          "name": "date-fns",
+          "packages": ["date-fns"],
+          "recommended": true,
+          "when": "Plain functions over `Date`; only what is imported is downloaded."
+        },
+        {
+          "id": "dayjs",
+          "name": "Day.js",
+          "packages": ["dayjs"],
+          "when": "Moving from Moment: nearly the same API."
+        }
+      ]
+    }
+  ]
+}
