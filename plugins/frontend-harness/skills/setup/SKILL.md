@@ -44,7 +44,7 @@ With the `libraries` module, settle which library each job uses. The jobs are th
    - An option found in `package.json` (`dependencies` or `devDependencies`; a name in `packages` ending in `/` matches a whole scope). With several found, it is the first in the section's order, and the section gets its own question in step 3.
    - An option whose `firstWhen` matches another section's library, such as Base UI for notifications when components use Base UI. In step 3 the answer already given counts, not the recommendation.
    - The section's first option.
-2. Show the whole list in one `AskUserQuestion`, section titles with their recommended library, with the options "Accept" and "Change by section". On "Accept", these are the answers, except for sections left for step 3.
+2. Show the whole list in one `AskUserQuestion`, in the user's language and with nothing else in the question: "Recommended libraries as the project grows: components — Base UI; forms — React Hook Form; ...". Its options are "Accept" and "Change by section". On "Accept", these are the answers, except for sections left for step 3.
 3. On "Change by section", ask with `AskUserQuestion`, one question per section, the section's `title` as header, up to 4 questions per call (a second call for the rest). Options, in this order: the recommended library with "(recommended)" after its label, the section's other options in their order, then "No library", described by the section's `platform`. Each option's label is its `name`, its description its `when`. The user names any other library through "Other".
 
 An answer is the option's `id`, `none` for "No library", or the name the user gave.
