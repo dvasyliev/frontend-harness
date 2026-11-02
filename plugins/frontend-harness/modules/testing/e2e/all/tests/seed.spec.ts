@@ -1,13 +1,8 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./fixtures";
 
-// Starting point for generated end-to-end tests: opens the home page and checks it
-// for accessibility problems (WCAG 2.1 A and AA).
+// Starting point for generated end-to-end tests: opens the home page. The
+// fixture checks every page it opens for accessibility problems.
 test("seed", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL("/");
-  const axe = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-    .analyze();
-  expect(axe.violations).toEqual([]);
 });
