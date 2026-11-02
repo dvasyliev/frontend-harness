@@ -21,8 +21,8 @@ A list here is any repeated set of items: a row, a grid, a feed, a table.
 - Fetch the next batch after the last item shown (a cursor), not by offset, so an item that leaves the list does not make another get skipped.
 - Filter and sort on the server, in the same order for every batch. Changing a filter starts again from the first batch.
 - When the data source answers in fixed pages, use its page as the batch.
-- After a write (an item added or removed), the list starts again from the new first batch and drops what it had loaded and hidden.
-- Counts and totals come from the server, never from the number of items loaded so far.
+- A write shows at once in the items already loaded and goes back if it fails. The list keeps its loaded batches and its place, so the page does not jump; the next load starts from the new first batch.
+- Counts and totals come from the server, never from the number of items loaded so far. A write made here may adjust the server's count until the new one arrives.
 
 ## Ask data sources for as little as possible
 
