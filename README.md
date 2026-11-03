@@ -88,6 +88,7 @@ Later, you can:
 | Add or remove modules | `/frontend-harness:setup`, or just ask: "add e2e tests" |
 | Get the newest version of the harness, without losing your own changes | `/frontend-harness:update` |
 | Pick the libraries for forms, data, dates and so on | `/frontend-harness:libraries` |
+| Check code written before the harness against its rules, then fix what you pick | `/frontend-harness:audit` |
 
 More commands, how to turn off one check, and how to remove the plugin: [plugin guide](plugins/frontend-harness/README.md).
 
