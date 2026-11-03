@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.37.2 (2026-11-03)
+
+### Fixes
+
+- skip popup focus guards in the e2e accessibility check (aa5a933)
+
 ## 0.37.1 (2026-11-03)
 
 ### Fixes
