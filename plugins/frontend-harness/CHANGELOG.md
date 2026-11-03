@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.34.0 (2026-11-03)
+
+### Features
+
+- let Next.js projects use server-only (1bcbad7)
+
+### Other
+
+- install from the public frontend-harness marketplace (ea0ca39)
+
 ## 0.33.0 (2026-11-03)
 
 ### Features
