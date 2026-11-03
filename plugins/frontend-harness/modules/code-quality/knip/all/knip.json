@@ -8,7 +8,8 @@
     "prettier-plugin-tailwindcss",
     "lint-staged",
     "@secretlint/secretlint-rule-preset-recommend",
-    "@size-limit/file"
+    "@size-limit/file",
+    "server-only"
   ],
   "ignore": [".claude/**"]
 }
