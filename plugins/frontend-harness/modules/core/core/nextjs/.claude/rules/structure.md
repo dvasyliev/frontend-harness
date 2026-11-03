@@ -10,7 +10,7 @@ Sections of `project-structure`:
 
 - Where project files go: "Split project files by feature or route". The shared `lib/` stays at the project root.
 - Files inside a route: "Colocation" and "Private folders".
-- A special file: "Routing Files" and "Component hierarchy", then the file with its name in the `file-conventions` folder (`global-error` is in `error`, `global-not-found` in `not-found`).
+- A special file: "Routing Files" and "Component hierarchy", then the file with its name in the `file-conventions` folder (`global-error` is in `error`, `global-not-found` in `not-found`). The app always has `not-found`, `error` and `global-error` at the root, in its own language; below a layout that must stay on screen, add `error` and `not-found` too.
 - Grouping routes: "Route groups", then `route-groups`. Add a group only when some routes need their own layout or skeleton ("Opting specific segments into a layout", "Opting for loading skeletons on a specific route"), and keep one root layout.
 - A slot, or a modal with its own address: "Parallel and Intercepted Routes", then `parallel-routes` and `intercepting-routes`.
 - Icons, share images, robots and sitemaps: "Metadata file conventions".
