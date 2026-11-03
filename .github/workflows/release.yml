@@ -1,0 +1,32 @@
+# Publishes a GitHub Release for each version tag the pre-push hook pushes, with that version's
+# section of the plugin's CHANGELOG.md as the notes. Run it by hand to publish an existing tag.
+name: Release
+
+on:
+  push:
+    tags: ["frontend-harness-v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish, e.g. frontend-harness-v0.34.1"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Notes from the changelog
+        run: |
+          version="${TAG#frontend-harness-v}"
+          awk -v v="$version" '$0 ~ "^## " v " " {on=1; next} /^## / {on=0} on' plugins/frontend-harness/CHANGELOG.md > notes.md
+          test -s notes.md || { echo "no CHANGELOG.md section for $version"; exit 1; }
+      - run: gh release create "$TAG" --title "v${TAG#frontend-harness-v}" --notes-file notes.md --verify-tag
