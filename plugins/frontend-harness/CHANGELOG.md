@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.37.1 (2026-11-03)
+
+### Fixes
+
+- keep only hooks and inline API calls with their components (1a78d66)
+
 ## 0.37.0 (2026-11-03)
 
 ### Features
