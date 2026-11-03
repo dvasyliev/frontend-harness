@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.35.0 (2026-11-03)
+
+### Features
+
+- turn on typed links in Next.js projects (106f1f1)
+
 ## 0.34.2 (2026-11-03)
 
 ### Fixes
