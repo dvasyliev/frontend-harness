@@ -23,15 +23,21 @@ const thenHydrated =
     return response;
   };
 
-// Every page a test opens is checked for accessibility problems (WCAG 2.1 A and AA).
+// Checks the page as it is now for accessibility problems (WCAG 2.1 A and AA).
+// Call it once a menu or dialog a test opens is on screen.
+export const expectAccessible = async (page: Page) => {
+  const axe = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(axe.violations).toEqual([]);
+};
+
+// Every page a test opens is checked.
 const thenAccessible =
   <A extends unknown[], R>(page: Page, load: (...args: A) => Promise<R>) =>
   async (...args: A) => {
     const response = await load(...args);
-    const axe = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    expect(axe.violations).toEqual([]);
+    await expectAccessible(page);
     return response;
   };
 
