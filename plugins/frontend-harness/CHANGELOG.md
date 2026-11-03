@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.33.0 (2026-11-03)
+
+### Features
+
+- require the root error and not-found pages (9da7a37)
+- use private folders in routes and cover route groups (775840f)
+- name the Next.js docs sections in the structure rule (c71705a)
+- point the Next.js structure rule at the bundled docs (d3670e3)
+- check every page with axe in the e2e fixture (d418db3)
+
+### Fixes
+
+- treat each folder in a route group as a route (11f15ae)
+- cover saves, a sleeping Mac and improve-harness (0787303)
+- let a write show at once in the data-loading rule (97b3f22)
+
 ## 0.32.0 (2026-11-02)
 
 ### Features
