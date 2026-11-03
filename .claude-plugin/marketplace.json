@@ -9,7 +9,7 @@
     {
       "name": "frontend-harness",
       "source": "./plugins/frontend-harness",
-      "description": "Install and update a Claude Code harness (hooks, rules, skills, checks) in React (Vite) and Next.js projects, picking the modules that fit the project"
+      "description": "Claude Code plugin that sets up hooks, rules and checks so Claude writes code that fits your React or Next.js project"
     }
   ]
 }
