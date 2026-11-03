@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.34.1 (2026-11-03)
+
+### Other
+
+- match the plugin description to the README (2ef74fa)
+
 ## 0.34.0 (2026-11-03)
 
 ### Features
