@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.37.0 (2026-11-03)
+
+### Features
+
+- check open menus and dialogs with expectAccessible in e2e tests (375791a)
+
+### Fixes
+
+- load the unit test rule only for unit tests (e1a2640)
+- forbid ../ imports in Next.js e2e tests too (666449e)
+
 ## 0.36.1 (2026-11-03)
 
 ### Fixes
