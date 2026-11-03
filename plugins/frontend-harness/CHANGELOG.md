@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.35.1 (2026-11-03)
+
+### Fixes
+
+- give every agent a browser of its own (13e56bc)
+
 ## 0.35.0 (2026-11-03)
 
 ### Features
