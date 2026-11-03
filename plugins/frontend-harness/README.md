@@ -6,16 +6,16 @@ The plugin only installs and updates the harness. What it installs lives in the 
 
 ## Getting started
 
-1. Add the marketplace once (the `claude-plugins` folder):
+1. Add the marketplace once:
 
    ```bash
-   claude plugin marketplace add /path/to/marketplace
+   claude plugin marketplace add dvasyliev/frontend-harness
    ```
 
 2. Install the plugin in each project that should have it, from that project's folder:
 
    ```bash
-   claude plugin install frontend-harness@dvasyliev-plugins --scope local
+   claude plugin install frontend-harness@frontend-harness --scope local
    ```
 
    | Scope | Where it is on | Written to |
@@ -34,8 +34,8 @@ The plugin only installs and updates the harness. What it installs lives in the 
 | Turn one check off | Ask "turn off the dupes check" (it goes into `skipChecks`). |
 | Choose or change the libraries | `/frontend-harness:libraries`, also when the question was skipped at setup. |
 | Update the harness in a project | `/frontend-harness:update` (or ask "update the harness"): its files are merged with the project's edits. |
-| Update the plugin | `claude plugin marketplace update dvasyliev-plugins`, then `claude plugin update frontend-harness@dvasyliev-plugins --scope local`, and restart Claude Code. |
-| Remove the plugin | `claude plugin uninstall frontend-harness@dvasyliev-plugins --scope local`. The harness already in the project stays. |
+| Update the plugin | `claude plugin marketplace update frontend-harness`, then `claude plugin update frontend-harness@frontend-harness --scope local`, and restart Claude Code. |
+| Remove the plugin | `claude plugin uninstall frontend-harness@frontend-harness --scope local`. The harness already in the project stays. |
 
 By hand, from the project folder (answers left out keep their values from `.claude/harness.json`):
 
