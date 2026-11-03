@@ -24,7 +24,7 @@ Ask as `../../references/questions.md` (from this skill's base directory) says. 
 
 ## 2. Choose modules
 
-Modules named after the command (`$ARGUMENTS`) that are installed and have an `audit` are the ones to audit; name any other as skipped. With no names, ask which modules to audit, a multiple choice: the module id as label, its areas in a few words as description (such as "structure: where files go, nesting, imports"; for libraries "code that does a library's job by hand or with another library", not the list of libraries), in catalog order. With one module, do not ask; say which it is.
+Modules named after the command (`$ARGUMENTS`) that are installed and have an `audit` are the ones to audit; name any other as skipped. With no names, ask which modules to audit, a multiple choice with one option per module (never two modules in one option; with more than 4, split them over more questions in the same call): the module id as label, its areas in a few words as description (such as "structure: where files go, nesting, imports"; for libraries "code that does a library's job by hand or with another library", not the list of libraries), in catalog order. With one module, do not ask; say which it is.
 
 ## 3. Find the problems
 
