@@ -24,10 +24,15 @@ const thenHydrated =
   };
 
 // Checks the page as it is now for accessibility problems (WCAG 2.1 A and AA).
-// Call it once a menu or dialog a test opens is on screen.
+// Call it once a menu or dialog a test opens is on screen. The focus guards
+// that Floating UI and Base UI put around a popup are skipped: they hold focus
+// only for a moment and must be aria-hidden, which axe takes for a problem
+// (floating-ui/floating-ui#2758).
 export const expectAccessible = async (page: Page) => {
   const axe = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .exclude("[data-floating-ui-focus-guard]")
+    .exclude("[data-base-ui-focus-guard]")
     .analyze();
   expect(axe.violations).toEqual([]);
 };
