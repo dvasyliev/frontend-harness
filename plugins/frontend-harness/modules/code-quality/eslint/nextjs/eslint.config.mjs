@@ -35,10 +35,31 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  // File placement (.claude/rules/structure.md). Shared code is imported through
-  // `@/`, never `../`. A route folder is private to its route: other routes,
-  // shared components and lib/ may not import from it. lib/ imports nothing
-  // from app/.
+  // Shared code is imported through `@/`, never `../` (.claude/rules/structure.md),
+  // in the end-to-end tests too.
+  {
+    files: [
+      "app/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+      "tests/**/*.{ts,tsx,mts}",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["../*"],
+              message: "Import through `@/` instead of `../`.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // File placement (.claude/rules/structure.md). A route folder is private to
+  // its route: other routes, shared components and lib/ may not import from it.
+  // lib/ imports nothing from app/.
   {
     files: ["app/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
     plugins: { boundaries },
@@ -60,19 +81,6 @@ const eslintConfig = defineConfig([
           partialMatch: false,
         },
         { type: "lib", pattern: "lib", partialMatch: false },
-      ],
-    },
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: ["../*"],
-              message: "Import through `@/` instead of `../`.",
-            },
-          ],
-        },
       ],
     },
   },

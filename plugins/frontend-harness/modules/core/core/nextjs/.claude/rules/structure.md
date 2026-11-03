@@ -21,7 +21,7 @@ Decide by who imports it. A route's subroutes count as that route, except for `/
 
 - **One route uses it:** keep it in that route, next to its `page.tsx`: components in a `_components` folder, other code (helpers, server actions) in a `_lib` folder, even for one file. Besides these two, a route folder holds only special files, subroutes, `@slot` and `(group)` folders, and tests. Do not extract code before a second user appears.
 - **Two or more routes use it:** move it in the same change: components to a topic subfolder of `app/components/`, other code to `lib/`. Generic pieces with no app data (buttons, dialogs, carousels, skeletons) go in the `ui` topic. Test: it would work unchanged in an app about something else.
-- **Data fetching, external APIs and shared types** go in the root `lib/`, even for one route, split into topic subfolders once it grows.
+- **Data fetching, external APIs and shared types** go in the root `lib/`, even for one route, split into topic subfolders once it grows. A hook or `fetch` that calls the app's own API routes from the browser is part of the components that use it and goes where they go.
 
 Before adding a component, search the shared folder for one that already does it.
 
