@@ -25,12 +25,9 @@ Then decide what the request needs:
 
 Use `superpowers:writing-plans`. List each scenario's user steps with the expected outcome on `- expect:` lines.
 
-If `superpowers:brainstorming` produced a written spec, show the plan and wait for the user's approval. Otherwise start at once. Either way, do not ask how to carry out the plan; choose:
+If `superpowers:brainstorming` produced a written spec, show the plan and wait for the user's approval. Otherwise start at once. Either way, carry it out as `.claude/rules/plan-execution.md` says.
 
-- **Default:** do every task yourself in this session (`superpowers:executing-plans`).
-- **Plan long enough that its later tasks would run on a compacted conversation, or a risky change that needs a review after each task:** use `superpowers:subagent-driven-development`: one subagent per task, in order, with a review after each. Skip its worktree setup and work on `main`; each implementer commits only its own files.
-
-With `e2e`: make the end-to-end tests the plan's last task, so the final review that both skills end with covers them; that review is the feature's review. The browser check stays with you, not the subagents.
+With `e2e`: make the end-to-end tests the plan's last task, so the final review that both ways of carrying it out end with covers them; that review is the feature's review. The browser check stays with you, not the subagents.
 
 Ask the user only about what the spec leaves open, not about how to execute.
 
@@ -65,7 +62,3 @@ While working, run only the feature's own spec files (`npx playwright test tests
 ## Improve the harness
 
 Invoke the `improve-harness` skill.
-
-## Subagents
-
-Subagents that implement a task do not run `npm run check`; the Stop hook does. With `unit`, they run only the unit tests of the files they touch (`npx vitest run <files>`). With `e2e`, the subagent on the end-to-end task runs only its spec files, never `npm run verify`; the end-to-end step does.

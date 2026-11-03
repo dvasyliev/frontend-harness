@@ -1,5 +1,5 @@
 {
-  "$comment": "Every framework and module the harness can install. A module's files are in modules/<category>/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` and `frameworkScripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`. `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module is. The setup skill suggests modules by `detect` and `recommended`, and asks about them by `category` (also the folder its files are in).",
+  "$comment": "Every framework and module the harness can install. A module's files are in modules/<category>/<module>/: all/ for every framework, <framework>/ for one; each is written at the same path in the project and merged with the project's edits. A module also brings: `scripts` and `frameworkScripts` (package.json), `checks` and `fileChecks` (what the hooks run, read from .claude/harness.json), `settings` (merged into .claude/settings.json), `mcpServers` (merged into .mcp.json), `install` (commands, each run when one of the paths it `creates` is missing; with none, every time), `mcp` (the .mcp.json servers its install adds), npm `devDependencies` and `frameworkDevDependencies`, and `audit` (the rule files and skill folders, at their paths in the project, that the audit skill checks existing code against). `required` modules are always installed, `auto` ones exactly when their `detect` matches (package.json fields, or `files` that exist), and exactly one `linter` module is. The setup skill suggests modules by `detect` and `recommended`, and asks about them by `category` (also the folder its files are in).",
   "frameworks": {
     "nextjs": {
       "description": "Next.js App Router",
@@ -22,6 +22,7 @@
     "core": {
       "description": "Claude Code hooks, the structure and hooks rules, typecheck and Prettier on every edit and turn.",
       "category": "core",
+      "audit": [".claude/rules/structure.md"],
       "required": true,
       "scripts": {
         "typecheck": {
@@ -138,7 +139,7 @@
       }
     },
     "feature-workflow": {
-      "description": "The feature-workflow skill (spec, plan, tests first, browser check, end-to-end tests, improve the harness), the rule for how agents work here (on main, several at once), the superpowers plugin and the improve-harness skill.",
+      "description": "The feature-workflow skill (spec, plan, tests first, browser check, end-to-end tests, improve the harness), the rule for how agents work here (on main, several at once), the rule for carrying out a plan (yourself or with subagents), the superpowers plugin and the improve-harness skill.",
       "category": "workflow",
       "recommended": true,
       "settings": {
@@ -281,6 +282,7 @@
     "unit": {
       "description": "Vitest unit tests, run at the end of every turn.",
       "category": "testing",
+      "audit": [".claude/rules/tests-unit.md"],
       "recommended": true,
       "detect": {
         "devDependencies": ["vitest"]
@@ -308,6 +310,7 @@
     "e2e": {
       "description": "Playwright end-to-end tests with axe accessibility checks, the playwright-cli skill for browser checks, and a pre-push hook that runs them.",
       "category": "testing",
+      "audit": [".claude/rules/tests-e2e.md"],
       "recommended": true,
       "detect": {
         "devDependencies": ["@playwright/test"]
@@ -381,6 +384,7 @@
     "best-practices": {
       "description": "Vercel's skills: React and Next.js performance rules, composition patterns, and the Web Interface Guidelines review.",
       "category": "best-practices",
+      "audit": [".claude/skills/vercel-react-best-practices", ".claude/skills/vercel-composition-patterns", ".claude/skills/web-design-guidelines"],
       "recommended": true,
       "install": [
         {
@@ -415,6 +419,7 @@
     "libraries": {
       "description": "A rule on when to use the platform and when a library, with the library chosen for each job (components, forms, validation, URL state, data and more).",
       "category": "best-practices",
+      "audit": [".claude/rules/libraries.md"],
       "recommended": true
     },
     "next-docs": {
@@ -434,6 +439,7 @@
     "page-speed": {
       "description": "Rules for fast pages and lists, how to measure them with the Chrome DevTools MCP server, and (on React) a bundle size check.",
       "category": "performance",
+      "audit": [".claude/rules/data-loading.md", ".claude/rules/page-loading.md"],
       "recommended": true,
       "frameworkScripts": {
         "react": {

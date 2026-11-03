@@ -5,7 +5,7 @@ description: Use when the user wants to choose or change which library each job 
 
 # Choose the libraries
 
-Sets the `libraries` answers of a project that already has the harness, and adds the `libraries` module if it is missing. The template is the one the `setup` skill (`../setup/SKILL.md`, next to this skill's folder) describes.
+Sets the `libraries` answers of a project that already has the harness, and adds the `libraries` module if it is missing. The template is the one the `setup` skill (`../setup/SKILL.md`, next to this skill's folder) describes. Ask as `../../references/questions.md` (from this skill's base directory) says.
 
 1. Stop if `.claude/harness.json` is missing: the project has no harness yet; offer `/frontend-harness:setup`.
 2. Run `git status --short`. If anything is uncommitted, stop and tell the user, as setup's step 1 says.

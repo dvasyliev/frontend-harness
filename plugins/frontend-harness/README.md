@@ -33,6 +33,7 @@ The plugin only installs and updates the harness. What it installs lives in the 
 | Add or remove modules | `/frontend-harness:setup`, or ask "add e2e", "remove sync-deps". |
 | Turn one check off | Ask "turn off the dupes check" (it goes into `skipChecks`). |
 | Choose or change the libraries | `/frontend-harness:libraries`, also when the question was skipped at setup. |
+| Bring old code in line with the rules | `/frontend-harness:audit` (or `/frontend-harness:audit libraries core` for some modules): read the report by area, tick what to fix; each area is fixed, checked and committed on its own. |
 | Update the harness in a project | `/frontend-harness:update` (or ask "update the harness"): its files are merged with the project's edits. |
 | Update the plugin | `claude plugin marketplace update frontend-harness`, then `claude plugin update frontend-harness@frontend-harness --scope local`, and restart Claude Code. |
 | Remove the plugin | `claude plugin uninstall frontend-harness@frontend-harness --scope local`. The harness already in the project stays. |
@@ -48,7 +49,7 @@ node <plugin>/tasks/apply.mjs '{"framework": "nextjs", "modules": ["core", "esli
 | Category | Module | Chosen | Brings |
 |---|---|---|---|
 | core | `core` | required | Claude Code hooks (session start, command guard, format and lint on edit, checks at end of turn), structure and hooks rules, typecheck, Prettier |
-| workflow | `feature-workflow` | recommended | feature-workflow skill, "how we work" rule, superpowers plugin, improve-harness skill |
+| workflow | `feature-workflow` | recommended | feature-workflow skill, workflow and plan execution rules, superpowers plugin, improve-harness skill |
 | code-quality | `eslint` / `oxlint` | linter | the linter, with no import cycles and a 400-line limit (oxlint: accessibility too) |
 | code-quality | `knip` | recommended | knip: unused files, exports and dependencies, run at end of turn |
 | code-quality | `jscpd` | recommended | jscpd: duplicated code, run at end of turn |

@@ -9,6 +9,8 @@ This skill picks the modules that fit the project, runs `tasks/apply.mjs` to wri
 
 **Template:** `$HARNESS_TEMPLATE` if set (a local checkout of this plugin, to try changes), else this plugin's folder: two folders up from this skill's base directory. Its version is `version` in `.claude-plugin/plugin.json`.
 
+**Questions:** ask as `../../references/questions.md` (from this skill's base directory) says.
+
 **Catalog:** `<template>/modules.json` lists every framework and module: what a module brings (`scripts`, `checks`, `settings` for `.claude/settings.json`, `install` commands, npm packages) and how to suggest it (`detect`, `recommended`). A module's files are in `<template>/modules/<category>/<module>/`: `all/` for every framework, `<framework>/` for one, laid out as in the project. Read them; do not guess.
 
 ## 1. Look at the project
