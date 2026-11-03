@@ -42,6 +42,8 @@ Use `superpowers:test-driven-development`: write the tests, watch them fail with
 
 With the `playwright-cli` skill, drive the feature on the running dev server and confirm the `- expect:` outcomes.
 
+Open a browser of your own, named after the feature (`playwright-cli -s=<feature> open`), and pass the same `-s` to every command; the default session is shared with every other agent and with the user. Close it when done (`playwright-cli -s=<feature> close`).
+
 ### Screenshots
 
 Every screenshot stays in the conversation and is re-read on every later turn, so take few and small ones.
