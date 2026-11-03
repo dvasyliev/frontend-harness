@@ -6,15 +6,20 @@
 
 Claude Code plugin that sets up hooks, rules and checks so Claude writes code that fits your React or Next.js project
 
-[Claude Code](https://docs.claude.com/en/docs/claude-code/overview) reads your `CLAUDE.md`, but nothing makes it follow it: it can end a turn with type errors, failing tests or unformatted files, and it does not know your project's conventions until it trips over them.
+[Claude Code](https://docs.claude.com/en/docs/claude-code/overview) writes code fast, but on a real project you keep cleaning up after it. frontend-harness turns that cleanup into checks Claude runs itself (each row comes with a module you can pick):
 
-A **harness** is the set of files that turns those expectations into checks Claude runs every time. frontend-harness writes one into your project from the modules you pick, and updates it later without losing your edits:
+| The pain | What the harness does |
+|---|---|
+| Claude says "done", and you find type errors, lint errors or failing tests later, or in CI. | At the end of every turn it runs typecheck, lint, tests and the other checks. If any is red, Claude is sent back to fix it before it finishes. |
+| Every file Claude touches needs formatting and lint fixes afterwards. | The file is formatted and linted right after each edit, and Claude sees the errors at once. |
+| You repeat the same instructions in every session, and `CLAUDE.md` gets ignored. | Rules in `.claude/rules/` load with the files they cover: folder structure, tests, commits, page speed. |
+| Claude adds a new library for something the project already has a library for. | The libraries rule and list name the one library the project uses for each job (forms, data fetching, dates and so on). |
+| The codebase slowly fills with duplicated code, unused exports, huge files and import cycles. | knip, jscpd and the linter (400-line limit, no import cycles) catch them on every turn. |
+| Claude force-pushes or skips the git hooks with `--no-verify`. | Those commands are blocked before they run. |
+| Bad commit messages, secrets in commits, broken pages reaching the remote. | Git hooks check commit messages, scan staged files for secrets and run end-to-end tests before a push. |
+| Setting all this up by hand takes days, and every project ends up with its own drifting copy. | One command sets it up from the modules you pick, and another updates it later without losing your edits. |
 
-- **After every edit**, the file Claude changed is formatted and linted.
-- **At the end of every turn**, typecheck, lint, tests and the other checks run, and if any is red, Claude is sent back to fix it before it finishes.
-- **Before risky commands**, dangerous git commands are blocked.
-- **Rules** tell Claude how the project is built: folder structure, tests, commits, page speed, which libraries to use.
-- **Git hooks** check commit messages, scan staged files for secrets and run end-to-end tests before a push.
+A **harness** is that set of hooks, rules, skills, checks and git hooks: the files that turn your expectations into checks Claude runs every time.
 
 Everything lands in the project's own files (`.claude/`, `.githooks/`, configs, `package.json`). The harness keeps working without the plugin, and everyone who clones the project gets it.
 
