@@ -45,6 +45,7 @@ All of this lives in your project's own files (the `.claude/` and `.githooks/` f
 - [Install](#install)
 - [Usage](#usage)
 - [Modules](#modules)
+- [My Educational Courses](#my-educational-courses)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -116,7 +117,7 @@ Pick only what you need. `core` is always on.
 Full details for each module: [plugin guide](plugins/frontend-harness/README.md#modules).
 
 <!-- COURSES:START -->
-# My Educational Courses
+## My Educational Courses
 
 I teach developers what I use in production: practical, project-based courses on AI coding tools, Agentic AI, Vibe Coding and modern full-stack technologies. Every course builds on projects I ship and workflows I test first. Students learn what holds up in real work, from new framework releases to AI coding tools.
 
