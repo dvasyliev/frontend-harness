@@ -1,0 +1,22 @@
+# Opens a weekly pull request when the GitHub Actions or the npm packages this repo uses have a
+# new version. The commit prefix keeps the messages within the repo's commit rules.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(repo)
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(repo)
+    groups:
+      npm:
+        patterns: ["*"]
