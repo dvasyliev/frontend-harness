@@ -42,16 +42,18 @@ Use `superpowers:test-driven-development`: write the tests, watch them fail with
 
 With the `playwright-cli` skill, drive the feature on the running dev server and confirm the `- expect:` outcomes.
 
-Open a browser of your own, named after the feature (`playwright-cli -s=<feature> open`), and pass the same `-s` to every command; the default session is shared with every other agent and with the user. Close it when done (`playwright-cli -s=<feature> close`).
+`@playwright/cli` is a devDependency of the project: run every command as `npx playwright-cli <command>`, where the skill writes `playwright-cli <command>`. Never install it globally, even when the skill says to.
+
+Open a browser of your own, named after the feature (`npx playwright-cli -s=<feature> open`), and pass the same `-s` to every command; the default session is shared with every other agent and with the user. Close it when done (`npx playwright-cli -s=<feature> close`).
 
 ### Screenshots
 
 Every screenshot stays in the conversation and is re-read on every later turn, so take few and small ones.
 
-- Check behaviour with `playwright-cli snapshot` (text), not screenshots. Search it instead of reading it whole when you look for one thing.
+- Check behaviour with `npx playwright-cli snapshot` (text), not screenshots. Search it instead of reading it whole when you look for one thing.
 - Take a screenshot only to judge how something looks: layout, colours, spacing.
-- Screenshot the element in question (`playwright-cli screenshot e5`), not the whole page. Never use `--hires`.
-- Fix the window size before screenshots: `playwright-cli resize 1280 800` for desktop, `playwright-cli open --mobile` for phone.
+- Screenshot the element in question (`npx playwright-cli screenshot e5`), not the whole page. Never use `--hires`.
+- Fix the window size before screenshots: `npx playwright-cli resize 1280 800` for desktop, `npx playwright-cli open --mobile` for phone.
 - One screenshot per state you need to judge. Do not re-take one to confirm a change a snapshot already shows.
 
 ## End-to-end tests (with `e2e`)
