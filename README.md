@@ -14,36 +14,20 @@ frontend-harness makes Claude check its own work. After every change, it checks 
 
 | Without it | With it |
 |---|---|
-| Claude says "done", but the code has errors or the tests fail. | Before Claude says "done", the checks run. If one fails, Claude is sent back to fix it. |
-| You fix the formatting and code style after Claude. | Each file is formatted and checked right after Claude changes it. |
-| You repeat the same instructions in every chat. | The project's rules are written down once. Claude reads them when it works on those files. |
-| Claude adds a new library when the project already has one for that job. | The project has a list: one library for each job. Claude uses it. |
-| The code slowly gets messy: copied code, unused code, very long files. | Tools find this on every change, and Claude cleans it up. |
-| Claude runs a risky git command, like a force push. | Risky commands are blocked. |
-| A bad commit or a leaked password gets pushed. | Git checks the commit message and looks for passwords before every commit. |
-| Setting all this up by hand takes days. | One command sets it up. Another one updates it later. |
+| ❌ Claude says "done", but the code has errors, bad formatting or failing tests. | ✅ Each edit is formatted and checked at once, and all checks run before "done". Claude fixes what fails. |
+| ❌ You repeat the same rules in every chat. | ✅ The rules are written down once, and Claude follows them. |
+| ❌ Claude adds a new library for a job the project already has one for. | ✅ One library for each job, and Claude uses it. |
+| ❌ The code slowly fills up with copied, unused and very long code. | ✅ Tools catch it on every change, and Claude cleans it up. |
+| ❌ A force push, a bad commit message or a leaked password slips through. | ✅ Risky commands are blocked, and every commit is checked. |
+| ❌ Code written before the rules does not follow them. | ✅ An audit shows where, and fixes what you pick. |
+| ❌ Setting all this up by hand takes days. | ✅ One command sets it up, another updates it. |
 
-## How it works
-
-You ask Claude for a change. Then, every time:
-
-1. Claude edits a file.
-2. The file is formatted and checked at once. Claude sees any errors and fixes them.
-3. When Claude wants to stop, all the checks run: types, code style, tests and more.
-4. If a check fails, Claude is sent back to fix it before it finishes.
-
-All of this lives in your project's own files (the `.claude/` and `.githooks/` folders, config files and `package.json`). So it works even without the plugin, and everyone who clones the project gets it too.
-
-**Words used here:**
-
-- **Harness:** the whole set of checks, rules and scripts that keeps Claude on track.
-- **Hook:** a small script that runs on its own at a set moment, for example right after Claude edits a file.
-- **Module:** one part of the harness you can turn on or off, for example "unit tests".
+Everything goes into your project's own files (`.claude/`, `.githooks/`, configs, `package.json`), so it works without the plugin and for everyone who clones the project.
 
 ## Table of Contents
 
 - [Install](#install)
-- [Usage](#usage)
+- [Commands](#commands)
 - [Modules](#modules)
 - [My Educational Courses](#my-educational-courses)
 - [Contributing](#contributing)
@@ -51,46 +35,34 @@ All of this lives in your project's own files (the `.claude/` and `.githooks/` f
 
 ## Install
 
-You need:
-
-- [Claude Code](https://docs.claude.com/en/docs/claude-code/overview)
-- [Node.js](https://nodejs.org) (it comes with npm)
-- git
-- a React (Vite) or Next.js project
-
-Run these two commands in your project's folder:
+You need [Claude Code](https://docs.claude.com/en/docs/claude-code/overview), [Node.js](https://nodejs.org), git and a React (Vite) or Next.js project. In the project's folder:
 
 ```bash
 claude plugin marketplace add dvasyliev/frontend-harness
 claude plugin install frontend-harness@frontend-harness --scope local
 ```
 
-`--scope local` turns the plugin on only for you, only in this project. Use `--scope project` to turn it on for everyone on the project, or `--scope user` to turn it on in all your projects.
+`--scope local` turns it on only for you in this project; `--scope project` for everyone on the project; `--scope user` in all your projects.
 
-## Usage
+Then open Claude Code in the project and run `/frontend-harness:setup`. It asks which framework and modules you want, adds the files, keeps what the project already had, runs the checks and commits. The files it adds: hooks, rules and settings in `.claude/`, git hooks in `.githooks/`, configs for the tools you picked, and scripts in `package.json`.
 
-Open Claude Code in your project and type:
+## Commands
 
-```
-/frontend-harness:setup
-```
-
-Claude asks you a few questions: which framework you use and which modules you want. Then it adds the files, keeps what your project already had, runs the checks and makes a commit.
-
-Here are the files it added to a Next.js project with four modules:
-
-![Files a setup with the core, eslint, unit and commitlint modules adds to a Next.js project](docs/setup.png)
-
-Later, you can:
-
-| To | Type |
+| Command | What it does |
 |---|---|
-| Add or remove modules | `/frontend-harness:setup`, or just ask: "add e2e tests" |
-| Get the newest version of the harness, without losing your own changes | `/frontend-harness:update` |
-| Pick the libraries for forms, data, dates and so on | `/frontend-harness:libraries` |
-| Check code written before the harness against its rules, then fix what you pick | `/frontend-harness:audit` |
+| `/frontend-harness:setup` | Sets up the harness. Run it again to add or remove modules, or just ask: "add e2e tests". |
+| `/frontend-harness:update` | Brings the harness to the newest version of the plugin and keeps your own edits. |
+| `/frontend-harness:libraries` | Picks one library for each job: forms, data, dates and so on. |
+| `/frontend-harness:audit` | Checks code written before the harness against its rules, shows what breaks them, and fixes what you pick. To check only some modules: `/frontend-harness:audit core libraries`. |
 
-More commands, how to turn off one check, and how to remove the plugin: [plugin guide](plugins/frontend-harness/README.md).
+With the `feature-workflow` module, your project also gets:
+
+| Command | What it does |
+|---|---|
+| `/feature-workflow` | Builds a feature step by step: spec, plan, tests first, a check in the browser. Claude uses it on its own for new features. |
+| `/improve-harness` | Finds where the harness let Claude down in this chat (a hook that did not run, a rule it ignored) and fixes what you approve. |
+
+To turn off one check, update the plugin or remove it, see the [plugin guide](plugins/frontend-harness/README.md).
 
 ## Modules
 
