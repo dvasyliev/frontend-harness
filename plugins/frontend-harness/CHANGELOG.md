@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.36.0 (2026-11-03)
+
+### Features
+
+- add audit skill for code written before the harness (fdf8dcf)
+
+### Fixes
+
+- run playwright-cli from the project, never globally (26588f5)
+
 ## 0.35.1 (2026-11-03)
 
 ### Fixes
