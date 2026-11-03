@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.36.1 (2026-11-03)
+
+### Fixes
+
+- ask about each module on its own in the audit (2fb1033)
+
 ## 0.36.0 (2026-11-03)
 
 ### Features
