@@ -1,0 +1,49 @@
+name: Bug report
+description: Something the plugin or the harness it installed does wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. Paste any error output.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run /frontend-harness:setup in a new Next.js project
+        2. Pick the e2e module
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: framework
+    attributes:
+      label: Framework
+      options: [Next.js, React (Vite)]
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: The frontend-harness version in `claude plugin list`.
+      placeholder: "0.34.1"
+    validations:
+      required: true
+  - type: input
+    id: claude-version
+    attributes:
+      label: Claude Code version
+      description: The output of `claude --version`.
+    validations:
+      required: true
+  - type: textarea
+    id: harness
+    attributes:
+      label: .claude/harness.json
+      description: The modules and answers the project uses.
+      render: json
