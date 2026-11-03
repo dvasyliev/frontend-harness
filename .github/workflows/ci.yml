@@ -1,5 +1,7 @@
 # Runs on GitHub what the local git hooks run: commitlint on the commit messages of a pull
-# request, and `claude plugin validate` on the marketplace and the plugin.
+# request, and `claude plugin validate` on the marketplace and the plugin. The smoke job installs
+# the harness with every module into a new React and a new Next.js project, then runs it again
+# and expects no change, so a broken apply.mjs or module never reaches a release.
 name: CI
 
 on:
@@ -33,3 +35,37 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - framework: nextjs
+            linter: eslint
+            package: '{"name":"smoke","private":true,"scripts":{"dev":"next dev"},"dependencies":{"next":"16.0.0","react":"19.2.0","react-dom":"19.2.0"}}'
+          - framework: react
+            linter: oxlint
+            package: '{"name":"smoke","private":true,"scripts":{"dev":"vite"},"dependencies":{"react":"19.2.0","react-dom":"19.2.0"},"devDependencies":{"vite":"7.0.0"}}'
+    env:
+      HARNESS_NO_INSTALL: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the harness with every module
+        run: |
+          mkdir "$RUNNER_TEMP/app" && cd "$RUNNER_TEMP/app"
+          git init -q && echo '${{ matrix.package }}' > package.json
+          modules='"core","feature-workflow","${{ matrix.linter }}","knip","jscpd","tailwind","unit","e2e","commitlint","pre-commit","sync-deps","best-practices","context7","libraries","next-docs","page-speed"'
+          node "$GITHUB_WORKSPACE/plugins/frontend-harness/tasks/apply.mjs" "{\"framework\":\"${{ matrix.framework }}\",\"modules\":[$modules]}"
+          for f in CLAUDE.md .claude/harness.json .claude/settings.json .claude/hooks/check-all.sh .githooks/pre-commit; do
+            test -f "$f" || { echo "missing $f"; exit 1; }
+          done
+      - name: Run it again and expect no change
+        run: |
+          cd "$RUNNER_TEMP/app"
+          git add -A
+          node "$GITHUB_WORKSPACE/plugins/frontend-harness/tasks/apply.mjs" '{}'
+          git diff --exit-code
