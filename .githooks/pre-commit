@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+# Before a commit: run the plugins/<name>/.githooks/pre-commit of each changed plugin that has
+# one, then validate the marketplace and each plugin the commit changes, so a broken
+# marketplace.json or plugin.json never lands. Validation is skipped where the claude CLI is
+# not installed.
+changed=$(git diff --cached --name-only)
+for plugin in $(echo "$changed" | sed -n 's#^plugins/\([^/]*\)/.*#\1#p' | sort -u); do
+  [ -f "plugins/$plugin/.githooks/pre-commit" ] || continue
+  sh "plugins/$plugin/.githooks/pre-commit" || exit 1
+done
+command -v claude >/dev/null 2>&1 || exit 0
+if echo "$changed" | grep -q '^\.claude-plugin/'; then
+  claude plugin validate . >/dev/null 2>&1 || { claude plugin validate .; exit 1; }
+fi
+for plugin in $(echo "$changed" | sed -n 's#^plugins/\([^/]*\)/.*#\1#p' | sort -u); do
+  [ -d "plugins/$plugin" ] || continue
+  claude plugin validate "plugins/$plugin" >/dev/null 2>&1 || { claude plugin validate "plugins/$plugin"; exit 1; }
+done

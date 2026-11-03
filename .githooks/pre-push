@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# Before a push: release every plugin with commits since its last tag (scripts/release.mjs).
+# A release adds a commit and a tag that this push no longer carries, so it stops the push:
+# push again and both go (push.followTags is on).
+released=$(node scripts/release.mjs) || exit 1
+[ -z "$released" ] && exit 0
+echo "$released" >&2
+echo "pre-push: released the plugins above; push again to send them." >&2
+exit 1

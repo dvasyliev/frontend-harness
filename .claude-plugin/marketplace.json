@@ -1,0 +1,15 @@
+{
+  "name": "frontend-harness",
+  "description": "Dmytro Vasyliev's frontend-harness Claude Code plugin",
+  "owner": {
+    "name": "Dmytro Vasyliev"
+  },
+  "allowCrossMarketplaceDependenciesOn": ["claude-plugins-official"],
+  "plugins": [
+    {
+      "name": "frontend-harness",
+      "source": "./plugins/frontend-harness",
+      "description": "Install and update a Claude Code harness (hooks, rules, skills, checks) in React (Vite) and Next.js projects, picking the modules that fit the project"
+    }
+  ]
+}
