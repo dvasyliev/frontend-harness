@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.34.2 (2026-11-03)
+
+### Fixes
+
+- point the changelog at the commits in this repo (b5656fc)
+
 ## 0.34.1 (2026-11-03)
 
 ### Other
