@@ -10,63 +10,63 @@
 
 ### Features
 
-- let Next.js projects use server-only (1bcbad7)
+- let Next.js projects use server-only (4179ccd)
 
 ### Other
 
-- install from the public frontend-harness marketplace (ea0ca39)
+- install from the public frontend-harness marketplace (3c74012)
 
 ## 0.33.0 (2026-11-03)
 
 ### Features
 
-- require the root error and not-found pages (9da7a37)
-- use private folders in routes and cover route groups (775840f)
-- name the Next.js docs sections in the structure rule (c71705a)
-- point the Next.js structure rule at the bundled docs (d3670e3)
-- check every page with axe in the e2e fixture (d418db3)
+- require the root error and not-found pages (c5c9a35)
+- use private folders in routes and cover route groups (31d0e61)
+- name the Next.js docs sections in the structure rule (86467aa)
+- point the Next.js structure rule at the bundled docs (7d53dac)
+- check every page with axe in the e2e fixture (7626cb6)
 
 ### Fixes
 
-- treat each folder in a route group as a route (11f15ae)
-- cover saves, a sleeping Mac and improve-harness (0787303)
-- let a write show at once in the data-loading rule (97b3f22)
+- treat each folder in a route group as a route (8957aa2)
+- cover saves, a sleeping Mac and improve-harness (4046e7d)
+- let a write show at once in the data-loading rule (dd2e17b)
 
 ## 0.32.0 (2026-11-02)
 
 ### Features
 
-- settle libraries in one question, add a libraries skill (e0f8097)
-- ask which library each job uses (360e0b8)
+- settle libraries in one question, add a libraries skill (8b2e75e)
+- ask which library each job uses (4da65b8)
 
 ### Fixes
 
-- shorten the libraries question (5ab9f84)
-- recommend Base UI toasts when components use it (5390151)
+- shorten the libraries question (c2ab725)
+- recommend Base UI toasts when components use it (b2c593a)
 
 ## 0.31.0 (2026-10-29)
 
 ### Features
 
-- wait for React before each end-to-end click, keep failure traces (7e69833)
+- wait for React before each end-to-end click, keep failure traces (b9a381e)
 
 ## 0.30.0 (2026-10-29)
 
 ### Features
 
-- give each project its own dev server port (40a8697)
+- give each project its own dev server port (ec0b8a9)
 
 ## 0.29.3 (2026-10-29)
 
 ### Fixes
 
-- keep a file waiting to be merged on a second run (60b2a11)
-- keep knip out of .claude (0fb0ba6)
+- keep a file waiting to be merged on a second run (0ed2d2c)
+- keep knip out of .claude (d699305)
 
 ## 0.29.2 (2026-10-29)
 
 ### Other
 
-- releases happen on push (451792c)
-- tag releases as frontend-harness-vX.Y.Z (915d303)
+- releases happen on push (ffad77a)
+- tag releases as frontend-harness-vX.Y.Z (d02d27c)
 
