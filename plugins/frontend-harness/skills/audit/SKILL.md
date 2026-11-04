@@ -28,7 +28,7 @@ Modules named after the command (`$ARGUMENTS`) that are installed and have an `a
 
 ## 3. Find the problems
 
-Run one subagent per chosen module, in parallel. Give each:
+Run one subagent per chosen module, in parallel, each on a mid-tier model (such as Sonnet) named in the call: a subagent with no model runs on the session's, usually the most expensive one. Give each:
 
 - The module's `audit` paths. A path missing in the project is skipped and named in the report.
 - The whole project to check, but `node_modules`, build output and generated files. The source folders (`frameworks.<framework>.srcDirs` in the catalog) are where app code should live: components, pages or logic outside them are a structure finding (tests, configs and scripts are not). A rule's `paths:` says which kind of files it is about; files of that kind elsewhere (tests named `*.test.ts` or in `__tests__/`) are findings of that rule, not out of scope.
