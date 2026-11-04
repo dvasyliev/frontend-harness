@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.38.3 (2026-11-04)
+
+### Fixes
+
+- skip embeds from other sites in the e2e accessibility check (18d42c1)
+
 ## 0.38.2 (2026-11-04)
 
 ### Fixes
