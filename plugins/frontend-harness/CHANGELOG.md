@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.37.3 (2026-11-04)
+
+### Fixes
+
+- fix harness files in the template first during an audit (3816956)
+
 ## 0.37.2 (2026-11-03)
 
 ### Fixes
