@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.38.0 (2026-11-04)
+
+### Features
+
+- fetch the newest plugin before updating a project (4d5aa1a)
+
 ## 0.37.3 (2026-11-04)
 
 ### Fixes
