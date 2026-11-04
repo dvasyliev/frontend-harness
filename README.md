@@ -49,14 +49,7 @@ Then open Claude Code in the project and run `/frontend-harness:setup`. It asks 
 
 ## Update
 
-When a new version is out, in the project's folder:
-
-```bash
-claude plugin marketplace update frontend-harness
-claude plugin update frontend-harness@frontend-harness --scope local
-```
-
-Use the same `--scope` you installed with. Restart Claude Code, then run `/frontend-harness:update` to update the harness files in the project. Your own edits to them are kept.
+Run `/frontend-harness:update` in the project. It fetches the newest plugin version first (`claude plugin marketplace update` and `claude plugin update` with the scope you installed with), then updates the harness files in the project. Your own edits to them are kept. Run `/reload-plugins` afterwards to get the new version's commands.
 
 ## Commands
 
