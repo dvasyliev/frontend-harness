@@ -28,6 +28,7 @@ const thenHydrated =
 // that Floating UI and Base UI put around a popup are skipped: they hold focus
 // only for a moment and must be aria-hidden, which axe takes for a problem
 // (floating-ui/floating-ui#2758).
+/** @public Kept for specs that open menus or dialogs, even while none does. */
 export const expectAccessible = async (page: Page) => {
   const axe = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
