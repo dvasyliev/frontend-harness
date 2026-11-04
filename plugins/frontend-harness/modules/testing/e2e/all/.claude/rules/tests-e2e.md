@@ -11,4 +11,4 @@ paths:
 - `playwright.config.ts` reuses the running dev server (port from `PORT`, else the `port` in `.claude/harness.json`) and starts one only if none is running.
 - A click that saves shows its result at once, before the save has finished. Wait for its response (`page.waitForResponse`) before `goto` or `reload`, or the save can be dropped.
 - On macOS run the end-to-end tests under `caffeinate -dims`: a Mac that sleeps fails random tests. When a run takes far longer than usual and pages time out, check `pmset -g log` for sleep before looking for a bug.
-- The `pre-push` git hook runs `npm run verify`; the push is cancelled if it fails.
+- The `pre-push` git hook runs `npm run verify` (under `caffeinate` on macOS); the push is cancelled if it fails. The project's own pre-push steps go in an executable `.githooks/pre-push.local`, which the hook runs afterwards and the harness never overwrites.

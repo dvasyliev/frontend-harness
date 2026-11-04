@@ -3,5 +3,15 @@
 [ -n "$SKIP_VERIFY" ] && { echo "pre-push: skipped via SKIP_VERIFY" >&2; exit 0; }
 
 # Run the end-to-end tests. If they fail, the push is cancelled.
+# On macOS caffeinate keeps the Mac awake: a Mac that sleeps fails random tests.
 echo "pre-push: running npm run verify"
-npm run -s verify
+if command -v caffeinate >/dev/null 2>&1; then
+	caffeinate -dims npm run -s verify || exit 1
+else
+	npm run -s verify || exit 1
+fi
+
+# The project's own pre-push steps, which the harness never writes or overwrites.
+# It gets the same arguments, and the refs being pushed on stdin.
+[ -x .githooks/pre-push.local ] && exec .githooks/pre-push.local "$@"
+exit 0

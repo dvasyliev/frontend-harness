@@ -93,4 +93,4 @@ Each entry: symptom, causes, and a check you can run yourself.
 
 ## A push gets through with failing tests
 
-- Another command runs after the tests and hides their exit code. Check: the test command is the last line of `.githooks/pre-push`.
+- A command after the tests hides their exit code. Check: every test run in `.githooks/pre-push` (and `.githooks/pre-push.local`) ends with `|| exit 1`.
