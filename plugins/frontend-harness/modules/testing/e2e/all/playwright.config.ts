@@ -3,7 +3,15 @@ import { defineConfig, devices } from "@playwright/test";
 
 // The dev server port: PORT if set, else the `port` in .claude/harness.json.
 const { port } = JSON.parse(readFileSync(".claude/harness.json", "utf8")) as { port: number };
-const baseURL = `http://localhost:${process.env.PORT ?? port}`;
+const devPort = process.env.PORT ?? String(port);
+const baseURL = `http://localhost:${devPort}`;
+
+// The `dev` script fixes the harness port; on another PORT, run it with that port instead.
+const { scripts } = JSON.parse(readFileSync("package.json", "utf8")) as { scripts: { dev: string } };
+const command =
+  devPort === String(port)
+    ? "npm run dev"
+    : `npx ${scripts.dev.replace(/(--port|-p)[ =]\d+/, `$1 ${devPort}`)}`;
 
 export default defineConfig({
   testDir: "tests",
@@ -15,7 +23,7 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   // Reuse the dev server when one already listens on that port; never start a second.
   webServer: {
-    command: "npm run dev",
+    command,
     url: baseURL,
     reuseExistingServer: true,
   },
