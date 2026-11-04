@@ -27,6 +27,7 @@ Everything goes into your project's own files (`.claude/`, `.githooks/`, configs
 ## Table of Contents
 
 - [Install](#install)
+- [New or existing project](#new-or-existing-project)
 - [Update](#update)
 - [Commands](#commands)
 - [Modules](#modules)
@@ -46,6 +47,20 @@ claude plugin install frontend-harness@frontend-harness --scope local
 `--scope local` turns it on only for you in this project; `--scope project` for everyone on the project; `--scope user` in all your projects.
 
 Then open Claude Code in the project and run `/frontend-harness:setup`. It asks which framework and modules you want, adds the files, keeps what the project already had, runs the checks and commits. The files it adds: hooks, rules and settings in `.claude/`, git hooks in `.githooks/`, configs for the tools you picked, and scripts in `package.json`.
+
+## New or existing project
+
+**A new project:**
+
+1. Create the app: [Next.js](https://nextjs.org/docs/app/getting-started/installation) or [React with Vite](https://vite.dev/guide/#scaffolding-your-first-vite-project). Run `git init` and make the first commit.
+2. [Install](#install) the plugin and run `/frontend-harness:setup`. With the `libraries` module, it also asks which library to use for each job.
+3. Build. New code follows the rules from the start, so there is nothing to audit.
+
+**An existing project:**
+
+1. [Install](#install) the plugin and run `/frontend-harness:setup`. Pick the libraries there too: the audit checks the code against them.
+2. Run `/frontend-harness:audit` and pick what to fix. For a big project, audit a few modules at a time: `/frontend-harness:audit core`.
+3. Run the audit once more. The fixes move files, so Claude sees the code in a new way and may find a bit more. Stop when it finds only small things: each run finds a few new ones because Claude does not answer the same way twice, and the checks catch new problems on every change anyway.
 
 ## Update
 
