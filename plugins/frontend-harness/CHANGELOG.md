@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.38.1 (2026-11-04)
+
+### Other
+
+- describe both ways to update the plugin (39ef43f)
+
 ## 0.38.0 (2026-11-04)
 
 ### Features
