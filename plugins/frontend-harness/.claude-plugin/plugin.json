@@ -1,6 +1,6 @@
 {
   "name": "frontend-harness",
-  "version": "0.38.1",
+  "version": "0.38.2",
   "description": "Claude Code plugin that sets up hooks, rules and checks so Claude writes code that fits your React or Next.js project",
   "author": {
     "name": "Dmytro Vasyliev"

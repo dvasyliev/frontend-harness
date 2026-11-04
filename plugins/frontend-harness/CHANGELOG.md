@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.38.2 (2026-11-04)
+
+### Fixes
+
+- keep expectAccessible from failing knip before a spec uses it (77d69cf)
+
 ## 0.38.1 (2026-11-04)
 
 ### Other
