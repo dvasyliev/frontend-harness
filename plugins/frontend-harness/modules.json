@@ -338,6 +338,7 @@
         "@playwright/cli",
         "@axe-core/playwright"
       ],
+      "gitignore": ["/test-results/", "/playwright-report/", "/.playwright-cli/"],
       "install": [
         {
           "command": "npx -y skills add microsoft/playwright-cli --skill playwright-cli -a claude-code --copy -y",

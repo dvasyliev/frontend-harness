@@ -59,7 +59,7 @@ node <template>/tasks/apply.mjs '{"framework": "<framework>", "modules": [...], 
 
 On an update, leave out the answers that do not change; they keep their values from `.claude/harness.json`. `docsLanguage` is the language of specs and plans (default English); ask if the project's docs do not show it. The dev server port, which the hooks and the end-to-end tests use, is the one the project's `dev` script sets (`--port` or `-p`), else one `apply.mjs` derives from the folder name (3000–3999) and adds to the `dev` script, so projects on one machine rarely share it. To change it, change the `dev` script.
 
-The script writes each module's files, merges its `scripts` into `package.json` and its `settings` into `.claude/settings.json` (the project's own keys stay), takes back what a removed module added, writes `.claude/harness.json` and `.claude/rules/harness.md`, installs missing npm packages, and runs each `install` command whose `creates` paths are not all there (one without `creates` runs every time).
+The script writes each module's files, merges its `scripts` into `package.json`, its `settings` into `.claude/settings.json` (the project's own keys stay), its `gitignore` lines into `.gitignore` (lines the project has are not added again), takes back what a removed module added, writes `.claude/harness.json` and `.claude/rules/harness.md`, installs missing npm packages, and runs each `install` command whose `creates` paths are not all there (one without `creates` runs every time).
 
 Then read the `harness:` lines it printed, `git status` and `git diff`:
 

@@ -244,6 +244,35 @@ for (const name of previous.mcp) if (!mcpNames.includes(name)) delete mcp.mcpSer
 if (Object.keys(mcp.mcpServers).length) writeJson(".mcp.json", mcp);
 else rmSync(".mcp.json", { force: true });
 
+// .gitignore: the modules' lines go in one block under a harness comment. A line the project already has
+// (with or without its leading or trailing slash) stays the project's; only the lines the harness added go with their module.
+const gitignoreHeader = "# Added by the frontend-harness plugin";
+const ignoreKey = (line) => line.trim().replace(/^\/|\/$/g, "");
+const ignores = [...new Set(collect("gitignore"))];
+const gitignoreText = existsSync(".gitignore") ? readFileSync(".gitignore", "utf8") : "";
+const gone = (previous.gitignore ?? []).filter((line) => !ignores.includes(line));
+const lines = (gitignoreText ? gitignoreText.replace(/\n$/, "").split("\n") : []).filter((line) => !gone.includes(line));
+const stillAdded = (previous.gitignore ?? []).filter((line) => ignores.includes(line) && lines.includes(line));
+const newIgnores = ignores.filter((line) => !lines.some((l) => ignoreKey(l) === ignoreKey(line)));
+const ignoresAdded = [...stillAdded, ...newIgnores];
+let header = lines.indexOf(gitignoreHeader);
+if (newIgnores.length && header < 0) {
+  if (lines.length && lines.at(-1).trim()) lines.push("");
+  header = lines.push(gitignoreHeader) - 1;
+}
+if (newIgnores.length) {
+  let end = header + 1;
+  while (end < lines.length && stillAdded.includes(lines[end])) end++;
+  lines.splice(end, 0, ...newIgnores);
+} else if (!ignoresAdded.length && header >= 0) {
+  // No harness line left: its comment goes too, with the blank line before it.
+  const blank = Number(header > 0 && !lines[header - 1].trim());
+  lines.splice(header - blank, 1 + blank);
+}
+if (lines.some((line) => line.trim())) {
+  if (lines.join("\n") + "\n" !== gitignoreText) writeFileSync(".gitignore", lines.join("\n") + "\n");
+} else if (gone.length) rmSync(".gitignore", { force: true });
+
 // .claude/harness.json: what the hooks read, and what this run wrote.
 const checks = collect("checks").filter((c) => !skip.has(c.name));
 const fileChecks = collect("fileChecks").filter((c) => !skip.has(c.name));
@@ -261,6 +290,7 @@ writeJson(".claude/harness.json", {
   paths,
   merged,
   mcp: mcpNames,
+  gitignore: ignoresAdded,
   base,
 });
 rmSync(legacyBase, { recursive: true, force: true });
