@@ -91,11 +91,11 @@ With the `feature-workflow` module, your project also gets:
 | `/feature-workflow` | Builds a feature step by step: spec, plan, tests first, a check in the browser. Claude uses it on its own for new features. |
 | `/improve-harness` | Finds where the harness let Claude down in this chat (a hook that did not run, a rule it ignored) and fixes what you approve. |
 
-To turn off one check or remove the plugin, see the [plugin guide](plugins/frontend-harness/README.md).
+To turn off one check, ask Claude: "turn off the dupes check". To remove the plugin: `claude plugin uninstall frontend-harness@frontend-harness --scope local`. The harness already in the project stays.
 
 ## Modules
 
-Pick only what you need. `core` is always on.
+Pick only what you need. `core` is always on, you pick one linter, and `tailwind` and `next-docs` turn on by themselves when the project uses Tailwind or Next.js. Setup marks the ones it recommends.
 
 | Module | What it does for you |
 |---|---|
@@ -115,8 +115,6 @@ Pick only what you need. `core` is always on.
 | `libraries` | One chosen library for each job, so Claude does not add new ones. |
 | `next-docs` | Gives Claude the docs of your exact Next.js version. |
 | `page-speed` | Rules for fast pages, a browser tool to measure them, and a size limit for your code bundle (React). |
-
-Full details for each module: [plugin guide](plugins/frontend-harness/README.md#modules).
 
 <!-- COURSES:START -->
 ## My Educational Courses

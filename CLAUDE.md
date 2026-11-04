@@ -1,6 +1,6 @@
 # frontend-harness
 
-A Claude Code marketplace, `frontend-harness`: `.claude-plugin/marketplace.json` lists the plugins in `plugins/<name>/`. A plugin's `README.md` says how to use it; its `CLAUDE.md`, when it has one, how it is built.
+A Claude Code marketplace, `frontend-harness`: `.claude-plugin/marketplace.json` lists the plugins in `plugins/<name>/`. The root `README.md` says how to use the plugin; a plugin's `CLAUDE.md`, when it has one, how it is built.
 
 ## Commits
 
