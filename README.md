@@ -10,6 +10,18 @@ Claude Code plugin that sets up hooks, rules and checks so Claude writes code th
 
 frontend-harness makes Claude check its own work. After every change, it checks the code. If something is broken, Claude fixes it before it tells you it is done. You get working code, not a list of things to clean up.
 
+## Table of Contents
+
+- [The problems it solves](#the-problems-it-solves)
+- [Use cases](#use-cases)
+- [Install](#install)
+- [Update](#update)
+- [Commands](#commands)
+- [Modules](#modules)
+- [My Educational Courses](#my-educational-courses)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## The problems it solves
 
 | Without it | With it |
@@ -37,16 +49,6 @@ Everything goes into your project's own files (`.claude/`, `.githooks/`, configs
 1. [Install](#install) the plugin and run `/frontend-harness:setup`. Pick the libraries there too: the audit checks the code against them.
 2. Run `/frontend-harness:audit` and pick what to fix. For a big project, audit a few modules at a time: `/frontend-harness:audit core`.
 3. Run the audit once more. The fixes move files, so Claude sees the code in a new way and may find a bit more. Stop when it finds only small things: each run finds a few new ones because Claude does not answer the same way twice, and the checks catch new problems on every change anyway.
-
-## Table of Contents
-
-- [Install](#install)
-- [Update](#update)
-- [Commands](#commands)
-- [Modules](#modules)
-- [My Educational Courses](#my-educational-courses)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Install
 
