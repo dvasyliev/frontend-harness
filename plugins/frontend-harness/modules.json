@@ -46,6 +46,14 @@
           "description": "all checks at once, as the Stop hook runs them"
         }
       },
+      "frameworkScripts": {
+        "nextjs": {
+          "typecheck": {
+            "command": "next typegen && tsc -b",
+            "description": "TypeScript, after regenerating Next.js route types; never `tsc --noEmit`"
+          }
+        }
+      },
       "checks": [
         {
           "name": "types",
