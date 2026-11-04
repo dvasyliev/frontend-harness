@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.38.4 (2026-11-04)
+
+### Other
+
+- keep one README, the repository's (d66dc42)
+
 ## 0.38.3 (2026-11-04)
 
 ### Fixes
