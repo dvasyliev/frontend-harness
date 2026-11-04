@@ -27,6 +27,7 @@ Everything goes into your project's own files (`.claude/`, `.githooks/`, configs
 ## Table of Contents
 
 - [Install](#install)
+- [Update](#update)
 - [Commands](#commands)
 - [Modules](#modules)
 - [My Educational Courses](#my-educational-courses)
@@ -46,6 +47,17 @@ claude plugin install frontend-harness@frontend-harness --scope local
 
 Then open Claude Code in the project and run `/frontend-harness:setup`. It asks which framework and modules you want, adds the files, keeps what the project already had, runs the checks and commits. The files it adds: hooks, rules and settings in `.claude/`, git hooks in `.githooks/`, configs for the tools you picked, and scripts in `package.json`.
 
+## Update
+
+When a new version is out, in the project's folder:
+
+```bash
+claude plugin marketplace update frontend-harness
+claude plugin update frontend-harness@frontend-harness --scope local
+```
+
+Use the same `--scope` you installed with. Restart Claude Code, then run `/frontend-harness:update` to update the harness files in the project. Your own edits to them are kept.
+
 ## Commands
 
 | Command | What it does |
@@ -62,7 +74,7 @@ With the `feature-workflow` module, your project also gets:
 | `/feature-workflow` | Builds a feature step by step: spec, plan, tests first, a check in the browser. Claude uses it on its own for new features. |
 | `/improve-harness` | Finds where the harness let Claude down in this chat (a hook that did not run, a rule it ignored) and fixes what you approve. |
 
-To turn off one check, update the plugin or remove it, see the [plugin guide](plugins/frontend-harness/README.md).
+To turn off one check or remove the plugin, see the [plugin guide](plugins/frontend-harness/README.md).
 
 ## Modules
 
