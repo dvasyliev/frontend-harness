@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.39.0 (2026-11-04)
+
+### Features
+
+- keep the Mac awake in pre-push and run a project's pre-push.local (89e8fb3)
+
+### Fixes
+
+- start the e2e dev server on the PORT the tests use (dcde9da)
+- run audit subagents on a named mid-tier model (8fe76d4)
+- regenerate Next.js route types before the type check (cc6e3c6)
+
 ## 0.38.4 (2026-11-04)
 
 ### Other
