@@ -46,6 +46,7 @@ A module that goes takes its files (unless the project edited them), scripts, se
 - The project's own work wins: edited files are merged, not overwritten; a script, setting or hooks path the project set stays; the harness takes back only what it added.
 - `modules.json` is ordered by category; checks run in module order, so cheap ones come first.
 - Everything in the plugin is written in English.
+- Files are written for any project: no file, route, component or service name from the project where a fix was found.
 
 ## Changing the harness
 
