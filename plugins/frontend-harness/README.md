@@ -34,8 +34,8 @@ The plugin only installs and updates the harness. What it installs lives in the 
 | Turn one check off | Ask "turn off the dupes check" (it goes into `skipChecks`). |
 | Choose or change the libraries | `/frontend-harness:libraries`, also when the question was skipped at setup. |
 | Bring old code in line with the rules | `/frontend-harness:audit` (or `/frontend-harness:audit libraries core` for some modules): read the report by area, tick what to fix; each area is fixed, checked and committed on its own. |
-| Update the harness in a project | `/frontend-harness:update` (or ask "update the harness"): its files are merged with the project's edits. |
-| Update the plugin | `claude plugin marketplace update frontend-harness`, then `claude plugin update frontend-harness@frontend-harness --scope local`, and restart Claude Code. |
+| Update the harness in a project | `/frontend-harness:update` (or ask "update the harness"): it gets the newest plugin version in the scope this project uses, then merges its files with the project's edits. Run `/reload-plugins` afterwards. |
+| Update only the plugin | `claude plugin marketplace update frontend-harness`, then `claude plugin update frontend-harness@frontend-harness --scope local` (the scope you installed with), and `/reload-plugins`. |
 | Remove the plugin | `claude plugin uninstall frontend-harness@frontend-harness --scope local`. The harness already in the project stays. |
 
 By hand, from the project folder (answers left out keep their values from `.claude/harness.json`):
