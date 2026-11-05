@@ -161,6 +161,25 @@
         }
       ]
     },
+    "context-size": {
+      "description": "Warns before every message once the session is over 200K tokens, so you /compact or start over with /clear.",
+      "category": "workflow",
+      "recommended": true,
+      "settings": {
+        "hooks": {
+          "UserPromptSubmit": [
+            {
+              "hooks": [
+                {
+                  "type": "command",
+                  "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/context-size.sh\""
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
     "eslint": {
       "description": "ESLint with type-aware typescript-eslint rules, no import cycles, a 400-line file limit and (on Next) the folder rules from structure.md. Needs TypeScript below 6.1.",
       "category": "code-quality",
