@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.40.0 (2026-11-05)
+
+### Features
+
+- add the context-size module, a warning past 200K session tokens (e6a55e9)
+- add the e2e output folders to the project's .gitignore (040f706)
+
 ## 0.39.0 (2026-11-04)
 
 ### Features
