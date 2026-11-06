@@ -100,7 +100,7 @@ Pick only what you need. `core` is always on, you pick one linter, and `tailwind
 
 | Module | What it does for you |
 |---|---|
-| `core` | Formats and checks each file Claude edits. Runs all checks before Claude finishes. Blocks risky commands. Checks types (TypeScript). |
+| `core` | Formats and checks each file Claude edits. Runs all checks before Claude finishes. Blocks risky commands. Checks types (TypeScript). Keeps `CLAUDE.md` and the rules under 200 lines. |
 | `feature-workflow` | Claude works in steps: describe the feature, plan it, write tests first, check it in the browser. |
 | `context-size` | Warns before every message once the chat is over 200K tokens, so you `/compact` it or start over with `/clear`. |
 | `eslint` or `oxlint` | Finds code mistakes and bad patterns. Also stops files from getting too long. |
