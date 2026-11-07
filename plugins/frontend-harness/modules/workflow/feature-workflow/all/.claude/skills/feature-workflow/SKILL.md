@@ -57,7 +57,7 @@ Every screenshot stays in the conversation and is re-read on every later turn, s
 
 Write them for the feature's happy paths only, one per main scenario.
 
-While working, run only the feature's own spec files (`npx playwright test tests/x/y.spec.ts`). Commits after each task are fine; run the whole suite with `npm run verify` once, before the last commit.
+While working, run only the feature's own spec files (`npx playwright test tests/x/y.spec.ts`). Commits after each task are fine; run the whole suite with `npm run verify` once, before the last commit. After every run, read its log for errors as `tests-e2e.md` says; a run that passes but logs an error the feature caused is not done.
 
 ## Improve the harness
 
