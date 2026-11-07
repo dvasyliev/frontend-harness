@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.41.0 (2026-11-07)
+
+### Features
+
+- read the end-to-end log for errors after every run (36096ae)
+- keep CLAUDE.md and the rules under 200 lines (c25d57f)
+
+### Fixes
+
+- stop the guard hook taking a plain commit for a force push (fa824b1)
+
 ## 0.40.0 (2026-11-05)
 
 ### Features
