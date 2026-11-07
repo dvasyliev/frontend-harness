@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.42.0 (2026-11-07)
+
+### Features
+
+- skip the end-to-end tests on a push of code that already passed (17d4ffd)
+
 ## 0.41.0 (2026-11-07)
 
 ### Features
