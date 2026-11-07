@@ -344,7 +344,7 @@
       },
       "scripts": {
         "verify": {
-          "command": "playwright test",
+          "command": ".githooks/verify.sh",
           "description": "all end-to-end tests; `npx playwright test <file>` for one"
         },
         "prepare": {
